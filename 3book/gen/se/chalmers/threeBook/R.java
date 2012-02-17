@@ -29,38 +29,54 @@ public final class R {
     public static final class drawable {
         public static final int button=0x7f020000;
         public static final int ic_collection=0x7f020001;
-        public static final int ic_collections=0x7f020002;
-        public static final int ic_ebook=0x7f020003;
-        public static final int ic_favourites=0x7f020004;
-        public static final int ic_file=0x7f020005;
-        public static final int ic_folder=0x7f020006;
-        public static final int ic_launcher=0x7f020007;
-        public static final int ic_open_import=0x7f020008;
-        public static final int ic_settings=0x7f020009;
-        public static final int ic_top_bar_search=0x7f02000a;
-        public static final int recent_shadow_bottom=0x7f02000b;
-        public static final int recent_shadow_top=0x7f02000c;
+        public static final int ic_ebook=0x7f020002;
+        public static final int ic_favourites=0x7f020003;
+        public static final int ic_file=0x7f020004;
+        public static final int ic_folder=0x7f020005;
+        public static final int ic_launcher=0x7f020006;
+        public static final int ic_open_import=0x7f020007;
+        public static final int ic_settings=0x7f020008;
+        public static final int ic_top_bar_search=0x7f020009;
+        public static final int recent_book_cover=0x7f02000a;
+        public static final int recent_frame_shadow=0x7f02000b;
+        public static final int recent_item_shadow=0x7f02000c;
         public static final int shape_top_bar_background=0x7f02000d;
         public static final int up_one_dir=0x7f02000e;
     }
     public static final class id {
-        public static final int btn_collection=0x7f080005;
         public static final int btn_dir_up=0x7f080001;
-        public static final int btn_favourites=0x7f080006;
-        public static final int btn_open_import=0x7f080007;
-        public static final int btn_settings=0x7f080008;
-        public static final int btn_top_bar_search=0x7f08000a;
+        public static final int btn_top_bar_search=0x7f080018;
+        public static final int img_favourites=0x7f08000f;
         public static final int img_file_icon=0x7f080003;
+        public static final int img_grid_button_image=0x7f080005;
+        public static final int img_my_collection=0x7f08000c;
+        public static final int img_open_import=0x7f080012;
+        public static final int img_recent_book_cover=0x7f080007;
+        public static final int img_recent_shadow=0x7f080008;
+        public static final int img_settings=0x7f080015;
+        public static final int lay_favourites=0x7f08000e;
+        public static final int lay_my_collection=0x7f08000b;
+        public static final int lay_open_import=0x7f080011;
+        public static final int lay_settings=0x7f080014;
         public static final int lst_book_browser=0x7f080002;
+        public static final int lst_recent_books=0x7f08000a;
+        public static final int txt_favourites=0x7f080010;
         public static final int txt_file_item_title=0x7f080004;
         public static final int txt_file_path=0x7f080000;
-        public static final int txt_top_bar_title=0x7f080009;
+        public static final int txt_grid_button_title=0x7f080006;
+        public static final int txt_my_collection=0x7f08000d;
+        public static final int txt_open_import=0x7f080013;
+        public static final int txt_recent_book_title=0x7f080009;
+        public static final int txt_settings=0x7f080016;
+        public static final int txt_top_bar_title=0x7f080017;
     }
     public static final class layout {
         public static final int activity_file_browser=0x7f030000;
         public static final int listview_file_browser=0x7f030001;
-        public static final int main=0x7f030002;
-        public static final int view_top_bar=0x7f030003;
+        public static final int listview_grid_button=0x7f030002;
+        public static final int listview_recent_book=0x7f030003;
+        public static final int main=0x7f030004;
+        public static final int view_top_bar=0x7f030005;
     }
     public static final class string {
         public static final int app_name=0x7f070001;

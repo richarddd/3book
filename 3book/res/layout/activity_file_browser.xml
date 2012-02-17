@@ -41,7 +41,6 @@
         android:id="@+id/lst_book_browser"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
-        android:divider="@color/grey_light"
         android:background="@android:color/white" >
     </ListView>
 
