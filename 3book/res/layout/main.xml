@@ -4,9 +4,34 @@
     android:layout_height="fill_parent"
     android:orientation="vertical" >
 
-    <TextView
+    <LinearLayout
+        android:id="@+id/linearLayout1"
         android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/hello" />
+        android:layout_height="wrap_content" >
+
+        <Button
+            android:id="@+id/btn_prevChapter"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/control_prev_chapter" />
+
+        <Button
+            android:id="@+id/btn_nextChapter"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/control_next_chapter" />
+
+        <Button
+            android:id="@+id/btn_displayToc"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/control_display_toc" />
+
+    </LinearLayout>
+
+    <WebView
+        android:id="@+id/web_webView1"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent" />
 
 </LinearLayout>

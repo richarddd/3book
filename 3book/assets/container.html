@@ -1,0 +1,99 @@
+<html>
+        		<head>
+        			<style>
+        				*{
+        					margin: 0 0 0 0;
+        					padding: 0 0 0 0;
+        				}
+        				body{
+        					background: #AAA;
+        					color: #FFF;
+        				}
+        				#content {
+        					text-align: justify;
+        					width:100%;
+        					height:100%;
+        				}
+        				
+        				#content2 {
+        					width:300px;
+        					height:400px;
+        					background:#AEF;
+        				
+        				}
+        			</style>
+        			<script type="text/javascript">
+						function checkOverflow(el)
+						{
+						   var curOverflow = el.style.overflow;
+						   if ( !curOverflow || curOverflow === "visible" )
+						      el.style.overflow = "hidden";
+						     
+						   var isOverflowing = el.clientWidth < el.scrollWidth 
+						      || el.clientHeight < el.scrollHeight;
+						
+						   el.style.overflow = curOverflow;
+						
+						   return isOverflowing;
+						}
+						
+						/*function addContent(text){
+							var div = document.getElementById("content");
+							div.innerHTML += text;
+							
+							//div.innerHTML = div.style.width + "/" + div.style.height;
+							
+							if(checkOverflow(div)){
+								window.jsinterface.setOverflow();
+							}else{
+								window.jsinterface.loadNext();
+							} 
+						} */
+						
+						function g(str){
+							return document.getElementById(str);
+						}
+						
+						function sendData(str){
+							g("status").innerHTML = "trying to add data";
+							//document.getElementById("content2").innerHTML = str;
+							g("status").innerHTML = "done adding data";
+						}
+						
+						function addStringPile(pile){
+							var el = document.createElement("div");
+							el.style.width = "300px";
+							el.style.height = "450px";
+							var strings = pile.split(".");
+							var count = 0;
+
+							while(!checkOverflow(el) && count < strings.length){
+								el.innerHTML += strings[count++];
+							}
+							document.getElementById("content2").innerHTML = el.innerHTML;
+							window.jsinterface.stopTimer();
+						}
+						
+						function clicky(){
+							window.jsinterface.clicked();
+							window.jsinterface.loadStringPile();
+						}
+						
+						
+
+        			</script>
+        			</head>
+        		<body>
+        			<div id="status">Status div waiting...</div>
+        			<div id="control">
+        				<a href="javascript:clicky()" id="clicky">CLICK ME!</a>
+        			</div>
+        			<div id="content">
+        			
+        			</div>
+        			
+        			<div id="content2"> 
+        				hej!
+        			</div>
+        		</body>
+        	</html>
