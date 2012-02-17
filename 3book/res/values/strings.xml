@@ -3,5 +3,18 @@
 
     <string name="hello">Hello World, threeBookActivity!</string>
     <string name="app_name">3book</string>
+    <string name="my_collection">My Collection</string>
+    <string name="favourites">Favourites</string>
+    <string name="open_import">Open/Import</string>
+    <string name="settings">Settings</string>
+    
+     <!-- COMMON -->
+     <string name="ok">Ok</string>
+     <string name="cancle">Cancel</string>
+    
+    <!-- ERRORS -->
+    <string name="err_general">Error</string>
+    <string name="err_file_browser_general">Unable to access file/folder</string>
+    
 
 </resources>

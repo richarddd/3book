@@ -10,14 +10,75 @@ package se.chalmers.threeBook;
 public final class R {
     public static final class attr {
     }
+    public static final class color {
+        public static final int blue_light=0x7f040003;
+        public static final int default_background=0x7f040000;
+        public static final int font_dark=0x7f040004;
+        public static final int grey_dark=0x7f040002;
+        public static final int grey_light=0x7f040001;
+    }
+    public static final class dimen {
+        public static final int listview_one_row=0x7f050006;
+        public static final int padding_l=0x7f050005;
+        public static final int padding_m=0x7f050004;
+        public static final int padding_s=0x7f050003;
+        public static final int top_bar_content_margin=0x7f050002;
+        public static final int top_bar_height=0x7f050000;
+        public static final int top_bar_icon_size=0x7f050001;
+    }
     public static final class drawable {
-        public static final int ic_launcher=0x7f020000;
+        public static final int button=0x7f020000;
+        public static final int ic_collection=0x7f020001;
+        public static final int ic_collections=0x7f020002;
+        public static final int ic_ebook=0x7f020003;
+        public static final int ic_favourites=0x7f020004;
+        public static final int ic_file=0x7f020005;
+        public static final int ic_folder=0x7f020006;
+        public static final int ic_launcher=0x7f020007;
+        public static final int ic_open_import=0x7f020008;
+        public static final int ic_settings=0x7f020009;
+        public static final int ic_top_bar_search=0x7f02000a;
+        public static final int recent_shadow_bottom=0x7f02000b;
+        public static final int recent_shadow_top=0x7f02000c;
+        public static final int shape_top_bar_background=0x7f02000d;
+        public static final int up_one_dir=0x7f02000e;
+    }
+    public static final class id {
+        public static final int btn_collection=0x7f080005;
+        public static final int btn_dir_up=0x7f080001;
+        public static final int btn_favourites=0x7f080006;
+        public static final int btn_open_import=0x7f080007;
+        public static final int btn_settings=0x7f080008;
+        public static final int btn_top_bar_search=0x7f08000a;
+        public static final int img_file_icon=0x7f080003;
+        public static final int lst_book_browser=0x7f080002;
+        public static final int txt_file_item_title=0x7f080004;
+        public static final int txt_file_path=0x7f080000;
+        public static final int txt_top_bar_title=0x7f080009;
     }
     public static final class layout {
-        public static final int main=0x7f030000;
+        public static final int activity_file_browser=0x7f030000;
+        public static final int listview_file_browser=0x7f030001;
+        public static final int main=0x7f030002;
+        public static final int view_top_bar=0x7f030003;
     }
     public static final class string {
-        public static final int app_name=0x7f040001;
-        public static final int hello=0x7f040000;
+        public static final int app_name=0x7f070001;
+        public static final int cancle=0x7f070007;
+        public static final int err_file_browser_general=0x7f070009;
+        /**  ERRORS 
+         */
+        public static final int err_general=0x7f070008;
+        public static final int favourites=0x7f070003;
+        public static final int hello=0x7f070000;
+        public static final int my_collection=0x7f070002;
+        /**  COMMON 
+         */
+        public static final int ok=0x7f070006;
+        public static final int open_import=0x7f070004;
+        public static final int settings=0x7f070005;
+    }
+    public static final class style {
+        public static final int btn_main=0x7f060000;
     }
 }
