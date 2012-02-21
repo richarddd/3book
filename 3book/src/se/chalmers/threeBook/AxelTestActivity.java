@@ -7,6 +7,8 @@ import java.io.Reader;
 import java.util.ArrayList;
 import java.util.List;
 
+import parser.epub.ImgRewriter;
+
 import nl.siegmann.epublib.domain.Book;
 import nl.siegmann.epublib.domain.Resource;
 import nl.siegmann.epublib.domain.Spine;
@@ -14,6 +16,7 @@ import nl.siegmann.epublib.domain.TOCReference;
 import nl.siegmann.epublib.epub.EpubReader;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.Intent;
 import android.content.res.AssetManager;
 import android.graphics.Color;
 import android.os.Bundle;
@@ -39,7 +42,7 @@ public class AxelTestActivity extends Activity {
 	public Book book;
 	
 	private Button nextChap, prevChap, showToc;
-	private int curChap = 0;
+	private int curChap = 1;
 	private int maxChap;
 	
     @Override
@@ -113,8 +116,11 @@ public class AxelTestActivity extends Activity {
 			
 			@Override
 			public void onClick(View v) {
-				AxelTestActivity moi = AxelTestActivity.this;
-				moi.displayToc();
+				Intent tocIntent = new Intent(view.getContext(), TocActivity.class);
+				int GET_SECTION_REFERENCE = 1;
+				tocIntent.putExtra("se.chalmers.threebook.TableOfContents", book.getTableOfContents());
+				tocIntent.putExtra("se.chalmers.threebook.TheBook", book);
+				startActivityForResult(tocIntent, GET_SECTION_REFERENCE);
 			}
 		});
         
@@ -195,10 +201,14 @@ public class AxelTestActivity extends Activity {
     	sb.append(HTML_START).append(getBodyContents(text)).append(HTML_END);
     	Log.d("3", "Media type: " + book.getSpine().getResource(index).getMediaType().getName() + ", enc: " + book.getSpine().getResource(index).getInputEncoding());
 //file://mnt/sdcard/epub/OEBPS/
-    	
-    	//view.loadDataWithBaseURL("file:///android_asset/books/",sb.toString(), book.getSpine().getResource(index).getMediaType().getName(), book.getSpine().getResource(index).getInputEncoding(), "");
+    	//String rewritten = ImgRewriter.rewriteImages(sb.toString(), "file:///android_asset/books/");
+    	//Log.d("3", "rewritten string: " + rewritten);
+    	//view.loadDataWithBaseURL("file:///android_asset/", rewritten, book.getSpine().getResource(index).getMediaType().getName(), book.getSpine().getResource(index).getInputEncoding(), "");
+    	//view.loadData(rewritten, book.getSpine().getResource(index).getMediaType().getName(), book.getSpine().getResource(index).getInputEncoding());
+    	//view.loadDataWithBaseURL("file:///android_asset/",sb.toString(), book.getSpine().getResource(index).getMediaType().getName(), book.getSpine().getResource(index).getInputEncoding(), "");
     	view.loadData(sb.toString(), book.getSpine().getResource(index).getMediaType().getName(), book.getSpine().getResource(index).getInputEncoding());
     	//view.loadData(text, book.getSpine().getResource(index).getMediaType().getName(), book.getSpine().getResource(index).getInputEncoding());
+    	//Log.d("3", "URL is: " + view.getUrl());
     }
     
     private String getBodyContents(String xhtml){
@@ -212,17 +222,24 @@ public class AxelTestActivity extends Activity {
     	List<TOCReference> ref = book.getTableOfContents().getTocReferences();
     	StringBuilder sb = new StringBuilder();
     	sb.append("<html><head></head><body>\n");
+    	sb.append("<script>function gotoSection(refid, id){\n" +
+//    		"alert('got click! id:' + id); \n" +
+    		"window.jsinterface.lol(); \n" +
+    		"window.jsinterface.navToSection(refid, id);\n" +	
+    	 "return; }</script>");
     	sb.append("<ol>\n");
+    	int i = 0;
     	for (TOCReference r : ref){
-    		addLi(r.getTitle(), sb);
+    		addLi(r.getTitle(), r.getResourceId(), sb, i++);
     	}
     	sb.append("</ol>\n");
     	sb.append("</body></html>");
+    	Log.d("3", "TOC html: " + sb.toString());
     	view.loadData(sb.toString(), "text/html", "UTF-8");
     }
     
-    private StringBuilder addLi(String str, StringBuilder sb){
-    	return sb.append("\t<li>").append(str).append("</li>\n");
+    private StringBuilder addLi(String str, String refId, StringBuilder sb, int count){
+    	return sb.append("\t<li><a href=\"javascript:gotoSection('"+refId+","+count+"')\">").append(str).append("</a></li>\n");
     }
     
     class JsInterface {
@@ -242,6 +259,19 @@ public class AxelTestActivity extends Activity {
     	private long t1 = 0, t2 = 0;
     	private int row = 0;
     	private boolean overflow = false;
+    	
+    	public void navToSection(String refId, String id){
+    		int spineResIndex = -1; 
+    		int firstResById = -1;
+    		
+    		Log.d("3", "navToSection called! refId: " + refId + ", id: " + id);
+    		boolean containsId = book.getResources().containsId(refId);
+    		boolean containsHref = book.getResources().containsByHref(refId);
+    		spineResIndex = book.getSpine().getResourceIndex(refId);
+    		firstResById = book.getSpine().findFirstResourceById(refId);
+    		Log.d("3", "Does the book contain this by id? " + containsId + ", by href?: " + containsHref);
+    		Log.d("3", "Spine resource index? " + spineResIndex +", firstResById? : " + firstResById);
+    	}
     	
     	public boolean isOverflow(){
 			return overflow;

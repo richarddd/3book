@@ -16,6 +16,8 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+        <activity android:name="TocActivity"></activity>
+        <activity android:name="DisplayActivity"></activity>
     </application>
 
 </manifest>
