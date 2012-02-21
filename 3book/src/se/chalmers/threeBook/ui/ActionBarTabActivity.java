@@ -15,14 +15,19 @@ import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.view.ViewPager;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.View;
 import android.widget.TabHost;
 import android.widget.TabHost.TabContentFactory;
 import android.widget.TabWidget;
+import android.widget.TextView;
 
 public class ActionBarTabActivity extends FragmentActivity implements
-TabHost.OnTabChangeListener, ViewPager.OnPageChangeListener {
-	
+		TabHost.OnTabChangeListener, ViewPager.OnPageChangeListener {
+
 	final ActionBarHelper mActionBarHelper = ActionBarHelper
 			.createInstance(this);
 
@@ -33,14 +38,18 @@ TabHost.OnTabChangeListener, ViewPager.OnPageChangeListener {
 
 	private class TabInfo {
 		private String tag;
-		private Class<?> clss;
+		private Class<?> className;
 		private Bundle args;
 		private Fragment fragment;
 
-		TabInfo(String tag, Class<?> clazz, Bundle args) {
+		TabInfo(String tag, Class<?> className, Bundle args) {
 			this.tag = tag;
-			this.clss = clazz;
+			this.className = className;
 			this.args = args;
+		}
+		
+		private Class getClassName(){
+			return className;		
 		}
 	}
 
@@ -59,43 +68,43 @@ TabHost.OnTabChangeListener, ViewPager.OnPageChangeListener {
 			return v;
 		}
 	}
-	
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState); // Inflate the layout'
+		super.onCreate(savedInstanceState);
 		mActionBarHelper.onCreate(savedInstanceState);
-		
-		
 	}
-	
-	protected void build(Bundle savedInstanceState){
-		initialiseTabHost(savedInstanceState);
-		if (savedInstanceState != null) {
-			mTabHost.setCurrentTabByTag(savedInstanceState.getString("tab"));
+
+	protected void buildTabs(Bundle savedInstanceState) {
+
+		if (mapTabInfo.size() > 0) {
+
+			init(savedInstanceState);
+			if (savedInstanceState != null) {
+				mTabHost.setCurrentTabByTag(savedInstanceState.getString("tab"));
+			}
+		} else {
+			Log.e("ActionBarTabAcitivy",
+					"You have not added any fragments. Add them via addFragment method!");
 		}
-		intialiseViewPager();	
 	}
-	
-	protected ActionBarTabActivity addFragment(Class className, String title){
-		
-		return this;
-	}
-	
+
 	@Override
 	protected void onPostCreate(Bundle savedInstanceState) {
 		super.onPostCreate(savedInstanceState);
 		mActionBarHelper.onPostCreate(savedInstanceState);
 	}
-	
+
 	@Override
 	protected void onSaveInstanceState(Bundle outState) {
 		outState.putString("tab", mTabHost.getCurrentTabTag());
 		super.onSaveInstanceState(outState);
 	}
-	
+
 	private void intialiseViewPager() {
 
 		List<Fragment> fragments = new Vector<Fragment>();
+
 		fragments
 				.add(Fragment.instantiate(this, BooksFragment.class.getName()));
 		fragments.add(Fragment.instantiate(this,
@@ -104,34 +113,65 @@ TabHost.OnTabChangeListener, ViewPager.OnPageChangeListener {
 		this.mPagerAdapter = new PagerAdapter(
 				super.getSupportFragmentManager(), fragments);
 		//
-		this.mViewPager = (ViewPager) super
-				.findViewById(R.id.view_collection_pager);
+		this.mViewPager = (ViewPager) super.findViewById(R.id.view_pager);
 		this.mViewPager.setAdapter(this.mPagerAdapter);
 		this.mViewPager.setOnPageChangeListener(this);
 	}
-	
-	private void initialiseTabHost(Bundle args) {
+
+	private void init(Bundle args) {
 		mTabHost = (TabHost) findViewById(android.R.id.tabhost);
 		mTabHost.setup();
-		TabInfo tabInfo = null;
+		List<Fragment> fragments = new Vector<Fragment>();
 
-		ActionBarTabActivity.AddTab(this, this.mTabHost, this.mTabHost
-				.newTabSpec("Tab1").setIndicator("Tab 1"),
-				(tabInfo = new TabInfo("Tab1", BooksFragment.class, args)));
-		this.mapTabInfo.put(tabInfo.tag, tabInfo);
-		ActionBarTabActivity.AddTab(this, this.mTabHost, this.mTabHost
-				.newTabSpec("Tab2").setIndicator("Tab 2"),
-				(tabInfo = new TabInfo("Tab2", AuthorsFragment.class, args)));
-		this.mapTabInfo.put(tabInfo.tag, tabInfo);
-		ActionBarTabActivity.AddTab(this, this.mTabHost, this.mTabHost
-				.newTabSpec("Tab3").setIndicator("Tab 3"),
-				(tabInfo = new TabInfo("Tab3", TagsFragment.class, args)));
-		this.mapTabInfo.put(tabInfo.tag, tabInfo);
-		// Default to first tab
-		// this.onTabChanged("Tab1");
+		for (String key : mapTabInfo.keySet()) {
+			View tabview = createTabView(mTabHost.getContext(), key);
+			ActionBarTabActivity
+					.AddTab(this, this.mTabHost, this.mTabHost.newTabSpec(key)
+							.setIndicator(tabview), mapTabInfo.get(key));
+			fragments.add(Fragment.instantiate(this, mapTabInfo.get(key)
+					.getClassName().getName()));
+		}
+
+		this.mPagerAdapter = new PagerAdapter(
+				super.getSupportFragmentManager(), fragments);
 		//
+		this.mViewPager = (ViewPager) super.findViewById(R.id.view_pager);
+		this.mViewPager.setAdapter(this.mPagerAdapter);
+		this.mViewPager.setOnPageChangeListener(this);
+
+		/*
+		 * TabInfo tabInfo = null;
+		 * 
+		 * ActionBarTabActivity.AddTab(this, this.mTabHost, this.mTabHost
+		 * .newTabSpec("Tab1").setIndicator("Tab 1"), (tabInfo = new
+		 * TabInfo("Tab1", BooksFragment.class, args)));
+		 * this.mapTabInfo.put(tabInfo.tag, tabInfo);
+		 * ActionBarTabActivity.AddTab(this, this.mTabHost, this.mTabHost
+		 * .newTabSpec("Tab2").setIndicator("Tab 2"), (tabInfo = new
+		 * TabInfo("Tab2", AuthorsFragment.class, args)));
+		 * this.mapTabInfo.put(tabInfo.tag, tabInfo);
+		 * ActionBarTabActivity.AddTab(this, this.mTabHost, this.mTabHost
+		 * .newTabSpec("Tab3").setIndicator("Tab 3"), (tabInfo = new
+		 * TabInfo("Tab3", TagsFragment.class, args)));
+		 * this.mapTabInfo.put(tabInfo.tag, tabInfo); // Default to first tab //
+		 * this.onTabChanged("Tab1"); //
+		 */
 		mTabHost.setOnTabChangedListener(this);
 		initTabsAppearance(mTabHost.getTabWidget());
+	}
+
+	private View createTabView(final Context context, final String tag) {
+		View view = LayoutInflater.from(context).inflate(R.layout.view_tab,
+				null);
+		TextView tv = (TextView) view.findViewById(R.id.txt_tab);
+		tv.setText(tag.toUpperCase());
+		return view;
+	}
+
+	protected ActionBarTabActivity addFragment(Class className, String title,
+			Bundle args) {
+		mapTabInfo.put(title, new TabInfo(title, className, args));
+		return this;
 	}
 
 	private void initTabsAppearance(TabWidget tabWidget) {
@@ -145,31 +185,49 @@ TabHost.OnTabChangeListener, ViewPager.OnPageChangeListener {
 
 	private static void AddTab(ActionBarTabActivity activity, TabHost tabHost,
 			TabHost.TabSpec tabSpec, TabInfo tabInfo) {
-		// Attach a Tab view factory to the spec
 		tabSpec.setContent(activity.new TabFactory(activity));
 		tabHost.addTab(tabSpec);
 	}
 
 	public void onTabChanged(String tag) {
-		// TabInfo newTab = this.mapTabInfo.get(tag);
 		int pos = this.mTabHost.getCurrentTab();
-		this.mViewPager.setCurrentItem(pos);
+		mViewPager.setCurrentItem(pos);
 	}
-	
+
+	public void onPageSelected(int page) {
+		mTabHost.setCurrentTab(page);
+	}
 
 	public void onPageScrollStateChanged(int arg0) {
-		// TODO Auto-generated method stub
-		
+
+	}
+
+	protected ActionBarHelper getActionBarHelper() {
+		return mActionBarHelper;
+	}
+
+	@Override
+	public MenuInflater getMenuInflater() {
+		return mActionBarHelper.getMenuInflater(super.getMenuInflater());
+	}
+
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		boolean retValue = false;
+		retValue |= mActionBarHelper.onCreateOptionsMenu(menu);
+		retValue |= super.onCreateOptionsMenu(menu);
+		return retValue;
+	}
+
+	@Override
+	protected void onTitleChanged(CharSequence title, int color) {
+		mActionBarHelper.onTitleChanged(title, color);
+		super.onTitleChanged(title, color);
 	}
 
 	public void onPageScrolled(int arg0, float arg1, int arg2) {
 		// TODO Auto-generated method stub
-		
-	}
 
-	public void onPageSelected(int arg0) {
-		// TODO Auto-generated method stub
-		
 	}
 
 }

@@ -124,7 +124,7 @@ or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>na
         public static final int txt_recent_book_title=0x7f060010;
         public static final int txt_settings=0x7f06001d;
         public static final int txt_tab=0x7f06001e;
-        public static final int view_collection_pager=0x7f060005;
+        public static final int view_pager=0x7f060005;
     }
     public static final class layout {
         public static final int actionbar_indeterminate_progress=0x7f030000;
