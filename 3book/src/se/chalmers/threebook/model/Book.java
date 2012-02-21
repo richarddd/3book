@@ -3,7 +3,7 @@ package se.chalmers.threebook.model;
 import java.io.File;
 import java.util.Date;
 
-import se.chalemers.threebook.content.ContentStream;
+import se.chalmers.threebook.content.ContentStream;
 
 public class Book {
 	private Long id;

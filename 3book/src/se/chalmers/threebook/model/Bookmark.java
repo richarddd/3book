@@ -1,7 +1,7 @@
 package se.chalmers.threebook.model;
 
 import android.graphics.Color;
-import se.chalemers.threebook.content.Position;
+import se.chalmers.threebook.content.Position;
 
 public class Bookmark {
 	private Position position;

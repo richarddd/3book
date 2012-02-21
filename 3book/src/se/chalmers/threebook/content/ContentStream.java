@@ -1,4 +1,4 @@
-package se.chalemers.threebook.content;
+package se.chalmers.threebook.content;
 
 import java.util.List;
 

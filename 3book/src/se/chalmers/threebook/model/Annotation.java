@@ -1,6 +1,6 @@
 package se.chalmers.threebook.model;
 
-import se.chalemers.threebook.content.Position;
+import se.chalmers.threebook.content.Position;
 
 public class Annotation {
 	private Position position;
