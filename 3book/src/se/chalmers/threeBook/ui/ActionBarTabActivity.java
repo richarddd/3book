@@ -1,6 +1,6 @@
 package se.chalmers.threeBook.ui;
 
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
 
@@ -33,7 +33,8 @@ public class ActionBarTabActivity extends FragmentActivity implements
 
 	private TabHost mTabHost;
 	private ViewPager mViewPager;
-	private HashMap<String, TabInfo> mapTabInfo = new HashMap<String, ActionBarTabActivity.TabInfo>();
+	private List<TabInfo> tabInfoList = new ArrayList<TabInfo>();
+	//private HashMap<String, TabInfo> mapTabInfo = new HashMap<String, ActionBarTabActivity.TabInfo>();
 	private PagerAdapter mPagerAdapter;
 
 	private class TabInfo {
@@ -50,6 +51,10 @@ public class ActionBarTabActivity extends FragmentActivity implements
 		
 		private Class getClassName(){
 			return className;		
+		}
+		
+		private String getTag(){
+			return tag;		
 		}
 	}
 
@@ -77,7 +82,7 @@ public class ActionBarTabActivity extends FragmentActivity implements
 
 	protected void buildTabs(Bundle savedInstanceState) {
 
-		if (mapTabInfo.size() > 0) {
+		if (tabInfoList.size() > 0) {
 
 			init(savedInstanceState);
 			if (savedInstanceState != null) {
@@ -97,25 +102,8 @@ public class ActionBarTabActivity extends FragmentActivity implements
 
 	@Override
 	protected void onSaveInstanceState(Bundle outState) {
-		outState.putString("tab", mTabHost.getCurrentTabTag());
-		super.onSaveInstanceState(outState);
-	}
-
-	private void intialiseViewPager() {
-
-		List<Fragment> fragments = new Vector<Fragment>();
-
-		fragments
-				.add(Fragment.instantiate(this, BooksFragment.class.getName()));
-		fragments.add(Fragment.instantiate(this,
-				AuthorsFragment.class.getName()));
-		fragments.add(Fragment.instantiate(this, TagsFragment.class.getName()));
-		this.mPagerAdapter = new PagerAdapter(
-				super.getSupportFragmentManager(), fragments);
-		//
-		this.mViewPager = (ViewPager) super.findViewById(R.id.view_pager);
-		this.mViewPager.setAdapter(this.mPagerAdapter);
-		this.mViewPager.setOnPageChangeListener(this);
+		/*outState.putString("tab", mTabHost.getCurrentTabTag());
+		super.onSaveInstanceState(outState);*/
 	}
 
 	private void init(Bundle args) {
@@ -123,13 +111,12 @@ public class ActionBarTabActivity extends FragmentActivity implements
 		mTabHost.setup();
 		List<Fragment> fragments = new Vector<Fragment>();
 
-		for (String key : mapTabInfo.keySet()) {
-			View tabview = createTabView(mTabHost.getContext(), key);
+		for (TabInfo tabInfo : tabInfoList) {
+			View tabview = createTabView(mTabHost.getContext(), tabInfo.getTag());
 			ActionBarTabActivity
-					.AddTab(this, this.mTabHost, this.mTabHost.newTabSpec(key)
-							.setIndicator(tabview), mapTabInfo.get(key));
-			fragments.add(Fragment.instantiate(this, mapTabInfo.get(key)
-					.getClassName().getName()));
+					.AddTab(this, this.mTabHost, this.mTabHost.newTabSpec(tabInfo.getTag())
+							.setIndicator(tabview), tabInfo);
+			fragments.add(Fragment.instantiate(this, tabInfo.getClassName().getName()));
 		}
 
 		this.mPagerAdapter = new PagerAdapter(
@@ -139,23 +126,7 @@ public class ActionBarTabActivity extends FragmentActivity implements
 		this.mViewPager.setAdapter(this.mPagerAdapter);
 		this.mViewPager.setOnPageChangeListener(this);
 
-		/*
-		 * TabInfo tabInfo = null;
-		 * 
-		 * ActionBarTabActivity.AddTab(this, this.mTabHost, this.mTabHost
-		 * .newTabSpec("Tab1").setIndicator("Tab 1"), (tabInfo = new
-		 * TabInfo("Tab1", BooksFragment.class, args)));
-		 * this.mapTabInfo.put(tabInfo.tag, tabInfo);
-		 * ActionBarTabActivity.AddTab(this, this.mTabHost, this.mTabHost
-		 * .newTabSpec("Tab2").setIndicator("Tab 2"), (tabInfo = new
-		 * TabInfo("Tab2", AuthorsFragment.class, args)));
-		 * this.mapTabInfo.put(tabInfo.tag, tabInfo);
-		 * ActionBarTabActivity.AddTab(this, this.mTabHost, this.mTabHost
-		 * .newTabSpec("Tab3").setIndicator("Tab 3"), (tabInfo = new
-		 * TabInfo("Tab3", TagsFragment.class, args)));
-		 * this.mapTabInfo.put(tabInfo.tag, tabInfo); // Default to first tab //
-		 * this.onTabChanged("Tab1"); //
-		 */
+
 		mTabHost.setOnTabChangedListener(this);
 		initTabsAppearance(mTabHost.getTabWidget());
 	}
@@ -170,7 +141,7 @@ public class ActionBarTabActivity extends FragmentActivity implements
 
 	protected ActionBarTabActivity addFragment(Class className, String title,
 			Bundle args) {
-		mapTabInfo.put(title, new TabInfo(title, className, args));
+		tabInfoList.add(new TabInfo(title, className, args));
 		return this;
 	}
 

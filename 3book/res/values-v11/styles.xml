@@ -22,7 +22,7 @@
     </style>
 
     <style name="ActionBar" parent="android:style/Widget.Holo.Light.ActionBar">
-        <item name="android:background">#eee</item>
+        <item name="android:background">@drawable/action_bar_top_background</item>
         <item name="android:titleTextStyle">@style/ActionBarTitle</item>
         <item name="android:icon">@drawable/ic_home</item>
     </style>

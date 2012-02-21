@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
-    android:orientation="vertical" >
+     >
     
     <TabHost
 	    android:id="@android:id/tabhost"
+	    android:layout_above="@+id/lay_collection_sub"
 	    android:layout_width="fill_parent"
 	    android:layout_height="fill_parent"
 	    >
@@ -36,5 +37,13 @@
 			  	/>
 	    </LinearLayout>
 	</TabHost>
-
-</LinearLayout>
+	<RelativeLayout
+        android:id="@+id/lay_collection_sub"
+        android:layout_width="fill_parent"
+        android:layout_height="@dimen/actionbar_compat_height"
+        android:layout_alignParentBottom="true"
+        android:background="@drawable/action_bar_bottom_background"
+        android:paddingLeft="@dimen/padding_l"
+        android:paddingRight="@dimen/padding_l" >
+    </RelativeLayout>
+</RelativeLayout>
