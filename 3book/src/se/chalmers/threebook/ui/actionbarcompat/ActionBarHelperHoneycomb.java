@@ -16,7 +16,7 @@
 
 package se.chalmers.threebook.ui.actionbarcompat;
 
-import se.chalmers.threeBook.R;
+import se.chalmers.threebook.R;
 import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;

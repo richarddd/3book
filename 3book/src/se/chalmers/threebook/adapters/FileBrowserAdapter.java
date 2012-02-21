@@ -4,7 +4,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import se.chalmers.threeBook.R;
+import se.chalmers.threebook.R;
 
 import android.content.Context;
 import android.view.LayoutInflater;

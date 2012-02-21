@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
 
-import se.chalmers.threeBook.R;
+import se.chalmers.threebook.R;
 import se.chalmers.threebook.adapters.PagerAdapter;
 import se.chalmers.threebook.ui.actionbarcompat.ActionBarHelper;
 import se.chalmers.threebook.ui.fragments.AuthorsFragment;

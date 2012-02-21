@@ -3,7 +3,7 @@ package se.chalmers.threebook.adapters;
 import java.util.ArrayList;
 import java.util.List;
 
-import se.chalmers.threeBook.R;
+import se.chalmers.threebook.R;
 import se.chalmers.threebook.ui.RecentBook;
 import android.content.Context;
 import android.view.LayoutInflater;

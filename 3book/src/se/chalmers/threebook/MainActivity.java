@@ -2,7 +2,7 @@ package se.chalmers.threebook;
 
 import java.util.List;
 
-import se.chalmers.threeBook.R;
+import se.chalmers.threebook.R;
 import se.chalmers.threebook.adapters.RecentBookAdapter;
 import se.chalmers.threebook.ui.HorizontalListView;
 import se.chalmers.threebook.ui.RecentBook;

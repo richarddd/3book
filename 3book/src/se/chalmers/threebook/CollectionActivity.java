@@ -1,6 +1,6 @@
 package se.chalmers.threebook;
 
-import se.chalmers.threeBook.R;
+import se.chalmers.threebook.R;
 import se.chalmers.threebook.ui.ActionBarTabActivity;
 import se.chalmers.threebook.ui.fragments.AuthorsFragment;
 import se.chalmers.threebook.ui.fragments.BooksFragment;

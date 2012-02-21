@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import se.chalmers.threeBook.R;
+import se.chalmers.threebook.R;
 import se.chalmers.threebook.adapters.FileBrowserAdapter;
 import se.chalmers.threebook.core.Helper;
 import se.chalmers.threebook.ui.actionbarcompat.ActionBarActivity;
