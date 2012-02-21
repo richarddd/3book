@@ -1,11 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <dimen name="top_bar_height">45dp</dimen>
-    <dimen name="top_bar_icon_size">36dp</dimen>
-    <dimen name="top_bar_content_margin">10dp</dimen>
-    <dimen name="padding_s">2dp</dimen>
-    <dimen name="padding_m">10dp</dimen>
-    <dimen name="padding_l">15dp</dimen>
+
+    <dimen name="padding_s">4dp</dimen>
+    <dimen name="padding_m">8dp</dimen>
+    <dimen name="padding_l">16dp</dimen>
     <dimen name="listview_one_row">64dp</dimen>
+    <dimen name="icon_size_m">32dp</dimen>
+    <dimen name="icon_size_l">48dp</dimen>
     
+    <dimen name="actionbar_stroke_height">2dp</dimen>
+    <dimen name="actionbar_compat_height">48dp</dimen>
+    <dimen name="actionbar_compat_button_width">48dp</dimen>
+    <dimen name="actionbar_compat_button_home_width">56dp</dimen>
+
 </resources>

@@ -2,8 +2,12 @@
 <resources>
 
     <color name="default_background">#ffffff</color>
-	<color name="grey_light">#ebebeb</color>
-	<color name="grey_dark">#ebebeb</color>
-	<color name="blue_light">#0099cc</color>
+	<color name="grey_light">#dddddd</color>
+	<color name="grey_dark">#C6C6C6</color>
+	<!-- <color name="blue_light">#0099cc</color> -->
+	<color name="blue_light">#B233B5E5</color>
+	<color name="blue_dark">#0086B3</color>
 	<color name="font_dark">#333333</color>
+	
+	<color name="actionbar_title_color">#fff</color>
 </resources>

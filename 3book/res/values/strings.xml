@@ -7,6 +7,13 @@
     <string name="favourites">Favourites</string>
     <string name="open_import">Open/Import</string>
     <string name="settings">Settings</string>
+    <string name="parent_directory">Parent folder</string>
+    <string name="scan">Scan</string>
+    <string name="current_path">Current path: </string>
+    <string name="books">Books</string>
+    <string name="authors">Authors</string>
+    <string name="tags">Tags</string>
+    
     
      <!-- COMMON -->
      <string name="ok">Ok</string>
@@ -16,5 +23,8 @@
     <string name="err_general">Error</string>
     <string name="err_file_browser_general">Unable to access file/folder</string>
     
-
+    <!-- MENU -->
+	<string name="menu_refresh">Refresh</string>
+    <string name="menu_search">Search</string>
+    <string name="menu_share">Share</string>
 </resources>
