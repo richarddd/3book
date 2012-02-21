@@ -1,5 +1,6 @@
-package se.chalmers.threeBook;
+package se.chalmers.threebook;
 
+import se.chalmers.threeBook.R;
 import android.app.Activity;
 import android.os.Bundle;
 
