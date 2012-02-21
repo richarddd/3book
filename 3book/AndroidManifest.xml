@@ -28,7 +28,7 @@
             android:name=".FileBrowserActivity"
             android:label="@string/open_import" />
         <activity
-            android:name=".CollectionActivity"
+            android:name="se.chalmers.threebook.CollectionActivity"
             android:label="@string/my_collection" />
     </application>
 
