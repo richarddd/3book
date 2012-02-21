@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="hello">Hello World, threeBookActivity!</string>
+    <string name="hello">Hello World, threebookActivity!</string>
     <string name="app_name">3book</string>
     <string name="my_collection">My Collection</string>
     <string name="favourites">Favourites</string>
