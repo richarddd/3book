@@ -20,4 +20,5 @@
         <item name="android:textColor">@color/actionbar_title_color</item>
     </style>
 
+
 </resources>
