@@ -83,9 +83,10 @@ or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>na
         public static final int recent_book_cover=0x7f020016;
         public static final int recent_frame_shadow=0x7f020017;
         public static final int recent_item_shadow=0x7f020018;
-        public static final int tab_background_normal=0x7f020019;
-        public static final int tab_background_pressed=0x7f02001a;
-        public static final int tab_background_selected=0x7f02001b;
+        public static final int tab_background=0x7f020019;
+        public static final int tab_background_normal=0x7f02001a;
+        public static final int tab_background_pressed=0x7f02001b;
+        public static final int tab_background_selected=0x7f02001c;
     }
     public static final class id {
         public static final int actionbar_compat=0x7f060000;
@@ -107,12 +108,12 @@ or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>na
         public static final int lay_settings=0x7f06001b;
         public static final int lst_book_browser=0x7f060009;
         public static final int lst_recent_books=0x7f060011;
-        public static final int menu_parent_directory=0x7f060020;
+        public static final int menu_parent_directory=0x7f060021;
         public static final int menu_refresh=0x7f060004;
-        public static final int menu_scan=0x7f060021;
-        public static final int menu_search=0x7f06001e;
-        public static final int menu_settings=0x7f06001f;
-        public static final int menu_share=0x7f060022;
+        public static final int menu_scan=0x7f060022;
+        public static final int menu_search=0x7f06001f;
+        public static final int menu_settings=0x7f060020;
+        public static final int menu_share=0x7f060023;
         public static final int txt_favourites=0x7f060017;
         public static final int txt_file_item_title=0x7f06000b;
         public static final int txt_file_path=0x7f060008;
@@ -122,6 +123,7 @@ or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>na
         public static final int txt_open_import=0x7f06001a;
         public static final int txt_recent_book_title=0x7f060010;
         public static final int txt_settings=0x7f06001d;
+        public static final int txt_tab=0x7f06001e;
         public static final int view_collection_pager=0x7f060005;
     }
     public static final class layout {
@@ -136,6 +138,7 @@ or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>na
         public static final int listview_recent_book=0x7f030008;
         public static final int main=0x7f030009;
         public static final int view_actionbar_compat=0x7f03000a;
+        public static final int view_tab=0x7f03000b;
     }
     public static final class menu {
         public static final int collection=0x7f090000;

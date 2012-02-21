@@ -1,39 +1,34 @@
-package se.chalmers.threeBook;
+package se.chalmers.threeBook.ui;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Vector;
 
+import se.chalmers.threeBook.R;
 import se.chalmers.threeBook.adapters.PagerAdapter;
-import se.chalmers.threeBook.core.Helper;
 import se.chalmers.threeBook.ui.actionbarcompat.ActionBarHelper;
 import se.chalmers.threeBook.ui.fragments.AuthorsFragment;
 import se.chalmers.threeBook.ui.fragments.BooksFragment;
 import se.chalmers.threeBook.ui.fragments.TagsFragment;
-import android.app.ActionBar;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.view.ViewPager;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.TabHost;
 import android.widget.TabHost.TabContentFactory;
 import android.widget.TabWidget;
-import android.widget.Toast;
 
-public class CollectionActivity extends FragmentActivity implements
-		TabHost.OnTabChangeListener, ViewPager.OnPageChangeListener {
-
+public class ActionBarTabActivity extends FragmentActivity implements
+TabHost.OnTabChangeListener, ViewPager.OnPageChangeListener {
+	
 	final ActionBarHelper mActionBarHelper = ActionBarHelper
 			.createInstance(this);
 
 	private TabHost mTabHost;
 	private ViewPager mViewPager;
-	private HashMap<String, TabInfo> mapTabInfo = new HashMap<String, CollectionActivity.TabInfo>();
+	private HashMap<String, TabInfo> mapTabInfo = new HashMap<String, ActionBarTabActivity.TabInfo>();
 	private PagerAdapter mPagerAdapter;
 
 	private class TabInfo {
@@ -64,37 +59,40 @@ public class CollectionActivity extends FragmentActivity implements
 			return v;
 		}
 	}
-
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState); // Inflate the layout'
 		mActionBarHelper.onCreate(savedInstanceState);
-		setContentView(R.layout.activity_collection); // Initialise the TabHost
-
-		if (Helper.SupportsNewApi()) {
-			ActionBar actionBar = getActionBar();
-			actionBar.setDisplayHomeAsUpEnabled(true);
-		}
-
+		
+		
+	}
+	
+	protected void build(Bundle savedInstanceState){
 		initialiseTabHost(savedInstanceState);
 		if (savedInstanceState != null) {
 			mTabHost.setCurrentTabByTag(savedInstanceState.getString("tab"));
 		}
-		intialiseViewPager();
+		intialiseViewPager();	
 	}
-
+	
+	protected ActionBarTabActivity addFragment(Class className, String title){
+		
+		return this;
+	}
+	
 	@Override
 	protected void onPostCreate(Bundle savedInstanceState) {
 		super.onPostCreate(savedInstanceState);
 		mActionBarHelper.onPostCreate(savedInstanceState);
 	}
-
+	
 	@Override
 	protected void onSaveInstanceState(Bundle outState) {
 		outState.putString("tab", mTabHost.getCurrentTabTag());
 		super.onSaveInstanceState(outState);
 	}
-
+	
 	private void intialiseViewPager() {
 
 		List<Fragment> fragments = new Vector<Fragment>();
@@ -111,30 +109,27 @@ public class CollectionActivity extends FragmentActivity implements
 		this.mViewPager.setAdapter(this.mPagerAdapter);
 		this.mViewPager.setOnPageChangeListener(this);
 	}
-
+	
 	private void initialiseTabHost(Bundle args) {
 		mTabHost = (TabHost) findViewById(android.R.id.tabhost);
 		mTabHost.setup();
 		TabInfo tabInfo = null;
-		
-		//mapTabInfo.put(tabInfo.tag, value)
-		
-		/*
-		CollectionActivity.AddTab(this, this.mTabHost, this.mTabHost
+
+		ActionBarTabActivity.AddTab(this, this.mTabHost, this.mTabHost
 				.newTabSpec("Tab1").setIndicator("Tab 1"),
 				(tabInfo = new TabInfo("Tab1", BooksFragment.class, args)));
 		this.mapTabInfo.put(tabInfo.tag, tabInfo);
-		CollectionActivity.AddTab(this, this.mTabHost, this.mTabHost
+		ActionBarTabActivity.AddTab(this, this.mTabHost, this.mTabHost
 				.newTabSpec("Tab2").setIndicator("Tab 2"),
 				(tabInfo = new TabInfo("Tab2", AuthorsFragment.class, args)));
 		this.mapTabInfo.put(tabInfo.tag, tabInfo);
-		CollectionActivity.AddTab(this, this.mTabHost, this.mTabHost
+		ActionBarTabActivity.AddTab(this, this.mTabHost, this.mTabHost
 				.newTabSpec("Tab3").setIndicator("Tab 3"),
 				(tabInfo = new TabInfo("Tab3", TagsFragment.class, args)));
 		this.mapTabInfo.put(tabInfo.tag, tabInfo);
 		// Default to first tab
 		// this.onTabChanged("Tab1");
-		//*/
+		//
 		mTabHost.setOnTabChangedListener(this);
 		initTabsAppearance(mTabHost.getTabWidget());
 	}
@@ -148,7 +143,7 @@ public class CollectionActivity extends FragmentActivity implements
 		}
 	}
 
-	private static void AddTab(CollectionActivity activity, TabHost tabHost,
+	private static void AddTab(ActionBarTabActivity activity, TabHost tabHost,
 			TabHost.TabSpec tabSpec, TabInfo tabInfo) {
 		// Attach a Tab view factory to the spec
 		tabSpec.setContent(activity.new TabFactory(activity));
@@ -160,59 +155,21 @@ public class CollectionActivity extends FragmentActivity implements
 		int pos = this.mTabHost.getCurrentTab();
 		this.mViewPager.setCurrentItem(pos);
 	}
+	
 
-	public void onPageScrolled(int position, float positionOffset,
-			int positionOffsetPixels) {
+	public void onPageScrollStateChanged(int arg0) {
 		// TODO Auto-generated method stub
-
+		
 	}
 
-	public void onPageSelected(int position) {
+	public void onPageScrolled(int arg0, float arg1, int arg2) {
 		// TODO Auto-generated method stub
-		this.mTabHost.setCurrentTab(position);
+		
 	}
 
-	public void onPageScrollStateChanged(int state) {
+	public void onPageSelected(int arg0) {
 		// TODO Auto-generated method stub
-
+		
 	}
 
-	protected ActionBarHelper getActionBarHelper() {
-		return mActionBarHelper;
-	}
-
-	@Override
-	public MenuInflater getMenuInflater() {
-		return mActionBarHelper.getMenuInflater(super.getMenuInflater());
-	}
-
-	@Override
-	public boolean onCreateOptionsMenu(Menu menu) {
-		MenuInflater menuInflater = getMenuInflater();
-		menuInflater.inflate(R.menu.collection, menu);
-		return actionBarMenu(menu);
-	}
-
-	public boolean actionBarMenu(Menu menu) {
-		boolean retValue = false;
-		retValue |= mActionBarHelper.onCreateOptionsMenu(menu);
-		retValue |= super.onCreateOptionsMenu(menu);
-		return retValue;
-	}
-
-	@Override
-	public boolean onOptionsItemSelected(MenuItem item) {
-		switch (item.getItemId()) {
-		case android.R.id.home:
-			finish();
-			break;
-		case R.id.menu_search:
-			Toast.makeText(this, "Tapped search", Toast.LENGTH_SHORT).show();
-			break;
-		case R.id.menu_settings:
-			Toast.makeText(this, "Tapped settings", Toast.LENGTH_SHORT).show();
-			break;
-		}
-		return super.onOptionsItemSelected(item);
-	}
 }
