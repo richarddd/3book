@@ -1,10 +1,12 @@
 package se.chalmers.threebook;
 
 import se.chalmers.threebook.R;
+import se.chalmers.threebook.core.Helper;
 import se.chalmers.threebook.ui.ActionBarTabActivity;
 import se.chalmers.threebook.ui.fragments.AuthorsFragment;
 import se.chalmers.threebook.ui.fragments.BooksFragment;
 import se.chalmers.threebook.ui.fragments.TagsFragment;
+import android.app.ActionBar;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -23,6 +25,11 @@ public class CollectionActivity extends ActionBarTabActivity {
 		addFragment(TagsFragment.class,  getString(R.string.tags), savedInstanceState);
 		
 		buildTabs(savedInstanceState);
+		
+		if (Helper.SupportsNewApi()) {
+			ActionBar actionBar = getActionBar();
+			actionBar.setDisplayHomeAsUpEnabled(true);
+		}
 	}
 
 	@Override

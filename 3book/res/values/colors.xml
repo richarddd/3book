@@ -8,6 +8,7 @@
 	<color name="blue_light">#B233B5E5</color>
 	<color name="blue_dark">#0086B3</color>
 	<color name="font_dark">#333333</color>
+	<color name="font_light">#666666</color>
 	
 	<color name="actionbar_title_color">#fff</color>
 </resources>

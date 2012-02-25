@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/lay_read"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:background="@color/default_background"
+    android:orientation="vertical" >
+    
+     <ImageView
+        android:id="@+id/img_book"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent" />
+
+    <WebView
+        android:id="@+id/web_book"
+        android:layout_width="fill_parent"
+        android:visibility="invisible"
+        android:layout_height="fill_parent" android:layout_marginBottom="2dp" />
+
+   
+
+</FrameLayout>

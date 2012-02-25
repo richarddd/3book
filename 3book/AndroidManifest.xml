@@ -30,6 +30,10 @@
         <activity
             android:name="se.chalmers.threebook.CollectionActivity"
             android:label="@string/my_collection" />
+        
+        <activity
+            android:name="se.chalmers.threebook.ReadActivity"
+            android:label="@string/my_collection" />
     </application>
 
 </manifest>

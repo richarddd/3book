@@ -25,6 +25,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.res.XmlResourceParser;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.InflateException;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -157,7 +158,8 @@ public class ActionBarHelperBase extends ActionBarHelper {
      * Returns the {@link android.view.ViewGroup} for the action bar on phones (compatibility action
      * bar). Can return null, and will return null on Honeycomb.
      */
-    private ViewGroup getActionBarCompat() {
+    @Override
+    public ViewGroup getActionBarCompat() {
         return (ViewGroup) mActivity.findViewById(R.id.actionbar_compat);
     }
 

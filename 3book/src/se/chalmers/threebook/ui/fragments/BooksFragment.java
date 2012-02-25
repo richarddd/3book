@@ -1,15 +1,20 @@
 package se.chalmers.threebook.ui.fragments;
 
 import se.chalmers.threebook.R;
+import se.chalmers.threebook.adapters.CollectionBookAdapter;
+import se.chalmers.threebook.model.Book;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
+import android.widget.ListView;
 
 public class BooksFragment extends Fragment {
 	
+	private CollectionBookAdapter adapter;
+	private ListView list;
 	
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState) {
@@ -23,7 +28,20 @@ public class BooksFragment extends Fragment {
             // the view hierarchy; it would just never be used.
             return null;
         }
-		return (LinearLayout)inflater.inflate(R.layout.fragment_books, container, false);
+		
+		View view = (LinearLayout)inflater.inflate(R.layout.fragment_books, container, false);
+		
+		list = (ListView) view.findViewById(R.id.lst_collection_books);
+		
+		adapter = new CollectionBookAdapter(view.getContext());
+		for(int i = 0; i < 1000; i++){
+			adapter.getItems().add(new Book().setTitle("Book Title "+i).setAuthor("Book Author " + i));
+		}
+		
+		list.setAdapter(adapter);
+		
+		
+		return view;
 	}
 
 	public String getName() {
