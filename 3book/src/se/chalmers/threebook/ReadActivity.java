@@ -126,6 +126,7 @@ public class ReadActivity extends ActionBarActivity {
 	}
 
 	private void generateWebViewCache(boolean forward) {
+		//TODO Fix this, not a good implementation. 
 		if (forward) {
 			while (forwardCache.size() < maxCacheCount) {
 				webView.pageDown(false);
