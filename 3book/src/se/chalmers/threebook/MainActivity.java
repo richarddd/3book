@@ -42,7 +42,8 @@ public class MainActivity extends ActionBarActivity {
 		adapter = new RecentBookAdapter(this);
 
 		layOpenImport.setOnClickListener(new StartOnClick(FileBrowserActivity.class));
-		laySettings.setOnClickListener(new StartOnClick(ReadActivity.class));
+		//laySettings.setOnClickListener(new StartOnClick(ReadActivity.class));
+		laySettings.setOnClickListener(new StartOnClick(DisplayActivity.class));
 		layCollection.setOnClickListener(new StartOnClick(CollectionActivity.class));
 		layFavourites.setOnClickListener(new StartOnClick(FileBrowserActivity.class));
 		

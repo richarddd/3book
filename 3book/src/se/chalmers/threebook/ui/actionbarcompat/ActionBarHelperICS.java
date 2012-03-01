@@ -18,8 +18,6 @@ package se.chalmers.threebook.ui.actionbarcompat;
 
 import android.app.Activity;
 import android.content.Context;
-import android.view.Menu;
-import android.view.MenuItem;
 
 /**
  * An extension of {@link com.example.android.actionbarcompat.ActionBarHelper} that provides Android

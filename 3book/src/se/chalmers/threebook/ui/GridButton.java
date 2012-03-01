@@ -1,8 +1,5 @@
 package se.chalmers.threebook.ui;
 
-import android.content.Context;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
 
 public class GridButton {
 
