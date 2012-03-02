@@ -101,7 +101,7 @@ public class ActionBarTabActivity extends FragmentActivity implements
 	}
 
 	@Override
-	protected void onSaveInstanceState(Bundle outState) {
+	protected void onSaveInstanceState(Bundle outState) { //TODO This does not work properly
 		/*outState.putString("tab", mTabHost.getCurrentTabTag());
 		super.onSaveInstanceState(outState);*/
 	}
@@ -128,7 +128,6 @@ public class ActionBarTabActivity extends FragmentActivity implements
 
 
 		mTabHost.setOnTabChangedListener(this);
-		initTabsAppearance(mTabHost.getTabWidget());
 	}
 
 	private View createTabView(final Context context, final String tag) {
@@ -143,15 +142,6 @@ public class ActionBarTabActivity extends FragmentActivity implements
 			Bundle args) {
 		tabInfoList.add(new TabInfo(title, className, args));
 		return this;
-	}
-
-	private void initTabsAppearance(TabWidget tabWidget) {
-		for (int i = 0; i < tabWidget.getChildCount(); i++) {
-			/*
-			 * tabWidget.getChildAt(i).setBackgroundResource(
-			 * R.drawable.tab_background);
-			 */
-		}
 	}
 
 	private static void AddTab(ActionBarTabActivity activity, TabHost tabHost,

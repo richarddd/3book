@@ -1,5 +1,6 @@
 package se.chalmers.threebook.ui;
 
+import se.chalmers.threebook.ui.util.OnDrawListener;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.util.AttributeSet;

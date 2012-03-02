@@ -6,16 +6,15 @@
     android:background="@color/default_background"
     android:orientation="vertical" >
 
-    <se.chalmers.threebook.ui.MaxTextView
-        android:id="@+id/txt_book"
+    <android.support.v4.view.ViewPager
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
-        android:visibility="gone" />
+        android:id="@+id/pgr_book" />
 
-    <ImageView
+    <!--  <ImageView
         android:id="@+id/img_book"
         android:layout_width="fill_parent"
-        android:layout_height="fill_parent" />
+        android:layout_height="fill_parent" />-->
 
     <WebView
         android:id="@+id/web_book"

@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import se.chalmers.threebook.R;
-import se.chalmers.threebook.ui.BookNavItem;
 import se.chalmers.threebook.ui.HorizontalListView;
+import se.chalmers.threebook.ui.util.BookNavItem;
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;

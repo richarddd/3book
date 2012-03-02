@@ -1,4 +1,4 @@
-package se.chalmers.threebook.ui;
+package se.chalmers.threebook.ui.util;
 
 import android.graphics.Bitmap;
 

@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import se.chalmers.threebook.R;
-import se.chalmers.threebook.ui.GridButton;
+import se.chalmers.threebook.ui.util.GridButton;
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;

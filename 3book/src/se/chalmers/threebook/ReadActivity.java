@@ -1,14 +1,20 @@
 package se.chalmers.threebook;
 
+import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Vector;
 
 import se.chalmers.threebook.adapters.BookNavAdapter;
+import se.chalmers.threebook.adapters.PagerAdapter;
 import se.chalmers.threebook.core.Helper;
-import se.chalmers.threebook.ui.BookNavItem;
+import se.chalmers.threebook.ui.ActionBarFragmentActivity;
 import se.chalmers.threebook.ui.HorizontalListView;
 import se.chalmers.threebook.ui.MaxTextView;
 import se.chalmers.threebook.ui.actionbarcompat.ActionBarActivity;
+import se.chalmers.threebook.ui.fragments.BookImageFragment;
+import se.chalmers.threebook.ui.util.BookNavItem;
 import android.app.ActionBar;
 import android.app.ProgressDialog;
 import android.graphics.Bitmap;
@@ -16,6 +22,10 @@ import android.graphics.BitmapFactory;
 import android.graphics.Picture;
 import android.graphics.Point;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.view.ViewPager;
 import android.util.Log;
 import android.view.Display;
 import android.view.KeyEvent;
@@ -25,6 +35,7 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnTouchListener;
+import android.view.animation.Interpolator;
 import android.view.WindowManager;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
@@ -34,14 +45,15 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
+import android.widget.Scroller;
 import android.widget.Toast;
 
-public class ReadActivity extends ActionBarActivity {
+public class ReadActivity extends ActionBarFragmentActivity implements ViewPager.OnPageChangeListener {
 
 	private WebView webView;
 	private FrameLayout layout;
 	private Boolean selectionMode = false;
-	private ImageView imgBook;
+	//private ImageView imgBook;
 	private float screenWidth;
 	private float screenHeight;
 	private LinkedList<Bitmap> forwardCache = new LinkedList<Bitmap>();
@@ -57,6 +69,10 @@ public class ReadActivity extends ActionBarActivity {
 	private RelativeLayout layoutOverlay;
 	private HorizontalListView chapterListView;
 	private BookNavAdapter chapterAdapter;
+	private PagerAdapter pagerAdapter;
+	private ViewPager viewPager;
+	private Scroller scroller;
+	private Field mScroller;
 
 	/** Called when the activity is first created. */
 	@Override
@@ -80,12 +96,30 @@ public class ReadActivity extends ActionBarActivity {
 			ActionBar actionBar = getActionBar();
 			actionBar.setDisplayHomeAsUpEnabled(true);
 		}
+		
+		scroller = new Scroller(this);
 
 		webView = (WebView) findViewById(R.id.web_book);
 		layout = (FrameLayout) findViewById(R.id.lay_read);
-		imgBook = (ImageView) findViewById(R.id.img_book);
+		//imgBook = (ImageView) findViewById(R.id.img_book);
 		layoutOverlay = (RelativeLayout) findViewById(R.id.lay_book_overlay);
 		chapterListView = (HorizontalListView)findViewById(R.id.lst_chapters);
+		viewPager = (ViewPager)findViewById(R.id.pgr_book);
+		mScroller = null;
+		try {
+			mScroller = ViewPager.class.getDeclaredField("mScroller");
+			mScroller.setAccessible(true);
+			mScroller.set(viewPager, scroller);
+		} catch (NoSuchFieldException e) {
+			e.printStackTrace();
+		} catch (IllegalArgumentException e) {
+			e.printStackTrace();
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		
 		
 		chapterAdapter = new BookNavAdapter(this, chapterListView);
 		
@@ -94,23 +128,42 @@ public class ReadActivity extends ActionBarActivity {
 			chapters.add(new BookNavItem("Chapter "+i, null));
 		}
 		
-		//Log.d("SFasf", String.valueOf(chapterAdapter.getCount()));
+		
+		List<Fragment> fragments = new Vector<Fragment>();
+		fragments.add(Fragment.instantiate(this, BookImageFragment.class.getName()));
+		fragments.add(Fragment.instantiate(this, BookImageFragment.class.getName()));
+		fragments.add(Fragment.instantiate(this, BookImageFragment.class.getName()));
+		
+		pagerAdapter = new PagerAdapter(getSupportFragmentManager(), fragments);
+		viewPager.setAdapter(pagerAdapter);
+		viewPager.setCurrentItem(1);
+		viewPager.setOnPageChangeListener(this);
+		
+		//Log.d("Size Of fragments", String.valueOf(pagerAdapter.getFragments().size()));
+		
 		
 		
 		chapterListView.setAdapter(chapterAdapter);
 		chapterListView.setOnScrollListener(chapterAdapter);
 
-		imgBook.setOnTouchListener(new OnTouchListener() {
+		viewPager.setOnTouchListener(new OnTouchListener() {
+			
+			private float lastDownX;
+			
 			public boolean onTouch(View v, MotionEvent event) {
-
 				switch (event.getAction()) {
+				
 				case MotionEvent.ACTION_DOWN:
+					lastDownX = event.getX();
+					break;
+				case MotionEvent.ACTION_UP:		
 					float diff = event.getX() / screenWidth;
-					if (diff <= 0.33) { // left
+					float diffOld = lastDownX / screenWidth;
+					if (diff <= 0.33 && diffOld <= 0.33) { // left
 						prevPage();
-					} else if (diff >= 0.66) {// right
+					} else if (diff >= 0.66 && diffOld >= 0.66) {// right
 						nextPage();
-					} else { // middle
+					} else if(diff < 0.66 && diff > 0.33 && diffOld < 0.66 && diffOld > 0.33) { // middle
 						menuShown = !menuShown;
 						if (menuShown) {
 							showOverlay(false);
@@ -139,13 +192,25 @@ public class ReadActivity extends ActionBarActivity {
 		webView.setPictureListener(new PictureListener() { // XXX Fokkat!
 
 			public void onNewPicture(WebView view, Picture picture) {
-				dialog.dismiss();
-
+				
 				view.setPictureListener(null);
-
+				
 				forwardCache.add(getBitmapFromView(view));
-				imgBook.setImageBitmap(forwardCache.getFirst());
+				
 				generateWebViewCache(true);
+				
+				((BookImageFragment)pagerAdapter.getItem(0)).getImage().setImageBitmap(forwardCache.getFirst());
+				((BookImageFragment)pagerAdapter.getItem(1)).getImage().setImageBitmap(forwardCache.getFirst());
+				((BookImageFragment)pagerAdapter.getItem(2)).getImage().setImageBitmap(forwardCache.get(1));
+				
+				
+				
+				pagerAdapter.notifyDataSetChanged();
+				//pagerAdapter.
+				
+				
+				dialog.dismiss();
+				//generateWebViewCache(true);
 			}
 		});
 
@@ -183,9 +248,9 @@ public class ReadActivity extends ActionBarActivity {
 
 		if (Helper.SupportsNewApi()) {
 			if (show) {
-				getActionBar().hide();
-			} else {
 				getActionBar().show();
+			} else {
+				getActionBar().hide();
 			}
 		} else {
 			((View) ((LinearLayout) findViewById(R.id.actionbar_compat))
@@ -193,7 +258,15 @@ public class ReadActivity extends ActionBarActivity {
 		}
 		layoutOverlay.setVisibility(visibility);
 	}
+	
+	private synchronized void ensureCache(){
+		while (forwardCache.size() < maxCacheCount) {
+			webView.scrollTo(0, webView.getScrollY() + viewHeight);
+			forwardCache.add(getBitmapFromView(webView));
+		}
+	}
 
+	
 	private void generateWebViewCache(boolean forward) {
 		// TODO Fix this, not a good implementation.
 		if (forward) {
@@ -203,7 +276,7 @@ public class ReadActivity extends ActionBarActivity {
 			}
 		} else {
 			while (backwardCache.size() < maxCacheCount) {
-				webView.scrollTo(0, 0);
+				webView.scrollTo(0, webView.getScrollY() - viewHeight);
 				backwardCache.addFirst(getBitmapFromView(webView));
 			}
 		}
@@ -219,33 +292,11 @@ public class ReadActivity extends ActionBarActivity {
 	}
 
 	private void nextPage() {
-		List<Bitmap> forwardTemp = new LinkedList<Bitmap>();
-		for (int i = 1; i < forwardCache.size(); i++) {
-			forwardTemp.add(forwardCache.get(i));
-		}
-		if (backwardCache.size() >= maxCacheCount) {
-			backwardCache.removeLast();
-		}
-		backwardCache.addFirst(forwardCache.get(0));
-		forwardCache.clear();
-		forwardCache.addAll(forwardTemp);
-		imgBook.setImageBitmap(forwardCache.get(0));
-		generateWebViewCache(true);
+		viewPager.setCurrentItem(2);
 	}
 
 	private void prevPage() {
-		List<Bitmap> backwardTemp = new LinkedList<Bitmap>();
-		for (int i = 1; i < backwardCache.size(); i++) {
-			backwardTemp.add(backwardCache.get(i));
-		}
-		if (forwardCache.size() >= maxCacheCount) {
-			forwardCache.removeLast();
-		}
-		forwardCache.addFirst(backwardCache.get(0));
-		backwardCache.clear();
-		backwardCache.addAll(backwardTemp);
-		imgBook.setImageBitmap(backwardCache.get(0));
-		generateWebViewCache(false);
+		viewPager.setCurrentItem(0);
 	}
 
 	public void setFullScreen(boolean fullscreen) {
@@ -300,5 +351,52 @@ public class ReadActivity extends ActionBarActivity {
 			break;
 		}
 		return super.onOptionsItemSelected(item);
+	}
+
+	public void onPageScrollStateChanged(int val) {
+		
+		if(val == 0){
+			
+			
+			if(viewPager.getCurrentItem() > 1){
+				List<Bitmap> forwardTemp = new LinkedList<Bitmap>();
+				for (int i = 1; i < forwardCache.size(); i++) {
+					forwardTemp.add(forwardCache.get(i));
+				}
+				if (backwardCache.size() >= maxCacheCount) {
+					backwardCache.removeLast();
+				}
+				backwardCache.addFirst(forwardCache.get(0));
+				forwardCache.clear();
+				forwardCache.addAll(forwardTemp);
+				generateWebViewCache(true);
+				((BookImageFragment)pagerAdapter.getItem(1)).getImage().setImageBitmap(forwardCache.getFirst());
+				((BookImageFragment)pagerAdapter.getItem(2)).getImage().setImageBitmap(forwardCache.get(1));
+			}else if(viewPager.getCurrentItem() < 1){
+				List<Bitmap> backwardTemp = new LinkedList<Bitmap>();
+				for (int i = 1; i < backwardCache.size(); i++) {
+					backwardTemp.add(backwardCache.get(i));
+				}
+				if (forwardCache.size() >= maxCacheCount) {
+					forwardCache.removeLast();
+				}
+				forwardCache.addFirst(backwardCache.get(0));
+				backwardCache.clear();
+				backwardCache.addAll(backwardTemp);
+				generateWebViewCache(false);
+				((BookImageFragment)pagerAdapter.getItem(1)).getImage().setImageBitmap(backwardCache.getFirst());
+				((BookImageFragment)pagerAdapter.getItem(0)).getImage().setImageBitmap(backwardCache.get(1));
+			}
+			viewPager.setCurrentItem(1);
+			pagerAdapter.notifyDataSetChanged();
+			Log.d("Page Scroll", "Scroll FInnished");
+		}
+	}
+	public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+		
+	}
+
+	public void onPageSelected(int position) {
+		//Log.d("Page Scroll", "onPageSelected");
 	}
 }
