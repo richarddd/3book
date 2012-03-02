@@ -3,11 +3,16 @@ package se.chalmers.threebook;
 import java.util.LinkedList;
 import java.util.List;
 
+import se.chalmers.threebook.adapters.BookNavAdapter;
 import se.chalmers.threebook.core.Helper;
+import se.chalmers.threebook.ui.BookNavItem;
+import se.chalmers.threebook.ui.HorizontalListView;
+import se.chalmers.threebook.ui.MaxTextView;
 import se.chalmers.threebook.ui.actionbarcompat.ActionBarActivity;
 import android.app.ActionBar;
 import android.app.ProgressDialog;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Picture;
 import android.graphics.Point;
 import android.os.Bundle;
@@ -21,10 +26,14 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnTouchListener;
 import android.view.WindowManager;
+import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebView.PictureListener;
+import android.webkit.WebViewClient;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 public class ReadActivity extends ActionBarActivity {
@@ -38,7 +47,16 @@ public class ReadActivity extends ActionBarActivity {
 	private LinkedList<Bitmap> forwardCache = new LinkedList<Bitmap>();
 	private LinkedList<Bitmap> backwardCache = new LinkedList<Bitmap>();
 	private int maxCacheCount = 2;
+	private String total;
 	private ProgressDialog dialog;
+	private String lorem = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. ";
+	private int viewHeight = 0;
+	private MaxTextView txtView;
+
+	private boolean menuShown = false;
+	private RelativeLayout layoutOverlay;
+	private HorizontalListView chapterListView;
+	private BookNavAdapter chapterAdapter;
 
 	/** Called when the activity is first created. */
 	@Override
@@ -56,10 +74,6 @@ public class ReadActivity extends ActionBarActivity {
 			screenWidth = display.getWidth();
 			screenHeight = display.getWidth();
 		}
-
-		// this.requestWindowFeature(Window.FEATURE_NO_TITLE);
-
-		// Remove notification bar
 		setFullScreen(true);
 
 		if (Helper.SupportsNewApi()) {
@@ -67,11 +81,24 @@ public class ReadActivity extends ActionBarActivity {
 			actionBar.setDisplayHomeAsUpEnabled(true);
 		}
 
-		// ActionBarHelper helper = getActionBarHelper();
-
 		webView = (WebView) findViewById(R.id.web_book);
 		layout = (FrameLayout) findViewById(R.id.lay_read);
 		imgBook = (ImageView) findViewById(R.id.img_book);
+		layoutOverlay = (RelativeLayout) findViewById(R.id.lay_book_overlay);
+		chapterListView = (HorizontalListView)findViewById(R.id.lst_chapters);
+		
+		chapterAdapter = new BookNavAdapter(this, chapterListView);
+		
+		List<BookNavItem> chapters = chapterAdapter.getItems();
+		for(int i = 0; i < 25;i++){
+			chapters.add(new BookNavItem("Chapter "+i, null));
+		}
+		
+		//Log.d("SFasf", String.valueOf(chapterAdapter.getCount()));
+		
+		
+		chapterListView.setAdapter(chapterAdapter);
+		chapterListView.setOnScrollListener(chapterAdapter);
 
 		imgBook.setOnTouchListener(new OnTouchListener() {
 			public boolean onTouch(View v, MotionEvent event) {
@@ -79,13 +106,17 @@ public class ReadActivity extends ActionBarActivity {
 				switch (event.getAction()) {
 				case MotionEvent.ACTION_DOWN:
 					float diff = event.getX() / screenWidth;
-					Log.d("Read Activity", String.valueOf(diff));
 					if (diff <= 0.33) { // left
 						prevPage();
 					} else if (diff >= 0.66) {// right
 						nextPage();
 					} else { // middle
-						setFullScreen(false);
+						menuShown = !menuShown;
+						if (menuShown) {
+							showOverlay(false);
+						} else {
+							showOverlay(true);
+						}
 					}
 					break;
 				default:
@@ -97,21 +128,40 @@ public class ReadActivity extends ActionBarActivity {
 		});
 
 		webView.loadUrl("file:///android_asset/lorem.html");
-		
-		dialog = ProgressDialog.show(this, "", 
+
+		dialog = ProgressDialog.show(this, "",
 				this.getString(R.string.loading_please_wait), true);
 
 		webView.setVerticalScrollBarEnabled(false);
 		webView.setHorizontalScrollBarEnabled(false);
+		webView.getSettings().setDefaultZoom(WebSettings.ZoomDensity.MEDIUM);
 
-		webView.setPictureListener(new PictureListener() {
+		webView.setPictureListener(new PictureListener() { // XXX Fokkat!
+
 			public void onNewPicture(WebView view, Picture picture) {
-				forwardCache.add(getBitmapFromView(view));
-				imgBook.setImageBitmap(forwardCache.get(0));
-				generateWebViewCache(true);
-				generateWebViewCache(false);
 				dialog.dismiss();
+
 				view.setPictureListener(null);
+
+				forwardCache.add(getBitmapFromView(view));
+				imgBook.setImageBitmap(forwardCache.getFirst());
+				generateWebViewCache(true);
+			}
+		});
+
+		webView.setWebViewClient(new WebViewClient() {
+			@Override
+			public void onPageFinished(WebView view, String url) {
+				viewHeight = view.getBottom();
+				FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) view
+						.getLayoutParams();
+
+				layoutParams.setMargins(0, 0, 0,
+						(int) (viewHeight % (18 * 1.5)));
+				viewHeight -= viewHeight % (18 * 1.5);
+				view.setLayoutParams(layoutParams);
+				view.requestLayout();
+				view.setWebViewClient(null);
 			}
 		});
 
@@ -125,18 +175,35 @@ public class ReadActivity extends ActionBarActivity {
 
 	}
 
+	private void showOverlay(boolean show) {
+		setFullScreen(!show);
+
+		int visibility = show ? View.VISIBLE : View.INVISIBLE;
+		int gone = show ? View.VISIBLE : View.GONE;
+
+		if (Helper.SupportsNewApi()) {
+			if (show) {
+				getActionBar().hide();
+			} else {
+				getActionBar().show();
+			}
+		} else {
+			((View) ((LinearLayout) findViewById(R.id.actionbar_compat))
+					.getParent()).setVisibility(gone);
+		}
+		layoutOverlay.setVisibility(visibility);
+	}
+
 	private void generateWebViewCache(boolean forward) {
-		//TODO Fix this, not a good implementation. 
+		// TODO Fix this, not a good implementation.
 		if (forward) {
 			while (forwardCache.size() < maxCacheCount) {
-				webView.pageDown(false);
-				webView.pageDown(false);
+				webView.scrollTo(0, webView.getScrollY() + viewHeight);
 				forwardCache.add(getBitmapFromView(webView));
 			}
 		} else {
 			while (backwardCache.size() < maxCacheCount) {
-				webView.pageUp(false);
-				webView.pageUp(false);
+				webView.scrollTo(0, 0);
 				backwardCache.addFirst(getBitmapFromView(webView));
 			}
 		}
@@ -204,9 +271,19 @@ public class ReadActivity extends ActionBarActivity {
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
+		boolean value;
 		MenuInflater menuInflater = getMenuInflater();
 		menuInflater.inflate(R.menu.read, menu);
-		return super.onCreateOptionsMenu(menu);
+		value = super.onCreateOptionsMenu(menu);
+
+		if (Helper.SupportsNewApi()) {
+			getActionBar().hide();
+		} else {
+			((View) ((LinearLayout) findViewById(R.id.actionbar_compat))
+					.getParent()).setVisibility(View.GONE);
+		}
+
+		return value;
 	}
 
 	@Override

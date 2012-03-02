@@ -3,6 +3,8 @@ package se.chalmers.threebook.ui;
 import java.util.LinkedList;
 import java.util.Queue;
 
+import se.chalmers.threebook.adapters.BookNavAdapter;
+
 import android.content.Context;
 import android.database.DataSetObserver;
 import android.graphics.Rect;
@@ -14,6 +16,7 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListAdapter;
 import android.widget.Scroller;
+import android.widget.AbsListView.OnScrollListener;
 
 public class HorizontalListView extends AdapterView<ListAdapter> {
 
@@ -31,6 +34,7 @@ public class HorizontalListView extends AdapterView<ListAdapter> {
 	private OnItemSelectedListener mOnItemSelected;
 	private OnItemClickListener mOnItemClicked;
 	private OnItemLongClickListener mOnItemLongClicked;
+	private OnScrollListener mOnScroll;
 	private boolean mDataChanged = false;
 
 
@@ -304,7 +308,9 @@ public class HorizontalListView extends AdapterView<ListAdapter> {
 				mNextX += (int)distanceX;
 			}
 			requestLayout();
-
+			if(mOnScroll!=null){
+				mOnScroll.onScroll(null, mLeftViewIndex + 1,getChildCount(), mAdapter.getCount());
+			}
 			return true;
 		}
 
@@ -353,6 +359,11 @@ public class HorizontalListView extends AdapterView<ListAdapter> {
             return viewRect.contains((int) e.getRawX(), (int) e.getRawY());
         }
 	};
+
+
+	public void setOnScrollListener(OnScrollListener scrollListener) {
+		this.mOnScroll = scrollListener;	
+	}
 
 
 
