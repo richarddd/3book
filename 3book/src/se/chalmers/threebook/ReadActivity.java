@@ -1,12 +1,21 @@
 package se.chalmers.threebook;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.LinkedList;
 import java.util.List;
 
+import nl.siegmann.epublib.epub.EpubReader;
+
+import se.chalmers.threebook.content.ContentStream;
+import se.chalmers.threebook.content.EpubContentStream;
+import se.chalmers.threebook.content.MyBook;
 import se.chalmers.threebook.core.Helper;
 import se.chalmers.threebook.ui.actionbarcompat.ActionBarActivity;
 import android.app.ActionBar;
 import android.app.ProgressDialog;
+import android.content.Intent;
+import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.Picture;
 import android.graphics.Point;
@@ -39,10 +48,51 @@ public class ReadActivity extends ActionBarActivity {
 	private LinkedList<Bitmap> backwardCache = new LinkedList<Bitmap>();
 	private int maxCacheCount = 2;
 	private ProgressDialog dialog;
+	
+	public enum IntentType {
+		READ_BOOK_NOT_IN_LIBRARY,
+		READ_BOOK_FROM_LIBRARY,
+		GO_TO_TOC_INDEX;
+	}
+	
+	public enum IntentKey {
+		INTENT_TYPE("MYINTENTTYPE"),
+		TOC_INDEX("GETTOCINDEX"),
+		FILE_PATH("GETFILETYPE");
+		
+		private String id;
+		private static String PACKAGE = "se.chalmers.threebook.";
+		
+		private IntentKey(String id){
+			this.id = id;
+		}
+		
+		@Override
+		public String toString(){
+			return PACKAGE + id;
+		}
+	}
 
 	/** Called when the activity is first created. */
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
+		
+		
+		
+		// A few cases which need to be handled differently:
+			// a file path - read the damn file. 
+				// file path not in library
+					// offer to add to library
+				// file path in library
+					// chillax
+			// no file path but tocIndex
+				//assume TOC-navigation
+			// 
+		
+		
+		
+		
+		
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_read);
 
@@ -73,6 +123,40 @@ public class ReadActivity extends ActionBarActivity {
 		layout = (FrameLayout) findViewById(R.id.lay_read);
 		imgBook = (ImageView) findViewById(R.id.img_book);
 
+		// Handle Schtuff
+		IntentType type = (IntentType) getIntent().getSerializableExtra(IntentKey.INTENT_TYPE.toString());
+		
+		ContentStream stream = null;
+		
+		switch (type){
+		case READ_BOOK_NOT_IN_LIBRARY:
+			
+			break;
+		case READ_BOOK_FROM_LIBRARY:
+			AssetManager assetManager = getAssets();
+			String fileName = (String) getIntent().getSerializableExtra(IntentKey.FILE_PATH.toString());
+			
+			try {
+				InputStream epubInputStream = assetManager.open("books/"+fileName); // TODO : replace books string literal
+				MyBook.setBook(new EpubReader().readEpub(epubInputStream));
+				stream = new EpubContentStream(MyBook.get().book());
+				webView.loadData(stream.jumpTo(0), "application/xhtml+xml", "UTF-8");
+			} catch (IOException e) {
+				Log.e("3", "IOE: could not open book :/ " + e.getMessage() );
+			}
+			break;
+		case GO_TO_TOC_INDEX:
+			int id = (int)(Integer) getIntent().getSerializableExtra(IntentKey.TOC_INDEX.toString());
+			stream = new EpubContentStream(MyBook.get().book());
+			try {
+				webView.loadData(stream.jumpTo(id), "application/xhtml+xml", "UTF-8");
+			} catch (IOException e) {
+				Log.e("3", "IOE: IOE: could not display chapter: " + e.getMessage());
+			}
+			break;
+		}
+
+		
 		imgBook.setOnTouchListener(new OnTouchListener() {
 			public boolean onTouch(View v, MotionEvent event) {
 
@@ -85,7 +169,10 @@ public class ReadActivity extends ActionBarActivity {
 					} else if (diff >= 0.66) {// right
 						nextPage();
 					} else { // middle
-						setFullScreen(false);
+						//setFullScreen(false);
+						Intent tocIntent = new Intent(webView.getContext(), TocActivity.class);
+						int GET_SECTION_REFERENCE = 1;
+						startActivityForResult(tocIntent, GET_SECTION_REFERENCE);
 					}
 					break;
 				default:
@@ -96,7 +183,7 @@ public class ReadActivity extends ActionBarActivity {
 
 		});
 
-		webView.loadUrl("file:///android_asset/lorem.html");
+		//webView.loadUrl("file:///android_asset/lorem.html");
 		
 		dialog = ProgressDialog.show(this, "", 
 				this.getString(R.string.loading_please_wait), true);

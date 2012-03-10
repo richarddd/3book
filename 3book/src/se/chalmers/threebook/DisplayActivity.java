@@ -50,9 +50,11 @@ public class DisplayActivity extends Activity {
         	// T_T
         	Log.d("3", "Caught null pointer in init, urgh. let's make a book.");
 			try {
+				long t1 = System.currentTimeMillis();
 				final AssetManager assetManager = getAssets();
 				InputStream epubInputStream = assetManager.open("books/"+BOOK_URL);
 				MyBook.setBook(new EpubReader().readEpub(epubInputStream));
+				System.out.println("parsing book took in ms... " + (System.currentTimeMillis() - t1));
 			} catch (IOException e2){
 				Log.d("3", "Caught IOE in init, heh.");
 			}

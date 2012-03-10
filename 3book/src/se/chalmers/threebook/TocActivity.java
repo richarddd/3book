@@ -1,5 +1,6 @@
 package se.chalmers.threebook;
 
+import se.chalmers.threebook.ReadActivity.IntentType;
 import se.chalmers.threebook.content.ContentStream;
 import se.chalmers.threebook.content.EpubContentStream;
 import se.chalmers.threebook.content.MyBook;
@@ -18,6 +19,16 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
 public class TocActivity extends Activity {
+	
+
+	public enum IntentValue {
+		READ
+	}
+	
+	public enum IntentKey {
+		
+	}
+	
 	EpubContentStream book;
 	//TableOfContents toc;
 	ListView view;
@@ -52,8 +63,10 @@ public class TocActivity extends Activity {
 	}
 	
 	public void tocEntryClicked(int id){
-		Intent displayChapter = new Intent(this, DisplayActivity.class);
-		displayChapter.putExtra("se.chalmers.threebook.selectedTocId", id);
+		Intent displayChapter = new Intent(this, ReadActivity.class);
+
+		displayChapter.putExtra(ReadActivity.IntentKey.INTENT_TYPE.toString(), ReadActivity.IntentType.GO_TO_TOC_INDEX);
+		displayChapter.putExtra(ReadActivity.IntentKey.TOC_INDEX.toString(), id);
 		startActivity(displayChapter);
 	}
 	
