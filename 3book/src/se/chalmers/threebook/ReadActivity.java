@@ -1,13 +1,20 @@
 package se.chalmers.threebook;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Vector;
 
+import nl.siegmann.epublib.epub.EpubReader;
+
 import se.chalmers.threebook.adapters.BookNavAdapter;
 import se.chalmers.threebook.adapters.PagerAdapter;
+import se.chalmers.threebook.content.ContentStream;
+import se.chalmers.threebook.content.EpubContentStream;
+import se.chalmers.threebook.content.MyBook;
 import se.chalmers.threebook.core.Helper;
 import se.chalmers.threebook.ui.ActionBarFragmentActivity;
 import se.chalmers.threebook.ui.HorizontalListView;
@@ -76,26 +83,36 @@ public class ReadActivity extends ActionBarFragmentActivity implements ViewPager
 	private Scroller scroller;
 	private Field mScroller;
 
+	
+
+	public enum IntentType {
+		READ_BOOK_NOT_IN_LIBRARY,
+		READ_BOOK_FROM_LIBRARY,
+		GO_TO_TOC_INDEX;
+	}
+	
+	public enum IntentKey {
+		INTENT_TYPE("MYINTENTTYPE"),
+		TOC_INDEX("GETTOCINDEX"),
+		FILE_PATH("GETFILETYPE");
+		
+		private String id;
+		private static String PACKAGE = "se.chalmers.threebook.";
+		
+		private IntentKey(String id){
+			this.id = id;
+		}
+		
+		@Override
+		public String toString(){
+			return PACKAGE + id;
+		}
+	}
+
+	
 	/** Called when the activity is first created. */
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
-		
-		
-		
-		// A few cases which need to be handled differently:
-			// a file path - read the damn file. 
-				// file path not in library
-					// offer to add to library
-				// file path in library
-					// chillax
-			// no file path but tocIndex
-				//assume TOC-navigation
-			// 
-		
-		
-		
-		
-		
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_read);
 
@@ -124,6 +141,42 @@ public class ReadActivity extends ActionBarFragmentActivity implements ViewPager
 		layoutOverlay = (RelativeLayout) findViewById(R.id.lay_book_overlay);
 		chapterListView = (HorizontalListView)findViewById(R.id.lst_chapters);
 		viewPager = (ViewPager)findViewById(R.id.pgr_book);
+		
+		// Handle Schtuff
+		IntentType type = (IntentType) getIntent().getSerializableExtra(IntentKey.INTENT_TYPE.toString());
+		
+		ContentStream stream = null;
+		
+		switch (type){
+		case READ_BOOK_NOT_IN_LIBRARY:
+			
+			break;
+		case READ_BOOK_FROM_LIBRARY:
+			AssetManager assetManager = getAssets();
+			String fileName = (String) getIntent().getSerializableExtra(IntentKey.FILE_PATH.toString());
+			
+			try {
+				InputStream epubInputStream = assetManager.open("books/"+fileName); // TODO : replace books string literal
+				MyBook.setBook(new EpubReader().readEpub(epubInputStream));
+				stream = new EpubContentStream(MyBook.get().book());
+				webView.loadData(stream.jumpTo(0), "application/xhtml+xml", "UTF-8");
+			} catch (IOException e) {
+				Log.e("3", "IOE: could not open book :/ " + e.getMessage() );
+			}
+			break;
+		case GO_TO_TOC_INDEX:
+			int id = (int)(Integer) getIntent().getSerializableExtra(IntentKey.TOC_INDEX.toString());
+			stream = new EpubContentStream(MyBook.get().book());
+			try {
+				webView.loadData(stream.jumpTo(id), "application/xhtml+xml", "UTF-8");
+			} catch (IOException e) {
+				Log.e("3", "IOE: IOE: could not display chapter: " + e.getMessage());
+			}
+			break;
+		}
+
+		
+		
 		mScroller = null;
 		try {
 			mScroller = ViewPager.class.getDeclaredField("mScroller");
@@ -199,7 +252,7 @@ public class ReadActivity extends ActionBarFragmentActivity implements ViewPager
 
 		});
 
-		webView.loadUrl("file:///android_asset/lorem.html");
+		//webView.loadUrl("file:///android_asset/lorem.html");
 
 		dialog = ProgressDialog.show(this, "",
 				this.getString(R.string.loading_please_wait), true);
@@ -221,8 +274,6 @@ public class ReadActivity extends ActionBarFragmentActivity implements ViewPager
 				((BookImageFragment)pagerAdapter.getItem(0)).getImage().setImageBitmap(forwardCache.getFirst());
 				((BookImageFragment)pagerAdapter.getItem(1)).getImage().setImageBitmap(forwardCache.getFirst());
 				((BookImageFragment)pagerAdapter.getItem(2)).getImage().setImageBitmap(forwardCache.get(1));
-				
-				
 				
 				pagerAdapter.notifyDataSetChanged();
 				//pagerAdapter.
@@ -367,7 +418,12 @@ public class ReadActivity extends ActionBarFragmentActivity implements ViewPager
 			break;
 		case R.id.menu_bookmark:
 			selectText();
-			break;
+			//setFullScreen(false);
+			Intent tocIntent = new Intent(webView.getContext(), TocActivity.class);
+			int GET_SECTION_REFERENCE = 1;
+			startActivityForResult(tocIntent, GET_SECTION_REFERENCE);
+
+			break; 
 		}
 		return super.onOptionsItemSelected(item);
 	}
