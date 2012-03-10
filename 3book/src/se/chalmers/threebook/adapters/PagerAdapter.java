@@ -36,4 +36,9 @@ public class PagerAdapter extends FragmentPagerAdapter {
 	public int getCount() {
 		return this.fragments.size();
 	}
+	
+	public List<Fragment> getFragments(){
+		return fragments;
+	}
+	
 }
