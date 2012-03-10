@@ -63,6 +63,7 @@ public class TocActivity extends Activity {
 	}
 	
 	public void tocEntryClicked(int id){
+		// TODO refactor to use general method somewhere!
 		Intent displayChapter = new Intent(this, ReadActivity.class);
 
 		displayChapter.putExtra(ReadActivity.IntentKey.INTENT_TYPE.toString(), ReadActivity.IntentType.GO_TO_TOC_INDEX);

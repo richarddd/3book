@@ -7,11 +7,13 @@ import se.chalmers.threebook.R;
 import se.chalmers.threebook.ui.HorizontalListView;
 import se.chalmers.threebook.ui.util.BookNavItem;
 import android.content.Context;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.AbsListView.OnScrollListener;
+import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -28,8 +30,26 @@ public class BookNavAdapter extends BaseAdapter implements OnScrollListener {
 		layoutInflater = (LayoutInflater) context
 				.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 		this.listView = listView;
+		
 	}
-
+	
+	
+/* XXX axel test code - probably not right! */
+	
+	private TextView chapterNameTextView = null;
+	public void setChapterNameTextView(TextView view){
+		chapterNameTextView = view;
+	}
+	/**
+	 * Sets the onItemClickListener for the contained listView
+	 */
+	public void setOnItemClickListener(AdapterView.OnItemClickListener listener){
+		listView.setOnItemClickListener(listener);
+	}
+	
+/* end axel test code */
+	
+	
 	public List<BookNavItem> getItems() {
 		return items;
 	}
@@ -62,7 +82,12 @@ public class BookNavAdapter extends BaseAdapter implements OnScrollListener {
 		if (items.get(position).getBitmap() != null) {
 			holder.imgView.setImageBitmap(items.get(position).getBitmap());
 		}
-		holder.textView.setText(String.valueOf(position));
+		/* XXX Axel hacking! */
+		//holder.textView.setText(String.valueOf(position));
+		holder.textView.setText(items.get(position).getTitle());
+		
+		
+		/* XXX End axel hacking */ 
 		return convertView;
 	}
 
@@ -77,16 +102,25 @@ public class BookNavAdapter extends BaseAdapter implements OnScrollListener {
 		}
 	}
 
+	
 	public void onScroll(AbsListView view, int firstVisibleItem,
 			int visibleItemCount, int totalItemCount) {
-		for (int i = 0; i < visibleItemCount; i++) {
+		/*for (int i = 0; i < visibleItemCount; i++) {
 			int middle;
 			if (visibleItemCount % 2 == 0) {
 				middle = visibleItemCount / 2;
 			} else {
 				middle = (int) Math.ceil(visibleItemCount / 2);
 			}
+		} */
+		/* XXX axel hacking */
+		Log.d("3", "1stVis/visibleCount/totalCount: " + firstVisibleItem + "/" + visibleItemCount + "/" + totalItemCount);
+		int position = 0; 
+		position = firstVisibleItem + (int)(visibleItemCount % 2 == 0 ? visibleItemCount/2 : Math.ceil(visibleItemCount/2));
+		if (chapterNameTextView != null){
+			chapterNameTextView.setText(items.get(position).getTitle());
 		}
+		/* end axel hacking */
 	}
 
 	public void onScrollStateChanged(AbsListView view, int scrollState) {

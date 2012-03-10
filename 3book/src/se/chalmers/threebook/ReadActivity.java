@@ -50,11 +50,14 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebView.PictureListener;
 import android.webkit.WebViewClient;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.Scroller;
+import android.widget.TextView;
 import android.widget.Toast;
 
 public class ReadActivity extends ActionBarFragmentActivity implements ViewPager.OnPageChangeListener {
@@ -109,6 +112,14 @@ public class ReadActivity extends ActionBarFragmentActivity implements ViewPager
 		}
 	}
 
+	/** TODO XXX: refactor this method to somewhere nicer! */
+	public void goToToc(int index){
+		Intent displayChapter = new Intent(this, ReadActivity.class);
+
+		displayChapter.putExtra(ReadActivity.IntentKey.INTENT_TYPE.toString(), ReadActivity.IntentType.GO_TO_TOC_INDEX);
+		displayChapter.putExtra(ReadActivity.IntentKey.TOC_INDEX.toString(), index);
+		startActivity(displayChapter);
+	}
 	
 	/** Called when the activity is first created. */
 	@Override
@@ -144,7 +155,6 @@ public class ReadActivity extends ActionBarFragmentActivity implements ViewPager
 		
 		// Handle Schtuff
 		IntentType type = (IntentType) getIntent().getSerializableExtra(IntentKey.INTENT_TYPE.toString());
-		
 		ContentStream stream = null;
 		
 		switch (type){
@@ -156,7 +166,7 @@ public class ReadActivity extends ActionBarFragmentActivity implements ViewPager
 			String fileName = (String) getIntent().getSerializableExtra(IntentKey.FILE_PATH.toString());
 			
 			try {
-				InputStream epubInputStream = assetManager.open("books/"+fileName); // TODO : replace books string literal
+				InputStream epubInputStream = assetManager.open("books/"+fileName);
 				MyBook.setBook(new EpubReader().readEpub(epubInputStream));
 				stream = new EpubContentStream(MyBook.get().book());
 				webView.loadData(stream.jumpTo(0), "application/xhtml+xml", "UTF-8");
@@ -194,11 +204,28 @@ public class ReadActivity extends ActionBarFragmentActivity implements ViewPager
 		
 		
 		chapterAdapter = new BookNavAdapter(this, chapterListView);
+		chapterAdapter.setChapterNameTextView((TextView) findViewById(R.id.txt_book_nav_chapter_title));
 		
 		List<BookNavItem> chapters = chapterAdapter.getItems();
+		for (String title : stream.getToc()){
+			chapters.add(new BookNavItem(title, null));
+		}
+		
+		/* ole richard test code 
 		for(int i = 0; i < 25;i++){
 			chapters.add(new BookNavItem("Chapter "+i, null));
-		}
+		} */
+		
+		/* This is the adapter for each individual chapter in the list */
+		chapterAdapter.setOnItemClickListener(new OnItemClickListener(){
+
+			public void onItemClick(AdapterView<?> parent, View view, int position,
+					long id) {
+				Log.d("3", "Chapter click registered. pos/id: " + position + "/" + id);
+				goToToc((int)id);
+			}
+			
+		});
 		
 		
 		List<Fragment> fragments = new Vector<Fragment>();
