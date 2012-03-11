@@ -32,6 +32,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Picture;
 import android.graphics.Point;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -160,6 +161,7 @@ public class ReadActivity extends ActionBarFragmentActivity implements ViewPager
 		viewPager = (ViewPager)findViewById(R.id.pgr_book);
 		
 		webView.getSettings().setJavaScriptEnabled(true);
+		webView.addJavascriptInterface(new JsInterface(), "application");
 		
 		// Handle Schtuff
 		IntentType type = (IntentType) getIntent().getSerializableExtra(IntentKey.INTENT_TYPE.toString());
@@ -522,4 +524,16 @@ public class ReadActivity extends ActionBarFragmentActivity implements ViewPager
 	public void onPageSelected(int position) {
 		//Log.d("Page Scroll", "onPageSelected");
 	}
+	
+		class JsInterface {
+			public void fireImageIntent(String fileName){
+				Log.d("3", "Firing external image intent!");
+				Intent intent = new Intent();
+				intent.setAction(Intent.ACTION_VIEW);
+				intent.setDataAndType(Uri.parse(fileName), "image/*");
+				startActivity(intent);
+				Log.d("3", "Done firing external image intent");
+			}
+		}
+	
 }

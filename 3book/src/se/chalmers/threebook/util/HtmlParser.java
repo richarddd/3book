@@ -95,8 +95,9 @@ public class HtmlParser {
 				indexList.put(srcs.start(), srcs.end());
 			}
 
-			String startDiv = "<div class=\"threebookImageContainer\">";
-			String endDiv = "</div>";
+			String startDiv = "<div class=\"threebookImageContainer\">" + 
+					"<a class=\"threeBookImageLink\" href=\"#\" onClick=\"application.fireImageIntent(\""+"images/chap22.jpg"+"\");\" >";
+			String endDiv = "</a></div>";
 			String height = "height=\"252px\"";
 			int offset = 0;
 

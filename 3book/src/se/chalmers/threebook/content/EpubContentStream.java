@@ -6,6 +6,8 @@ import java.io.IOException;
 import java.io.Reader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import se.chalmers.threebook.util.HtmlParser;
 import se.chalmers.threebook.util.WriterHelper;
@@ -51,16 +53,23 @@ public class EpubContentStream implements ContentStream {
 		Resource chapter = ref.getResource();
 		nav.gotoResource(chapter, 0, ref.getFragmentId(), this);
 		//TODO: Inject anchor-jumping javascript
-		//String data = stripHeadFromHtml(getStringFromResource(nav.getCurrentResource()));
+
 		String data = stripHeadFromHtml(getStringFromResource(nav.getCurrentResource()));
 		// TODO: PERFORM STRING PROCESSING
+		boolean imageRewrite = false;
 		HtmlParser p = new HtmlParser(getStringFromResource(nav.getCurrentResource()));
 		List<String> imageNames = p.getImg();
-		for (String s : imageNames){
-			Log.d("3", "image filename is: " + s);
+		Map <String, String> headers = p.getHeadings();
+		if (headers.size() > 0){
+			for (Entry<String,String> e : headers.entrySet()){
+				Log.d("3", "Heading key/value: " + e.getKey() + "/" + e.getValue());
+			}
 		}
 		
 		// TODO: UNZIP AND PLACE IMAGES AS NEEDED
+		if (imageNames.size() > 0){ // rewrite HTML if we have any images.
+			data = p.getModifiedHtml();
+		}
 		for (String s : imageNames){
 			Log.d("3","trying to get image resource by href: ");
 			Resource r = nav.getBook().getResources().getByHref(s);
