@@ -1,5 +1,6 @@
 package se.chalmers.threebook;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
@@ -22,6 +23,7 @@ import se.chalmers.threebook.ui.MaxTextView;
 import se.chalmers.threebook.ui.actionbarcompat.ActionBarActivity;
 import se.chalmers.threebook.ui.fragments.BookImageFragment;
 import se.chalmers.threebook.ui.util.BookNavItem;
+import se.chalmers.threebook.util.WriterHelper;
 import android.app.ActionBar;
 import android.app.ProgressDialog;
 import android.content.Intent;
@@ -73,7 +75,6 @@ public class ReadActivity extends ActionBarFragmentActivity implements ViewPager
 	private int maxCacheCount = 2;
 	private String total;
 	private ProgressDialog dialog;
-	private String lorem = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. ";
 	private int viewHeight = 0;
 	private MaxTextView txtView;
 
@@ -86,7 +87,8 @@ public class ReadActivity extends ActionBarFragmentActivity implements ViewPager
 	private Scroller scroller;
 	private Field mScroller;
 
-	
+	private String curUrl = "";
+	private String curAnchor = "";
 
 	public enum IntentType {
 		READ_BOOK_NOT_IN_LIBRARY,
@@ -97,7 +99,9 @@ public class ReadActivity extends ActionBarFragmentActivity implements ViewPager
 	public enum IntentKey {
 		INTENT_TYPE("MYINTENTTYPE"),
 		TOC_INDEX("GETTOCINDEX"),
+		TOC_ANCHOR("GETTOCANCHOR"),		// optional anchor information 
 		FILE_PATH("GETFILETYPE");
+		
 		
 		private String id;
 		private static String PACKAGE = "se.chalmers.threebook.";
@@ -162,29 +166,41 @@ public class ReadActivity extends ActionBarFragmentActivity implements ViewPager
 			
 			break;
 		case READ_BOOK_FROM_LIBRARY:
+			Log.d("3", "reading from files and shit!");
 			AssetManager assetManager = getAssets();
 			String fileName = (String) getIntent().getSerializableExtra(IntentKey.FILE_PATH.toString());
 			
 			try {
 				InputStream epubInputStream = assetManager.open("books/"+fileName);
 				MyBook.setBook(new EpubReader().readEpub(epubInputStream));
-				stream = new EpubContentStream(MyBook.get().book());
-				webView.loadData(stream.jumpTo(0), "application/xhtml+xml", "UTF-8");
+				stream = new EpubContentStream(MyBook.get().book(), this);
+				
+				//webView.loadData(stream.jumpTo(0), "application/xhtml+xml", "UTF-8");
+				webView.loadUrl("file:///"+stream.jumpTo(0));
+			} catch (FileNotFoundException e){
+				Log.e("3", "ReadActivity FNFE: " + e.getMessage() );
 			} catch (IOException e) {
-				Log.e("3", "IOE: could not open book :/ " + e.getMessage() );
-			}
+				Log.e("3", "ReadActivity IOE: " + e.getMessage() );
+			} 
 			break;
 		case GO_TO_TOC_INDEX:
 			int id = (int)(Integer) getIntent().getSerializableExtra(IntentKey.TOC_INDEX.toString());
-			stream = new EpubContentStream(MyBook.get().book());
+			curAnchor = (String) getIntent().getSerializableExtra(IntentKey.TOC_ANCHOR.toString());
+			stream = new EpubContentStream(MyBook.get().book(), this);
 			try {
-				webView.loadData(stream.jumpTo(id), "application/xhtml+xml", "UTF-8");
+				Log.d("3", "Trying to jump via toc. Anchor: " + curAnchor);
+				Log.d("3", "olololol blankus indianer");
+				//curUrl = "file:///"+stream.jumpTo(id)+"#"+(curAnchor == null? "" : curAnchor);
+				curUrl = "file:///"+stream.jumpTo(id);
+				Log.d("3", "Full URL: " + curUrl);
+				
+				webView.loadUrl(curUrl);
+				//webView.loadData(stream.jumpTo(id), "application/xhtml+xml", "UTF-8");
 			} catch (IOException e) {
 				Log.e("3", "IOE: IOE: could not display chapter: " + e.getMessage());
 			}
 			break;
 		}
-
 		
 		
 		mScroller = null;
@@ -210,12 +226,7 @@ public class ReadActivity extends ActionBarFragmentActivity implements ViewPager
 		for (String title : stream.getToc()){
 			chapters.add(new BookNavItem(title, null));
 		}
-		
-		/* ole richard test code 
-		for(int i = 0; i < 25;i++){
-			chapters.add(new BookNavItem("Chapter "+i, null));
-		} */
-		
+				
 		/* This is the adapter for each individual chapter in the list */
 		chapterAdapter.setOnItemClickListener(new OnItemClickListener(){
 
@@ -314,6 +325,14 @@ public class ReadActivity extends ActionBarFragmentActivity implements ViewPager
 		webView.setWebViewClient(new WebViewClient() {
 			@Override
 			public void onPageFinished(WebView view, String url) {
+				Log.d("3", "in OPF!");
+				if (curUrl != "" && !curUrl.contains("#")){ // XXX reload fix attempt make less retarded plz
+					Log.d("3", "in if=true!");
+					webView.loadUrl("javascript:document.getElementById('#"+curAnchor+"').scrollIntoView(true);");
+					//view.loadUrl("javascript:document.getElementById('#"+curAnchor+"').scrollIntoView(true);");
+					curUrl = curUrl+"#"+curAnchor;
+					Log.d("3", "current url after fix: " + curUrl);
+				}
 				viewHeight = view.getBottom();
 				FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) view
 						.getLayoutParams();

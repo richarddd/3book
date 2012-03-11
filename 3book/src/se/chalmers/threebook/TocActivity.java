@@ -1,13 +1,8 @@
 package se.chalmers.threebook;
 
-import se.chalmers.threebook.ReadActivity.IntentType;
 import se.chalmers.threebook.content.ContentStream;
 import se.chalmers.threebook.content.EpubContentStream;
 import se.chalmers.threebook.content.MyBook;
-import nl.siegmann.epublib.domain.Book;
-import nl.siegmann.epublib.domain.Resource;
-import nl.siegmann.epublib.domain.TOCReference;
-import nl.siegmann.epublib.domain.TableOfContents;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
@@ -40,8 +35,7 @@ public class TocActivity extends Activity {
 		view = (ListView) findViewById(R.id.lst_toc);
 		Log.d("3", "==== Running TocActivity onCreate ====");
 		
-		ContentStream book = new EpubContentStream(MyBook.get().book());
-		//String[] tocStr = (String[]) book.getToc().toArray();
+		ContentStream book = new EpubContentStream(MyBook.get().book(), this);
 		String[] tocStr = new String[book.getToc().size()];
 		int i = 0;
 		for (String s : book.getToc()){
@@ -65,9 +59,17 @@ public class TocActivity extends Activity {
 	public void tocEntryClicked(int id){
 		// TODO refactor to use general method somewhere!
 		Intent displayChapter = new Intent(this, ReadActivity.class);
-
+		
+		// XXX this access is probabl not OK.
+		String fragment = MyBook.get().book().getTableOfContents().getTocReferences().get(id).getFragmentId();
+		String resourceID = MyBook.get().book().getTableOfContents().getTocReferences().get(id).getResourceId();
+		
+		Log.d("3", "TocActivity sends fragmentID: " + fragment);
+		Log.d("3", "TocActivity keeps resourceID : " + resourceID);
+		
 		displayChapter.putExtra(ReadActivity.IntentKey.INTENT_TYPE.toString(), ReadActivity.IntentType.GO_TO_TOC_INDEX);
 		displayChapter.putExtra(ReadActivity.IntentKey.TOC_INDEX.toString(), id);
+		displayChapter.putExtra(ReadActivity.IntentKey.TOC_ANCHOR.toString(), fragment);
 		startActivity(displayChapter);
 	}
 	

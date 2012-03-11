@@ -1,24 +1,31 @@
 package se.chalmers.threebook.content;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
+
 import java.io.Reader;
 import java.util.ArrayList;
 import java.util.List;
+
+import se.chalmers.threebook.util.WriterHelper;
 
 import nl.siegmann.epublib.browsersupport.Navigator;
 import nl.siegmann.epublib.domain.Book;
 import nl.siegmann.epublib.domain.Resource;
 import nl.siegmann.epublib.domain.TOCReference;
 import se.chalmers.threebook.model.Bookmark;
+import android.app.Activity;
 import android.util.Log;
 
 public class EpubContentStream implements ContentStream {
 
 	private Navigator nav;
 //	private Map<String,Resource> tocCache;
+	private Activity parent; 
 	
-	public EpubContentStream(Book book){
+	public EpubContentStream(Book book, Activity parent){
 		nav = new Navigator(book);
+		this.parent = parent;
 //		tocCache = new HashMap<String,Resource>((int) (nav.getBook().getTableOfContents().size() * 1.25));
 	}
 	
@@ -39,19 +46,26 @@ public class EpubContentStream implements ContentStream {
 		return stripHeadFromHtml(getStringFromResource(nav.getCurrentResource()));
 	}
 
-	public String jumpToToc(TOCReference ref) throws IOException {
+	public String jumpToToc(TOCReference ref) throws IOException, FileNotFoundException {
 		Resource chapter = ref.getResource();
 		nav.gotoResource(chapter, 0, ref.getFragmentId(), this);
 		//TODO: Inject anchor-jumping javascript
-		return stripHeadFromHtml(getStringFromResource(nav.getCurrentResource()));
+		String data = stripHeadFromHtml(getStringFromResource(nav.getCurrentResource()));
+		// TODO: PERFORM STRING PROCESSING
+		
+		// TODO: UNZIP AND PLACE IMAGES AS NEEDED
+		return WriterHelper.writeFile(data, nav.getBook().getTitle(), ref.getTitle(), parent); // GET PARENT!
+		
+		//return stripHeadFromHtml(getStringFromResource(nav.getCurrentResource()));
 	}
+	
 	
 	public String jumpTo(int index) throws IOException{
 		return jumpToToc(nav.getBook().getTableOfContents().getTocReferences().get(index));
 	}
 	
 	public String jumpTo(Position position){
-		Log.d("3", "jumpTo called, empty string returned - method not implemented yet");
+		Log.d("3", "jumpTo(Position position) called, empty string returned - method not implemented yet");
 		
 		return "";
 	}
