@@ -114,12 +114,13 @@ public class BookNavAdapter extends BaseAdapter implements OnScrollListener {
 			}
 		} */
 		/* XXX axel hacking */
-		Log.d("3", "1stVis/visibleCount/totalCount: " + firstVisibleItem + "/" + visibleItemCount + "/" + totalItemCount);
+		//Log.d("3", "1stVis/visibleCount/totalCount: " + firstVisibleItem + "/" + visibleItemCount + "/" + totalItemCount);
 		int position = 0; 
 		position = firstVisibleItem + (int)(visibleItemCount % 2 == 0 ? visibleItemCount/2 : Math.ceil(visibleItemCount/2));
 		if (chapterNameTextView != null){
 			chapterNameTextView.setText(items.get(position).getTitle());
 		}
+		
 		/* end axel hacking */
 	}
 
