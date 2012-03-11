@@ -52,12 +52,15 @@ public class EpubContentStream implements ContentStream {
 	public String jumpToToc(TOCReference ref) throws IOException, FileNotFoundException {
 		Resource chapter = ref.getResource();
 		nav.gotoResource(chapter, 0, ref.getFragmentId(), this);
+		
+		if (WriterHelper.chapterCached(nav.getBook().getTitle(), ref.getTitle())){
+			Log.d("3", "file is cached, returning like a boss!");
+			return WriterHelper.getCachedFileName(nav.getBook().getTitle(), ref.getTitle());
+		}
 		//TODO: Inject anchor-jumping javascript
-
 		String data = stripHeadFromHtml(getStringFromResource(nav.getCurrentResource()));
 		// TODO: PERFORM STRING PROCESSING
-		boolean imageRewrite = false;
-		HtmlParser p = new HtmlParser(getStringFromResource(nav.getCurrentResource()));
+		HtmlParser p = new HtmlParser(data);
 		List<String> imageNames = p.getImg();
 		Map <String, String> headers = p.getHeadings();
 		if (headers.size() > 0){
@@ -65,7 +68,7 @@ public class EpubContentStream implements ContentStream {
 				Log.d("3", "Heading key/value: " + e.getKey() + "/" + e.getValue());
 			}
 		}
-		
+
 		// TODO: UNZIP AND PLACE IMAGES AS NEEDED
 		if (imageNames.size() > 0){ // rewrite HTML if we have any images.
 			data = p.getModifiedHtml();
@@ -80,12 +83,10 @@ public class EpubContentStream implements ContentStream {
 		}
 		// FINALLY WRITE THE DAMN HTML FILE WITH THE BOOK
 		return WriterHelper.writeFile(data, nav.getBook().getTitle(), ref.getTitle(), parent); // GET PARENT!
-		
-		//return stripHeadFromHtml(getStringFromResource(nav.getCurrentResource()));
 	}
 	
 	
-	public String jumpTo(int index) throws IOException{
+	public String jumpTo(int index) throws IOException, FileNotFoundException{
 		return jumpToToc(nav.getBook().getTableOfContents().getTocReferences().get(index));
 	}
 	

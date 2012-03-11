@@ -4,13 +4,11 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Vector;
 
 import nl.siegmann.epublib.epub.EpubReader;
-
 import se.chalmers.threebook.adapters.BookNavAdapter;
 import se.chalmers.threebook.adapters.PagerAdapter;
 import se.chalmers.threebook.content.ContentStream;
@@ -20,23 +18,18 @@ import se.chalmers.threebook.core.Helper;
 import se.chalmers.threebook.ui.ActionBarFragmentActivity;
 import se.chalmers.threebook.ui.HorizontalListView;
 import se.chalmers.threebook.ui.MaxTextView;
-import se.chalmers.threebook.ui.actionbarcompat.ActionBarActivity;
 import se.chalmers.threebook.ui.fragments.BookImageFragment;
 import se.chalmers.threebook.ui.util.BookNavItem;
-import se.chalmers.threebook.util.WriterHelper;
 import android.app.ActionBar;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Picture;
 import android.graphics.Point;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.util.Log;
 import android.view.Display;
@@ -47,7 +40,6 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnTouchListener;
-import android.view.animation.Interpolator;
 import android.view.WindowManager;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
@@ -56,7 +48,6 @@ import android.webkit.WebViewClient;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.FrameLayout;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.Scroller;
@@ -88,8 +79,7 @@ public class ReadActivity extends ActionBarFragmentActivity implements ViewPager
 	private Scroller scroller;
 	private Field mScroller;
 
-	private String curUrl = "";
-	private String curAnchor = "";
+	private ContentStream stream = null;
 
 	public enum IntentType {
 		READ_BOOK_NOT_IN_LIBRARY,
@@ -117,13 +107,26 @@ public class ReadActivity extends ActionBarFragmentActivity implements ViewPager
 		}
 	}
 
-	/** TODO XXX: refactor this method to somewhere nicer! */
-	public void goToToc(int index){
-		Intent displayChapter = new Intent(this, ReadActivity.class);
 
-		displayChapter.putExtra(ReadActivity.IntentKey.INTENT_TYPE.toString(), ReadActivity.IntentType.GO_TO_TOC_INDEX);
-		displayChapter.putExtra(ReadActivity.IntentKey.TOC_INDEX.toString(), index);
-		startActivity(displayChapter);
+	
+	public void display(int index){
+		display(index, "");
+	}
+	
+	public void display(int index, String anchor){
+		anchor = anchor == null ? "" : anchor;
+		Log.d("3", "Trying to jump via toc. Index: " + index +", Anchor: " + anchor);
+		try { 
+			String curUrl = "file:///"+stream.jumpTo(index)+"#"+anchor;
+			Log.d("3", "time to load url into view! url is: " + curUrl);
+			webView.loadUrl(curUrl);
+			Log.d("3", "loading done, lol wut?");
+		} catch (FileNotFoundException e){
+			Log.d("3", "FNFE in display: " + e.getMessage());
+		} catch (IOException e){
+			Log.d("3","IOE in display: " + e.getMessage());
+		}
+	
 	}
 	
 	/** Called when the activity is first created. */
@@ -132,8 +135,6 @@ public class ReadActivity extends ActionBarFragmentActivity implements ViewPager
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_read);
 
-
-		
 		Display display = getWindowManager().getDefaultDisplay();
 		Point size = new Point();
 		if (Helper.SupportsNewApi()) {
@@ -165,7 +166,6 @@ public class ReadActivity extends ActionBarFragmentActivity implements ViewPager
 		
 		// Handle Schtuff
 		IntentType type = (IntentType) getIntent().getSerializableExtra(IntentKey.INTENT_TYPE.toString());
-		ContentStream stream = null;
 		
 		switch (type){
 		case READ_BOOK_NOT_IN_LIBRARY:
@@ -175,14 +175,13 @@ public class ReadActivity extends ActionBarFragmentActivity implements ViewPager
 			Log.d("3", "reading from files and shit!");
 			AssetManager assetManager = getAssets();
 			String fileName = (String) getIntent().getSerializableExtra(IntentKey.FILE_PATH.toString());
-			
+			//int lastIndex = getFromDatabase.lastChapterForUserDude(); // TODO implement this plz
+			int lastIndex = 5;
 			try {
 				InputStream epubInputStream = assetManager.open("books/"+fileName);
 				MyBook.setBook(new EpubReader().readEpub(epubInputStream));
 				stream = new EpubContentStream(MyBook.get().book(), this);
-				
-				//webView.loadData(stream.jumpTo(0), "application/xhtml+xml", "UTF-8");
-				webView.loadUrl("file:///"+stream.jumpTo(0));
+				display(lastIndex);
 			} catch (FileNotFoundException e){
 				Log.e("3", "ReadActivity FNFE: " + e.getMessage() );
 			} catch (IOException e) {
@@ -191,20 +190,8 @@ public class ReadActivity extends ActionBarFragmentActivity implements ViewPager
 			break;
 		case GO_TO_TOC_INDEX:
 			int id = (int)(Integer) getIntent().getSerializableExtra(IntentKey.TOC_INDEX.toString());
-			curAnchor = (String) getIntent().getSerializableExtra(IntentKey.TOC_ANCHOR.toString());
-			stream = new EpubContentStream(MyBook.get().book(), this);
-			try {
-				Log.d("3", "Trying to jump via toc. Anchor: " + curAnchor);
-				Log.d("3", "olololol blankus indianer");
-				//curUrl = "file:///"+stream.jumpTo(id)+"#"+(curAnchor == null? "" : curAnchor);
-				curUrl = "file:///"+stream.jumpTo(id);
-				Log.d("3", "Full URL: " + curUrl);
-				
-				webView.loadUrl(curUrl);
-				//webView.loadData(stream.jumpTo(id), "application/xhtml+xml", "UTF-8");
-			} catch (IOException e) {
-				Log.e("3", "IOE: IOE: could not display chapter: " + e.getMessage());
-			}
+			String anchor = (String) getIntent().getSerializableExtra(IntentKey.TOC_ANCHOR.toString());
+			display(id, anchor);
 			break;
 		}
 		
@@ -235,11 +222,9 @@ public class ReadActivity extends ActionBarFragmentActivity implements ViewPager
 				
 		/* This is the adapter for each individual chapter in the list */
 		chapterAdapter.setOnItemClickListener(new OnItemClickListener(){
-
 			public void onItemClick(AdapterView<?> parent, View view, int position,
 					long id) {
-				Log.d("3", "Chapter click registered. pos/id: " + position + "/" + id);
-				goToToc((int)id);
+				display((int)id);
 			}
 			
 		});
@@ -323,7 +308,8 @@ public class ReadActivity extends ActionBarFragmentActivity implements ViewPager
 				//pagerAdapter.
 				
 				
-				dialog.dismiss();
+					dialog.dismiss();
+				
 				//generateWebViewCache(true);
 			}
 		});
@@ -331,12 +317,6 @@ public class ReadActivity extends ActionBarFragmentActivity implements ViewPager
 		webView.setWebViewClient(new WebViewClient() {
 			@Override
 			public void onPageFinished(WebView view, String url) {
-				Log.d("3", "in OPF!");
-				if (curUrl != "" && !curUrl.contains("#")){ // XXX reload fix attempt make less retarded plz
-					Log.d("3", "in if=true!");
-					Log.d("3", "going to anchor: " + curAnchor);
-					webView.loadUrl("javascript:document.getElementById('#"+curAnchor+"').scrollIntoView(true);");
-				}
 				viewHeight = view.getBottom();
 				FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) view
 						.getLayoutParams();

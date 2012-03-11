@@ -44,53 +44,26 @@ public class WriterHelper {
 		
 	}
 	
+	public static boolean chapterCached(String bookName, String chapterName){
+		String fileHash = ((Integer)(bookName+chapterName).hashCode()).toString(); // XXX this is retarded
+		Log.d("3", "chapterCached returning :" + cache.containsKey(fileHash));
+		return cache.containsKey(fileHash);
+	}
+	
+	public static String getCachedFileName(String bookName, String chapterName){
+		
+		if (!chapterCached(bookName, chapterName)){
+			throw new IllegalArgumentException("Trying to get uncached filename. Callers must ensure target is in cache by calling chapterCached before calling this. Also, refactor this fucking shit.");
+		}
+		String fileHash = ((Integer)(bookName+chapterName).hashCode()).toString(); // XXX this is retarded
+		Log.d("3", "Returning fun cached file thingy");
+		return cache.get(fileHash).getAbsolutePath();
+	}
+	
 	public static boolean imageCached(String href){
 		return imgCache.containsKey(href);
 	}
 	
-	public static boolean writeImage(byte[] data, String bookName, String href) throws FileNotFoundException, IOException {
-		if (imageCached(href)){
-			return true;
-		}
-		
-		File cacheFile = null;
-		FileOutputStream out = null;
-		if (ensureBookCache(bookName)){
-			try {
-				
-				//File imageLocation = new File(bookCacheLocation, href);
-				int separator = href.lastIndexOf("/");
-				if (separator != -1){ // we need to make some dirs!
-					String path = href.substring(0, separator);
-					String rem = href.substring(separator+1);
-					boolean dirSuccess = new File(bookCacheLocation, path).mkdirs(); // TODO handle failure 'ere!
-				}
-				
-				File imageLocation = new File(bookCacheLocation, href);
-				out = new FileOutputStream(imageLocation, false);
-				out.write(data);
-				out.flush();
-				cache.put(href, cacheFile);
-			} catch (Exception e){
-				Log.d("3", "Caught imageexception: " + e.getMessage());
-				Log.d("3", "Trace: " + e.getStackTrace().toString());
-				e.printStackTrace();
-			}
-			finally {
-				if (out != null) { out.close(); }
-			}
-		} else {
-			throw new IOException("Could not make / access cache dir :/ ");
-		}
-
-		return true;
-	}
-	
-	// TODO remove this asap
-	public static boolean writeImage(byte[] data, String bookName, String href, Activity parent) throws FileNotFoundException, IOException {
-		ensurecachefile(parent);
-		return writeImage(data, bookName, href);
-	}
 	
 	public static String writeFile(String data, String bookName, String chapterName) throws FileNotFoundException, IOException {
 		chapterName +=".html"; // Append HTML to chapter name for proper filename shiznitz
@@ -131,6 +104,50 @@ public class WriterHelper {
 		ensurecachefile(parent); // TODO remove once refactored to set up params on start of application
 		return writeFile(data, bookName, chapterName);
 	}
+	
+	public static boolean writeImage(byte[] data, String bookName, String href) throws FileNotFoundException, IOException {
+		if (imageCached(href)){
+			return true;
+		}
+		
+		File cacheFile = null;
+		FileOutputStream out = null;
+		if (ensureBookCache(bookName)){
+			try {
+				
+				//File imageLocation = new File(bookCacheLocation, href);
+				int separator = href.lastIndexOf("/");
+				if (separator != -1){ // we need to make some dirs!
+					String path = href.substring(0, separator);;
+					boolean dirSuccess = new File(bookCacheLocation, path).mkdirs(); // TODO handle failure 'ere!
+				}
+				
+				File imageLocation = new File(bookCacheLocation, href);
+				out = new FileOutputStream(imageLocation, false);
+				out.write(data);
+				out.flush();
+				cache.put(href, cacheFile);
+			} catch (Exception e){
+				Log.d("3", "Caught imageexception: " + e.getMessage());
+				Log.d("3", "Trace: " + e.getStackTrace().toString());
+				e.printStackTrace();
+			}
+			finally {
+				if (out != null) { out.close(); }
+			}
+		} else {
+			throw new IOException("Could not make / access cache dir :/ ");
+		}
+
+		return true;
+	}
+	
+	// TODO remove this asap
+	public static boolean writeImage(byte[] data, String bookName, String href, Activity parent) throws FileNotFoundException, IOException {
+		ensurecachefile(parent);
+		return writeImage(data, bookName, href);
+	}
+	
 	
 	
 }
