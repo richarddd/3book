@@ -17,19 +17,82 @@ import android.app.Activity;
 import android.content.Context;
 import android.util.Log;
 
+/**
+ * TODO: REFACTOR! It's likely best to make class non-static, it started out with a lot less stuff.  
+ */
 public class WriterHelper {
 	
+	private static void ensurecachefile(Activity a){
+		if (appCacheLocation == null){
+			appCacheLocation = a.getCacheDir();
+		}
+	}
+	
+	private static File appCacheLocation = null;
+	private static File bookCacheLocation = null;
 	private static Map<String, File> cache = new HashMap<String, File>();
+	private static Map<String, File> imgCache = new HashMap<String, File>();
+	
+	private static boolean ensureBookCache(String bookName){
+		if (bookCacheLocation == null){
+			File bookCacheDir = new File (appCacheLocation, bookName);
+			bookCacheLocation = bookCacheDir;
+			return bookCacheDir.exists() ? true : bookCacheDir.mkdirs();
+		} else {
+			return true;
+		}
+		
+	}
+	
+	public static boolean imageCached(String href){
+		return imgCache.containsKey(href);
+	}
+	
+	public static boolean writeImage(byte[] data, String bookName, String href) throws FileNotFoundException, IOException {
+		if (imageCached(href)){
+			return true;
+		}
+		
+		File cacheFile = null;
+		FileOutputStream out = null;
+		if (ensureBookCache(bookName)){
+			try {
+				
+				//File imageLocation = new File(bookCacheLocation, href);
+				int separator = href.lastIndexOf("/");
+				if (separator != -1){ // we need to make some dirs!
+					String path = href.substring(0, separator);
+					String rem = href.substring(separator+1);
+					boolean dirSuccess = new File(bookCacheLocation, path).mkdirs(); // TODO handle failure 'ere!
+				}
+				
+				File imageLocation = new File(bookCacheLocation, href);
+				out = new FileOutputStream(imageLocation, false);
+				out.write(data);
+				out.flush();
+				cache.put(href, cacheFile);
+			} catch (Exception e){
+				Log.d("3", "Caught imageexception: " + e.getMessage());
+				Log.d("3", "Trace: " + e.getStackTrace().toString());
+				e.printStackTrace();
+			}
+			finally {
+				if (out != null) { out.close(); }
+			}
+		} else {
+			throw new IOException("Could not make / access cache dir :/ ");
+		}
 
-	/**
-	 * 
-	 * @param data
-	 * @param hash
-	 * @param parent
-	 * @return the filename of the new file
-	 */
-	public static String writeFile(String data, String bookName, String chapterName, Activity parent) 
-			throws FileNotFoundException, IOException {
+		return true;
+	}
+	
+	// TODO remove this asap
+	public static boolean writeImage(byte[] data, String bookName, String href, Activity parent) throws FileNotFoundException, IOException {
+		ensurecachefile(parent);
+		return writeImage(data, bookName, href);
+	}
+	
+	public static String writeFile(String data, String bookName, String chapterName) throws FileNotFoundException, IOException {
 		chapterName +=".html"; // Append HTML to chapter name for proper filename shiznitz
 		// TODO: Make sure multi-TOCEntry-in-file does not result in multiple cache entries!!!
 		// Coz it's stupid!!!
@@ -42,19 +105,19 @@ public class WriterHelper {
 		}
 		Log.d("3", "File not found in cache. Key: " + fileHash);
 		
-		File androidCache = parent.getCacheDir();
-		File bookCacheDir = new File (androidCache, bookName);
-		
-		boolean dirExists = bookCacheDir.exists() ? true : bookCacheDir.mkdir();
-		
 		File cacheFile = null;
-		if (dirExists){
-			cacheFile = new File(bookCacheDir, fileHash+".htm");
-			BufferedWriter out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(cacheFile)));
-			out.append(data);
-			out.flush();
-			out.close();
-			cache.put(fileHash, cacheFile);
+		BufferedWriter out = null;
+		if (ensureBookCache(bookName)){
+			try {
+				Log.d("3", "bookCacheLocatioN: " + bookCacheLocation.getAbsolutePath());
+				cacheFile = new File(bookCacheLocation, fileHash+".htm");
+				out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(cacheFile)));
+				out.append(data);
+				out.flush();
+				cache.put(fileHash, cacheFile);
+			} finally {
+				if (out != null) { out.close(); }
+			}
 		} else {
 			throw new IOException("Could not make / access cache dir :/ ");
 		}
@@ -62,18 +125,12 @@ public class WriterHelper {
 		return cacheFile.getAbsolutePath();
 	}
 	
-	/**
-	 * 
-	 * @param bookName
-	 * @param chapterName
-	 * @param parent
-	 * @return
-	 */
-	public static BufferedReader getReaderForFile(String bookName, String chapterName, Activity parent) 
+	// TODO remove this ASAP
+	public static String writeFile(String data, String bookName, String chapterName, Activity parent) 
 			throws FileNotFoundException, IOException {
-		String fileName = Constants.TEMP_BOOK_STORAGE_BASE_PATH.value()+bookName+"/"+chapterName;
-		FileInputStream fis = parent.openFileInput(fileName);
-		return new BufferedReader(new InputStreamReader(fis, Charset.defaultCharset()));
+		ensurecachefile(parent); // TODO remove once refactored to set up params on start of application
+		return writeFile(data, bookName, chapterName);
 	}
+	
 	
 }

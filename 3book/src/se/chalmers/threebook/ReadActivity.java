@@ -131,6 +131,8 @@ public class ReadActivity extends ActionBarFragmentActivity implements ViewPager
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_read);
 
+
+		
 		Display display = getWindowManager().getDefaultDisplay();
 		Point size = new Point();
 		if (Helper.SupportsNewApi()) {
@@ -156,6 +158,8 @@ public class ReadActivity extends ActionBarFragmentActivity implements ViewPager
 		layoutOverlay = (RelativeLayout) findViewById(R.id.lay_book_overlay);
 		chapterListView = (HorizontalListView)findViewById(R.id.lst_chapters);
 		viewPager = (ViewPager)findViewById(R.id.pgr_book);
+		
+		webView.getSettings().setJavaScriptEnabled(true);
 		
 		// Handle Schtuff
 		IntentType type = (IntentType) getIntent().getSerializableExtra(IntentKey.INTENT_TYPE.toString());
@@ -328,10 +332,8 @@ public class ReadActivity extends ActionBarFragmentActivity implements ViewPager
 				Log.d("3", "in OPF!");
 				if (curUrl != "" && !curUrl.contains("#")){ // XXX reload fix attempt make less retarded plz
 					Log.d("3", "in if=true!");
+					Log.d("3", "going to anchor: " + curAnchor);
 					webView.loadUrl("javascript:document.getElementById('#"+curAnchor+"').scrollIntoView(true);");
-					//view.loadUrl("javascript:document.getElementById('#"+curAnchor+"').scrollIntoView(true);");
-					curUrl = curUrl+"#"+curAnchor;
-					Log.d("3", "current url after fix: " + curUrl);
 				}
 				viewHeight = view.getBottom();
 				FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) view

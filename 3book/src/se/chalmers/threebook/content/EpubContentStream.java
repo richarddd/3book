@@ -7,6 +7,7 @@ import java.io.Reader;
 import java.util.ArrayList;
 import java.util.List;
 
+import se.chalmers.threebook.util.HtmlParser;
 import se.chalmers.threebook.util.WriterHelper;
 
 import nl.siegmann.epublib.browsersupport.Navigator;
@@ -50,10 +51,25 @@ public class EpubContentStream implements ContentStream {
 		Resource chapter = ref.getResource();
 		nav.gotoResource(chapter, 0, ref.getFragmentId(), this);
 		//TODO: Inject anchor-jumping javascript
+		//String data = stripHeadFromHtml(getStringFromResource(nav.getCurrentResource()));
 		String data = stripHeadFromHtml(getStringFromResource(nav.getCurrentResource()));
 		// TODO: PERFORM STRING PROCESSING
+		HtmlParser p = new HtmlParser(getStringFromResource(nav.getCurrentResource()));
+		List<String> imageNames = p.getImg();
+		for (String s : imageNames){
+			Log.d("3", "image filename is: " + s);
+		}
 		
 		// TODO: UNZIP AND PLACE IMAGES AS NEEDED
+		for (String s : imageNames){
+			Log.d("3","trying to get image resource by href: ");
+			Resource r = nav.getBook().getResources().getByHref(s);
+			if (r != null){
+				Log.d("3", "title of resource is: " + r.getTitle());
+				WriterHelper.writeImage(r.getData(), nav.getBook().getTitle(), s, parent);
+			}
+		}
+		// FINALLY WRITE THE DAMN HTML FILE WITH THE BOOK
 		return WriterHelper.writeFile(data, nav.getBook().getTitle(), ref.getTitle(), parent); // GET PARENT!
 		
 		//return stripHeadFromHtml(getStringFromResource(nav.getCurrentResource()));
