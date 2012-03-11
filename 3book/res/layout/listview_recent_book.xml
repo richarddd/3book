@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
+    android:layout_height="180dp"
     android:background="@color/default_background"
     android:orientation="vertical" >
 
@@ -22,19 +22,20 @@
         android:layout_below="@+id/img_recent_book_cover"
         android:layout_marginTop="@dimen/padding_s"
         android:src="@drawable/recent_item_shadow" />
-
+
     <TextView
-        android:layout_width="10dp"
         android:id="@+id/txt_recent_book_title"
+        android:layout_width="10dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="-6dp"
         android:layout_alignLeft="@+id/img_recent_book_cover"
+        android:layout_alignParentBottom="true"
         android:layout_alignRight="@+id/img_recent_book_cover"
         android:layout_below="@+id/img_recent_shadow"
-        android:gravity="center"
-        android:textColor="@color/font_dark"
-        android:text="Titledsgsdgsdgsd"
+        android:layout_marginTop="-6dp"
         android:fadingEdge="horizontal"
-        android:singleLine="true" />
+        android:gravity="center"
+        android:singleLine="true"
+        android:text="Titledsgsdgsdgsd"
+        android:textColor="@color/font_dark" />
 
 </RelativeLayout>

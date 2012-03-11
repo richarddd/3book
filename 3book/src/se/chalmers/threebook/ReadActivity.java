@@ -2,39 +2,26 @@ package se.chalmers.threebook;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Vector;
 
 import nl.siegmann.epublib.epub.EpubReader;
-
 import se.chalmers.threebook.adapters.BookNavAdapter;
-import se.chalmers.threebook.adapters.PagerAdapter;
+import se.chalmers.threebook.adapters.BookPageAdapter;
 import se.chalmers.threebook.content.ContentStream;
 import se.chalmers.threebook.content.EpubContentStream;
 import se.chalmers.threebook.content.MyBook;
 import se.chalmers.threebook.core.Helper;
-import se.chalmers.threebook.ui.ActionBarFragmentActivity;
+import se.chalmers.threebook.ui.BookFlipper;
 import se.chalmers.threebook.ui.HorizontalListView;
-import se.chalmers.threebook.ui.MaxTextView;
 import se.chalmers.threebook.ui.actionbarcompat.ActionBarActivity;
-import se.chalmers.threebook.ui.fragments.BookImageFragment;
 import se.chalmers.threebook.ui.util.BookNavItem;
 import android.app.ActionBar;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.res.AssetManager;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Picture;
 import android.graphics.Point;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentPagerAdapter;
-import android.support.v4.view.ViewPager;
 import android.util.Log;
 import android.view.Display;
 import android.view.KeyEvent;
@@ -44,7 +31,6 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnTouchListener;
-import android.view.animation.Interpolator;
 import android.view.WindowManager;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
@@ -53,74 +39,62 @@ import android.webkit.WebViewClient;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.FrameLayout;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
-import android.widget.Scroller;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class ReadActivity extends ActionBarFragmentActivity implements ViewPager.OnPageChangeListener {
+public class ReadActivity extends ActionBarActivity {
 
 	private WebView webView;
-	private FrameLayout layout;
 	private Boolean selectionMode = false;
-	//private ImageView imgBook;
 	private float screenWidth;
 	private float screenHeight;
-	private LinkedList<Bitmap> forwardCache = new LinkedList<Bitmap>();
-	private LinkedList<Bitmap> backwardCache = new LinkedList<Bitmap>();
-	private int maxCacheCount = 2;
-	private String total;
 	private ProgressDialog dialog;
-	private String lorem = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. ";
 	private int viewHeight = 0;
-	private MaxTextView txtView;
 
 	private boolean menuShown = false;
 	private RelativeLayout layoutOverlay;
 	private HorizontalListView chapterListView;
 	private BookNavAdapter chapterAdapter;
-	private PagerAdapter pagerAdapter;
-	private ViewPager viewPager;
-	private Scroller scroller;
-	private Field mScroller;
-
-	
+	private BookPageAdapter pagerAdapter;
+	private BookFlipper bookFlipper;
+	private boolean setupLayout = true;
+	private int currentPosition = 0;
+	private boolean endOfFile = false;
 
 	public enum IntentType {
-		READ_BOOK_NOT_IN_LIBRARY,
-		READ_BOOK_FROM_LIBRARY,
-		GO_TO_TOC_INDEX;
+		READ_BOOK_NOT_IN_LIBRARY, READ_BOOK_FROM_LIBRARY, GO_TO_TOC_INDEX;
 	}
-	
+
 	public enum IntentKey {
-		INTENT_TYPE("MYINTENTTYPE"),
-		TOC_INDEX("GETTOCINDEX"),
-		FILE_PATH("GETFILETYPE");
-		
+		INTENT_TYPE("MYINTENTTYPE"), TOC_INDEX("GETTOCINDEX"), FILE_PATH(
+				"GETFILETYPE");
+
 		private String id;
 		private static String PACKAGE = "se.chalmers.threebook.";
-		
-		private IntentKey(String id){
+
+		private IntentKey(String id) {
 			this.id = id;
 		}
-		
+
 		@Override
-		public String toString(){
+		public String toString() {
 			return PACKAGE + id;
 		}
 	}
 
 	/** TODO XXX: refactor this method to somewhere nicer! */
-	public void goToToc(int index){
+	public void goToToc(int index) {
 		Intent displayChapter = new Intent(this, ReadActivity.class);
 
-		displayChapter.putExtra(ReadActivity.IntentKey.INTENT_TYPE.toString(), ReadActivity.IntentType.GO_TO_TOC_INDEX);
-		displayChapter.putExtra(ReadActivity.IntentKey.TOC_INDEX.toString(), index);
+		displayChapter.putExtra(ReadActivity.IntentKey.INTENT_TYPE.toString(),
+				ReadActivity.IntentType.GO_TO_TOC_INDEX);
+		displayChapter.putExtra(ReadActivity.IntentKey.TOC_INDEX.toString(),
+				index);
 		startActivity(displayChapter);
 	}
-	
+
 	/** Called when the activity is first created. */
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -135,7 +109,7 @@ public class ReadActivity extends ActionBarFragmentActivity implements ViewPager
 			screenHeight = size.y;
 		} else {
 			screenWidth = display.getWidth();
-			screenHeight = display.getWidth();
+			screenHeight = display.getHeight();
 		}
 		setFullScreen(true);
 
@@ -143,126 +117,135 @@ public class ReadActivity extends ActionBarFragmentActivity implements ViewPager
 			ActionBar actionBar = getActionBar();
 			actionBar.setDisplayHomeAsUpEnabled(true);
 		}
-		
-		scroller = new Scroller(this);
 
 		webView = (WebView) findViewById(R.id.web_book);
-		layout = (FrameLayout) findViewById(R.id.lay_read);
-		//imgBook = (ImageView) findViewById(R.id.img_book);
 		layoutOverlay = (RelativeLayout) findViewById(R.id.lay_book_overlay);
-		chapterListView = (HorizontalListView)findViewById(R.id.lst_chapters);
-		viewPager = (ViewPager)findViewById(R.id.pgr_book);
-		
+		chapterListView = (HorizontalListView) findViewById(R.id.lst_chapters);
+		bookFlipper = (BookFlipper) findViewById(R.id.pgr_book);
+
 		// Handle Schtuff
-		IntentType type = (IntentType) getIntent().getSerializableExtra(IntentKey.INTENT_TYPE.toString());
+		IntentType type = (IntentType) getIntent().getSerializableExtra(
+				IntentKey.INTENT_TYPE.toString());
 		ContentStream stream = null;
-		
-		switch (type){
+
+		switch (type) {
 		case READ_BOOK_NOT_IN_LIBRARY:
-			
 			break;
 		case READ_BOOK_FROM_LIBRARY:
 			AssetManager assetManager = getAssets();
-			String fileName = (String) getIntent().getSerializableExtra(IntentKey.FILE_PATH.toString());
-			
+			String fileName = (String) getIntent().getSerializableExtra(
+					IntentKey.FILE_PATH.toString());
+
 			try {
-				InputStream epubInputStream = assetManager.open("books/"+fileName);
+				InputStream epubInputStream = assetManager.open("books/"
+						+ fileName);
 				MyBook.setBook(new EpubReader().readEpub(epubInputStream));
 				stream = new EpubContentStream(MyBook.get().book());
-				webView.loadData(stream.jumpTo(0), "application/xhtml+xml", "UTF-8");
+				webView.loadData(stream.jumpTo(0), "application/xhtml+xml",
+						"UTF-8");
 			} catch (IOException e) {
-				Log.e("3", "IOE: could not open book :/ " + e.getMessage() );
+				Log.e("3", "IOE: could not open book :/ " + e.getMessage());
 			}
 			break;
 		case GO_TO_TOC_INDEX:
-			int id = (int)(Integer) getIntent().getSerializableExtra(IntentKey.TOC_INDEX.toString());
+			int id = (int) (Integer) getIntent().getSerializableExtra(
+					IntentKey.TOC_INDEX.toString());
 			stream = new EpubContentStream(MyBook.get().book());
 			try {
-				webView.loadData(stream.jumpTo(id), "application/xhtml+xml", "UTF-8");
+				webView.loadData(stream.jumpTo(id), "application/xhtml+xml",
+						"UTF-8");
 			} catch (IOException e) {
-				Log.e("3", "IOE: IOE: could not display chapter: " + e.getMessage());
+				Log.e("3",
+						"IOE: IOE: could not display chapter: "
+								+ e.getMessage());
 			}
 			break;
 		}
 
-		
-		
-		mScroller = null;
-		try {
-			mScroller = ViewPager.class.getDeclaredField("mScroller");
-			mScroller.setAccessible(true);
-			mScroller.set(viewPager, scroller);
-		} catch (NoSuchFieldException e) {
-			e.printStackTrace();
-		} catch (IllegalArgumentException e) {
-			e.printStackTrace();
-		} catch (IllegalAccessException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-		
-		
 		chapterAdapter = new BookNavAdapter(this, chapterListView);
-		chapterAdapter.setChapterNameTextView((TextView) findViewById(R.id.txt_book_nav_chapter_title));
-		
+		chapterAdapter
+				.setChapterNameTextView((TextView) findViewById(R.id.txt_book_nav_chapter_title));
+
 		List<BookNavItem> chapters = chapterAdapter.getItems();
-		for (String title : stream.getToc()){
+		for (String title : stream.getToc()) {
 			chapters.add(new BookNavItem(title, null));
 		}
-		
-		/* ole richard test code 
-		for(int i = 0; i < 25;i++){
-			chapters.add(new BookNavItem("Chapter "+i, null));
-		} */
-		
-		/* This is the adapter for each individual chapter in the list */
-		chapterAdapter.setOnItemClickListener(new OnItemClickListener(){
 
-			public void onItemClick(AdapterView<?> parent, View view, int position,
-					long id) {
-				Log.d("3", "Chapter click registered. pos/id: " + position + "/" + id);
-				goToToc((int)id);
+		/* This is the adapter for each individual chapter in the list */
+		chapterAdapter.setOnItemClickListener(new OnItemClickListener() {
+
+			public void onItemClick(AdapterView<?> parent, View view,
+					int position, long id) {
+				Log.d("3", "Chapter click registered. pos/id: " + position
+						+ "/" + id);
+				goToToc((int) id);
 			}
-			
+
 		});
-		
-		
-		List<Fragment> fragments = new Vector<Fragment>();
-		fragments.add(Fragment.instantiate(this, BookImageFragment.class.getName()));
-		fragments.add(Fragment.instantiate(this, BookImageFragment.class.getName()));
-		fragments.add(Fragment.instantiate(this, BookImageFragment.class.getName()));
-		
-		pagerAdapter = new PagerAdapter(getSupportFragmentManager(), fragments);
-		viewPager.setAdapter(pagerAdapter);
-		viewPager.setCurrentItem(1);
-		viewPager.setOnPageChangeListener(this);
-		
-		//Log.d("Size Of fragments", String.valueOf(pagerAdapter.getFragments().size()));
-		
-		
-		
+
+		pagerAdapter = new BookPageAdapter(this);
+		bookFlipper.setAdapter(pagerAdapter);
 		chapterListView.setAdapter(chapterAdapter);
 		chapterListView.setOnScrollListener(chapterAdapter);
 
-		viewPager.setOnTouchListener(new OnTouchListener() {
-			
+		bookFlipper
+				.setPreViewSwitchedListener(bookFlipper.new PreViewSwitchedListener() {
+
+					@Override
+					public void onPreViewSwitched(int targetIndex) {
+						Log.d("ReadActivity",
+								"Targetindex: " + String.valueOf(targetIndex));
+						if (targetIndex > 0) {
+							if (targetIndex > currentPosition) {
+								int scrollTo = viewHeight * (targetIndex + 1);
+								/*
+								 * if(scrollTo >=
+								 * webView.getContentHeight()+(viewHeight*2)){
+								 * endOfFile = true; }
+								 */
+								Log.d("ReadActivity",
+										"Content height: "
+												+ String.valueOf(webView
+														.getContentHeight()));
+								webView.scrollTo(0, scrollTo);
+								Log.d("ReadActivity", "Next scroll to: "
+										+ String.valueOf(scrollTo));
+								pagerAdapter.setNext(Helper
+										.getBitmapFromView(webView));
+							} else {
+								endOfFile = false;
+								int scrollTo = viewHeight * (targetIndex - 1);
+								webView.scrollTo(0, scrollTo);
+								Log.d("ReadActivity", "Prev scroll to: "
+										+ String.valueOf(scrollTo));
+								pagerAdapter.setPrevious(Helper
+										.getBitmapFromView(webView));
+							}
+
+						}
+						currentPosition = targetIndex;
+					}
+				});
+
+		bookFlipper.setOnTouchListener(new OnTouchListener() {
+
 			private float lastDownX;
-			
+
 			public boolean onTouch(View v, MotionEvent event) {
 				switch (event.getAction()) {
-				
+
 				case MotionEvent.ACTION_DOWN:
 					lastDownX = event.getX();
 					break;
-				case MotionEvent.ACTION_UP:		
+				case MotionEvent.ACTION_UP:
 					float diff = event.getX() / screenWidth;
 					float diffOld = lastDownX / screenWidth;
 					if (diff <= 0.33 && diffOld <= 0.33) { // left
 						prevPage();
 					} else if (diff >= 0.66 && diffOld >= 0.66) {// right
 						nextPage();
-					} else if(diff < 0.66 && diff > 0.33 && diffOld < 0.66 && diffOld > 0.33) { // middle
+					} else if (diff < 0.66 && diff > 0.33 && diffOld < 0.66
+							&& diffOld > 0.33) { // middle
 						menuShown = !menuShown;
 						if (menuShown) {
 							showOverlay(false);
@@ -279,8 +262,6 @@ public class ReadActivity extends ActionBarFragmentActivity implements ViewPager
 
 		});
 
-		//webView.loadUrl("file:///android_asset/lorem.html");
-
 		dialog = ProgressDialog.show(this, "",
 				this.getString(R.string.loading_please_wait), true);
 
@@ -289,41 +270,35 @@ public class ReadActivity extends ActionBarFragmentActivity implements ViewPager
 		webView.getSettings().setDefaultZoom(WebSettings.ZoomDensity.MEDIUM);
 
 		webView.setPictureListener(new PictureListener() { // XXX Fokkat!
-
 			public void onNewPicture(WebView view, Picture picture) {
-				
 				view.setPictureListener(null);
-				
-				forwardCache.add(getBitmapFromView(view));
-				
-				generateWebViewCache(true);
-				
-				((BookImageFragment)pagerAdapter.getItem(0)).getImage().setImageBitmap(forwardCache.getFirst());
-				((BookImageFragment)pagerAdapter.getItem(1)).getImage().setImageBitmap(forwardCache.getFirst());
-				((BookImageFragment)pagerAdapter.getItem(2)).getImage().setImageBitmap(forwardCache.get(1));
-				
-				pagerAdapter.notifyDataSetChanged();
-				//pagerAdapter.
-				
-				
-				dialog.dismiss();
-				//generateWebViewCache(true);
 			}
 		});
 
 		webView.setWebViewClient(new WebViewClient() {
+
 			@Override
 			public void onPageFinished(WebView view, String url) {
-				viewHeight = view.getBottom();
-				FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) view
-						.getLayoutParams();
+				if (setupLayout) {
+					setupLayout = false;
+					viewHeight = view.getHeight();
+					FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) view
+							.getLayoutParams();
 
-				layoutParams.setMargins(0, 0, 0,
-						(int) (viewHeight % (18 * 1.5)));
-				viewHeight -= viewHeight % (18 * 1.5);
-				view.setLayoutParams(layoutParams);
-				view.requestLayout();
-				view.setWebViewClient(null);
+					layoutParams.setMargins(0, 0, 0,
+							(int) (viewHeight % (18 * 1.5)));
+					viewHeight -= viewHeight % (18 * 1.5);
+					view.setLayoutParams(layoutParams);
+					view.requestLayout();
+				}
+
+				pagerAdapter.setCurrent(Helper.getBitmapFromView(view));
+				view.scrollTo(0, view.getScrollY() + viewHeight);
+				pagerAdapter.setNext(Helper.getBitmapFromView(view));
+				pagerAdapter.notifyDataSetInvalidated();
+				pagerAdapter.notifyDataSetChanged();
+				dialog.dismiss();
+
 			}
 		});
 
@@ -355,45 +330,19 @@ public class ReadActivity extends ActionBarFragmentActivity implements ViewPager
 		}
 		layoutOverlay.setVisibility(visibility);
 	}
-	
-	private synchronized void ensureCache(){
-		while (forwardCache.size() < maxCacheCount) {
-			webView.scrollTo(0, webView.getScrollY() + viewHeight);
-			forwardCache.add(getBitmapFromView(webView));
-		}
-	}
-
-	
-	private void generateWebViewCache(boolean forward) {
-		// TODO Fix this, not a good implementation.
-		if (forward) {
-			while (forwardCache.size() < maxCacheCount) {
-				webView.scrollTo(0, webView.getScrollY() + viewHeight);
-				forwardCache.add(getBitmapFromView(webView));
-			}
-		} else {
-			while (backwardCache.size() < maxCacheCount) {
-				webView.scrollTo(0, webView.getScrollY() - viewHeight);
-				backwardCache.addFirst(getBitmapFromView(webView));
-			}
-		}
-	}
-
-	private Bitmap getBitmapFromView(View view) {
-		view.setDrawingCacheEnabled(true);
-		view.layout(0, 0, view.getWidth(), view.getBottom());
-		view.buildDrawingCache();
-		Bitmap bitmap = Bitmap.createBitmap(view.getDrawingCache());
-		view.setDrawingCacheEnabled(false);
-		return bitmap;
-	}
 
 	private void nextPage() {
-		viewPager.setCurrentItem(2);
+		if (!endOfFile) {
+			bookFlipper.nextScreen();
+		} else {
+			// /TODO nextChapter
+		}
 	}
 
 	private void prevPage() {
-		viewPager.setCurrentItem(0);
+		bookFlipper.prevousScreen();
+		// bookFlipper.setSelection(bookFlipper.getSelectedItemPosition()-1);
+		// bookFlipper.setCurrentItem(0);
 	}
 
 	public void setFullScreen(boolean fullscreen) {
@@ -445,60 +394,14 @@ public class ReadActivity extends ActionBarFragmentActivity implements ViewPager
 			break;
 		case R.id.menu_bookmark:
 			selectText();
-			//setFullScreen(false);
-			Intent tocIntent = new Intent(webView.getContext(), TocActivity.class);
+			// setFullScreen(false);
+			Intent tocIntent = new Intent(webView.getContext(),
+					TocActivity.class);
 			int GET_SECTION_REFERENCE = 1;
 			startActivityForResult(tocIntent, GET_SECTION_REFERENCE);
 
-			break; 
+			break;
 		}
 		return super.onOptionsItemSelected(item);
-	}
-
-	public void onPageScrollStateChanged(int val) {
-		
-		if(val == 0){
-			
-			
-			if(viewPager.getCurrentItem() > 1){
-				List<Bitmap> forwardTemp = new LinkedList<Bitmap>();
-				for (int i = 1; i < forwardCache.size(); i++) {
-					forwardTemp.add(forwardCache.get(i));
-				}
-				if (backwardCache.size() >= maxCacheCount) {
-					backwardCache.removeLast();
-				}
-				backwardCache.addFirst(forwardCache.get(0));
-				forwardCache.clear();
-				forwardCache.addAll(forwardTemp);
-				generateWebViewCache(true);
-				((BookImageFragment)pagerAdapter.getItem(1)).getImage().setImageBitmap(forwardCache.getFirst());
-				((BookImageFragment)pagerAdapter.getItem(2)).getImage().setImageBitmap(forwardCache.get(1));
-			}else if(viewPager.getCurrentItem() < 1){
-				List<Bitmap> backwardTemp = new LinkedList<Bitmap>();
-				for (int i = 1; i < backwardCache.size(); i++) {
-					backwardTemp.add(backwardCache.get(i));
-				}
-				if (forwardCache.size() >= maxCacheCount) {
-					forwardCache.removeLast();
-				}
-				forwardCache.addFirst(backwardCache.get(0));
-				backwardCache.clear();
-				backwardCache.addAll(backwardTemp);
-				generateWebViewCache(false);
-				((BookImageFragment)pagerAdapter.getItem(1)).getImage().setImageBitmap(backwardCache.getFirst());
-				((BookImageFragment)pagerAdapter.getItem(0)).getImage().setImageBitmap(backwardCache.get(1));
-			}
-			viewPager.setCurrentItem(1);
-			pagerAdapter.notifyDataSetChanged();
-			Log.d("Page Scroll", "Scroll FInnished");
-		}
-	}
-	public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
-		
-	}
-
-	public void onPageSelected(int position) {
-		//Log.d("Page Scroll", "onPageSelected");
 	}
 }
