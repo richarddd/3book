@@ -58,19 +58,18 @@ public class EpubContentStream implements ContentStream {
 			return WriterHelper.getCachedFileName(nav.getBook().getTitle(), ref.getTitle());
 		}
 		//TODO: Inject anchor-jumping javascript or other anchor solution
-		String data = stripHeadFromHtml(getStringFromResource(nav.getCurrentResource()));
+		String data = getStringFromResource(nav.getCurrentResource());
+		
 		// PERFORM STRING PROCESSING
 		HtmlParser p = new HtmlParser(data);
 		p.injectCss(HtmlParser.BASIC_STYLE);
 		List<String> imageNames = p.getImg();
 		Map <String, String> headers = p.getHeadings();
-		if (headers.size() > 0){
-			for (Entry<String,String> e : headers.entrySet()){
-				Log.d("3", "Heading key/value: " + e.getKey() + "/" + e.getValue());
-			}
-		}
-		data = p.getModifiedHtml(); // rewritten HTML
-		Log.d("3", "Html data: \n" + data.substring(0,8000));
+		
+		for (Entry<String,String> e : headers.entrySet()){
+			Log.d("3", "Heading key/value: " + e.getKey() + "/" + e.getValue());
+		} 
+		data = p.getModifiedHtml(); // rewritten HTMLg
 		
 		// UNZIP AND PLACE IMAGES AS NEEDED
 		for (String s : imageNames){
@@ -79,8 +78,9 @@ public class EpubContentStream implements ContentStream {
 			if (r != null){
 				Log.d("3", "title of resource is: " + r.getTitle());
 				WriterHelper.writeImage(r.getData(), nav.getBook().getTitle(), s, parent);
-			}
+			} 
 		}
+		
 		// FINALLY WRITE THE DAMN HTML FILE WITH THE BOOK
 		return WriterHelper.writeFile(data, nav.getBook().getTitle(), ref.getTitle(), parent); // GET PARENT!
 	}

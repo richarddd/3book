@@ -42,7 +42,7 @@ public class HtmlParser {
 
 			Pattern wrapperPattern = Pattern.compile("(<h[1-7])(.*?)(</h[1-7]>)",
 					Pattern.DOTALL);
-			Matcher html = wrapperPattern.matcher(original);
+			Matcher html = wrapperPattern.matcher(mod);
 
 			Map<Integer, String> titleList = new HashMap<Integer, String>();
 
@@ -80,7 +80,7 @@ public class HtmlParser {
 			Pattern srcPattern = Pattern.compile(
 					"<img[^>]+src\\s*=\\s*['\"]([^'\"]+)['\"][^>]*>",
 					Pattern.DOTALL);
-			Matcher srcs = srcPattern.matcher(original);
+			Matcher srcs = srcPattern.matcher(mod);
 
 			List<String> imgList = new ArrayList<String>();
 
