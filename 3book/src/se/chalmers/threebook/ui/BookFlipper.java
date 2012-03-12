@@ -99,7 +99,7 @@ public class BookFlipper extends AdapterView<Adapter> {
 
 	public BookFlipper(Context context) {
 		super(context);
-		mSideBuffer = 3;
+		mSideBuffer = 1;
 		init();
 	}
 
@@ -504,6 +504,7 @@ public class BookFlipper extends AdapterView<Adapter> {
 
 	@Override
 	public void setSelection(int position) {
+		//mPreViewSwitchedListener.onPreViewSwitched(position);
 		mNextScreen = INVALID_SCREEN;
 		mScroller.forceFinished(true);
 		if (mAdapter == null)
