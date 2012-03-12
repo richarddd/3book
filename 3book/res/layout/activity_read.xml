@@ -6,24 +6,22 @@
     android:background="@color/default_background"
     android:orientation="vertical" >
     
-     
     <se.chalmers.threebook.ui.BookFlipper
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
-        android:id="@+id/pgr_book" />
+        android:id="@+id/pgr_book"
+        android:visibility="visible" />
     
-
-    <!--  <ImageView
-        android:id="@+id/img_book"
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent" />-->
-
     <WebView
         android:id="@+id/web_book"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         android:background="@color/default_background"
-        android:visibility="invisible" />
+        android:visibility="visible" />
+     
+    
+    
+    
 
     <RelativeLayout
         android:id="@+id/lay_book_overlay"
@@ -68,8 +66,8 @@
                     android:layout_toLeftOf="@+id/txt_book_nav_chapter_no"
                     android:gravity="center_vertical"
                     android:paddingLeft="@dimen/padding_l"
-                    android:textColor="@color/default_background" 
-                    android:singleLine="true" />
+                    android:singleLine="true"
+                    android:textColor="@color/default_background" />
 
                 <TextView
                     android:id="@+id/txt_book_nav_chapter_no"
