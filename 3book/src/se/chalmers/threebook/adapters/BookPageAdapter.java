@@ -24,7 +24,8 @@ public class BookPageAdapter extends BaseAdapter {
 	}
 
 	public int getCount() {
-		return current == null || next == null ? 0 : Integer.MAX_VALUE;
+		//return current == null || next == null ? 0 : Integer.MAX_VALUE;
+		return current == null || next == null ? 0 : 100;
 	}
 
 	public int getCurrentItem() {

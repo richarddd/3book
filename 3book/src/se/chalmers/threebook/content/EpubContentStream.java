@@ -57,10 +57,11 @@ public class EpubContentStream implements ContentStream {
 			Log.d("3", "file is cached, returning like a boss!");
 			return WriterHelper.getCachedFileName(nav.getBook().getTitle(), ref.getTitle());
 		}
-		//TODO: Inject anchor-jumping javascript
+		//TODO: Inject anchor-jumping javascript or other anchor solution
 		String data = stripHeadFromHtml(getStringFromResource(nav.getCurrentResource()));
-		// TODO: PERFORM STRING PROCESSING
+		// PERFORM STRING PROCESSING
 		HtmlParser p = new HtmlParser(data);
+		p.injectCss(HtmlParser.BASIC_STYLE);
 		List<String> imageNames = p.getImg();
 		Map <String, String> headers = p.getHeadings();
 		if (headers.size() > 0){
@@ -68,11 +69,10 @@ public class EpubContentStream implements ContentStream {
 				Log.d("3", "Heading key/value: " + e.getKey() + "/" + e.getValue());
 			}
 		}
-
-		// TODO: UNZIP AND PLACE IMAGES AS NEEDED
-		if (imageNames.size() > 0){ // rewrite HTML if we have any images.
-			data = p.getModifiedHtml();
-		}
+		data = p.getModifiedHtml(); // rewritten HTML
+		Log.d("3", "Html data: \n" + data.substring(0,8000));
+		
+		// UNZIP AND PLACE IMAGES AS NEEDED
 		for (String s : imageNames){
 			Log.d("3","trying to get image resource by href: ");
 			Resource r = nav.getBook().getResources().getByHref(s);

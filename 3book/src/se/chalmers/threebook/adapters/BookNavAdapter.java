@@ -36,9 +36,23 @@ public class BookNavAdapter extends BaseAdapter implements OnScrollListener {
 	
 /* XXX axel test code - probably not right! */
 	
-	private TextView chapterNameTextView = null;
+	public void initialize(TextView chapNameView, TextView chapNoView, int startPos){
+		//
+	}
+	
+	private TextView chapterNameTextView;
+	private TextView chapterNoTextView;
 	public void setChapterNameTextView(TextView view){
 		chapterNameTextView = view;
+		//
+	}
+	public void setChapterNoTextView(TextView view){
+		chapterNoTextView = view;
+	}
+	
+	// XXX rather ugly thingie.
+	public void setCurrentChapterNumber(int chapterIndex, int chapterCount){
+		chapterNoTextView.setText((chapterIndex+1)+"/"+chapterCount);
 	}
 	/**
 	 * Sets the onItemClickListener for the contained listView
@@ -85,7 +99,8 @@ public class BookNavAdapter extends BaseAdapter implements OnScrollListener {
 		/* XXX Axel hacking! */
 		//holder.textView.setText(String.valueOf(position));
 		holder.textView.setText(items.get(position).getTitle());
-		
+		Log.d("3", "Trying to figure out view size for smallys. W/H: ");
+		Log.d("3", ((TextView) convertView.findViewById(R.id.txt_book_nav_item)).getWidth()+"/"+((TextView) convertView.findViewById(R.id.txt_book_nav_item)).getHeight());
 		
 		/* XXX End axel hacking */ 
 		return convertView;
@@ -119,6 +134,10 @@ public class BookNavAdapter extends BaseAdapter implements OnScrollListener {
 		position = firstVisibleItem + (int)(visibleItemCount % 2 == 0 ? visibleItemCount/2 : Math.ceil(visibleItemCount/2));
 		if (chapterNameTextView != null){
 			chapterNameTextView.setText(items.get(position).getTitle());
+		}
+		if (chapterNoTextView != null){
+			// position+1 for CS-zeroindex->human-oneindex
+			setCurrentChapterNumber(position, totalItemCount);
 		}
 		
 		/* end axel hacking */

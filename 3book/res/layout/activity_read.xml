@@ -78,7 +78,7 @@
                     android:layout_alignParentRight="true"
                     android:gravity="center_vertical"
                     android:paddingRight="@dimen/padding_l"
-                    android:text="2/3"
+                    android:text="*/*"
                     android:textColor="@color/default_background" />
             </RelativeLayout>
         </RelativeLayout>
