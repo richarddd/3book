@@ -17,6 +17,7 @@ public class BookPageAdapter extends BaseAdapter {
 	private Bitmap current;
 	private Bitmap next;
 	private Bitmap previous;
+	private int count = 0;
 
 	public BookPageAdapter(Context context) {
 		mInflater = (LayoutInflater) context
@@ -24,7 +25,8 @@ public class BookPageAdapter extends BaseAdapter {
 	}
 
 	public int getCount() {
-		return current == null || next == null ? 0 : Integer.MAX_VALUE;
+		return count;
+		//return current == null || next == null ? 0 : 30;
 	}
 
 	public int getCurrentItem() {
@@ -41,6 +43,7 @@ public class BookPageAdapter extends BaseAdapter {
 
 	public void setCurrent(Bitmap current) {
 		this.current = current;
+		count = Integer.MAX_VALUE;
 	}
 
 	public Bitmap getNext() {
@@ -65,12 +68,12 @@ public class BookPageAdapter extends BaseAdapter {
 			item = current;
 		} else {
 			if (position > lastPosition) {
-				Log.d("BookpagerAdapter", "Next adapter 'inflate' at: "
-						+ String.valueOf(position));
+				/*Log.d("BookpagerAdapter", "Next adapter 'inflate' at: "
+						+ String.valueOf(position));*/
 				item = next;
 			} else {
-				Log.d("BookpagerAdapter", "Prev adapter 'inflate' at: "
-						+ String.valueOf(position));
+				/*Log.d("BookpagerAdapter", "Prev adapter 'inflate' at: "
+						+ String.valueOf(position));*/
 				item = previous;
 			}
 		}

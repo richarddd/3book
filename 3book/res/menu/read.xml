@@ -28,8 +28,40 @@
         android:showAsAction="always" />
     
     <item android:id="@+id/menu_overflow"
-        android:title="@string/settings"
+        android:title="@string/more"
         android:icon="@drawable/ic_action_overflow"
         android:orderInCategory="2"
         android:showAsAction="always" />
+    
+    <item android:id="@+id/menu_table_of_contents"
+        android:title="@string/table_of_contents"
+        android:icon="@drawable/ic_action_overflow"
+        android:orderInCategory="3"
+        android:showAsAction="never" />
+    
+     <item android:id="@+id/menu_zoom_in"
+        android:title="@string/zoom_in"
+        android:icon="@drawable/ic_action_overflow"
+        android:orderInCategory="4"
+        android:showAsAction="never" />
+     
+      <item android:id="@+id/menu_zoom_out"
+        android:title="@string/zoom_out"
+        android:icon="@drawable/ic_action_overflow"
+        android:orderInCategory="5"
+        android:showAsAction="never" />
+      
+       <item android:id="@+id/menu_settings"
+        android:title="@string/settings"
+        android:icon="@drawable/ic_action_settings"
+        android:orderInCategory="6"
+        android:showAsAction="never" />
+       
+       <item android:id="@+id/menu_day_night_mode"
+        android:title="@string/day_night_mode"
+        android:icon="@drawable/ic_action_overflow"
+        android:orderInCategory="7"
+        android:showAsAction="never" />
+    
+    
 </menu>
