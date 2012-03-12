@@ -101,6 +101,14 @@ public class ReadActivity extends ActionBarActivity {
 	public void display(int index, String anchor){
 		anchor = anchor == null ? "" : anchor;
 		Log.d("3", "Trying to jump via toc. Index: " + index +", Anchor: " + anchor);
+		
+		// Scroll the chapter picker to an appropriate location
+		if (chapterListView.getChildAt(0) != null){
+			int chapWidth = chapterListView.getChildAt(0).getWidth();
+			//chapterListView.scrollTo(0);
+			//chapterListView.scrollTo((int)(chapWidth*(index-0.5))); // 1 to counter center-stuffies
+			chapterListView.scrollTo((int)(chapWidth*(index-1))); // 1 to counter center-stuffies
+		}
 		try { 
 			String curUrl = "file:///"+stream.jumpTo(index)+"#"+anchor;
 			Log.d("3", "time to load url into view! url is: " + curUrl);
@@ -152,6 +160,8 @@ public class ReadActivity extends ActionBarActivity {
 		chapterAdapter = new BookNavAdapter(this, chapterListView);
 		chapterAdapter
 				.setChapterNameTextView((TextView) findViewById(R.id.txt_book_nav_chapter_title));
+		chapterAdapter
+				.setChapterNoTextView((TextView) findViewById(R.id.txt_book_nav_chapter_no));
 
 		
 		/* This is the adapter for each individual chapter in the list */
@@ -307,16 +317,21 @@ public class ReadActivity extends ActionBarActivity {
 			break;
 		case READ_BOOK_FROM_LIBRARY:
 			Log.d("3", "reading from files and shit!");
+			
 			AssetManager assetManager = getAssets();
 			String fileName = (String) getIntent().getSerializableExtra(IntentKey.FILE_PATH.toString());
 			//int lastIndex = getFromDatabase.lastChapterForUserDude(); // TODO implement this plz
 			int lastIndex = 5;
 
-			try {
+			
+			try { // Open and store ye olde book
+				long t1 = System.currentTimeMillis();
 				InputStream epubInputStream = assetManager.open("books/"
 						+ fileName);
 				MyBook.setBook(new EpubReader().readEpub(epubInputStream));
 				stream = new EpubContentStream(MyBook.get().book(), this);
+				long t2 = System.currentTimeMillis();
+				Log.d("3", "opening book took " + (t2-t1) + "ms.");
 			
 			} catch (FileNotFoundException e){
 				Log.e("3", "ReadActivity FNFE: " + e.getMessage() );
@@ -324,10 +339,13 @@ public class ReadActivity extends ActionBarActivity {
 				Log.e("3", "ReadActivity IOE: " + e.getMessage() );
 			}
 			
+			// Set up listeners and data for the overlay chapter-scroller
 			List<BookNavItem> chapters = chapterAdapter.getItems();
 			for (String title : stream.getToc()) {
 				chapters.add(new BookNavItem(title, null));
 			}
+			((TextView) findViewById(R.id.txt_book_nav_chapter_no)).setText(lastIndex + "/" + stream.getToc().size());
+			
 			
 			display(lastIndex);
 			break;
@@ -356,6 +374,7 @@ public class ReadActivity extends ActionBarActivity {
 			((View) ((LinearLayout) findViewById(R.id.actionbar_compat))
 					.getParent()).setVisibility(gone);
 		}
+		
 		layoutOverlay.setVisibility(visibility);
 	}
 

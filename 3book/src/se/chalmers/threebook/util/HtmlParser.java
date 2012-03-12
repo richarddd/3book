@@ -15,6 +15,8 @@ public class HtmlParser {
 	Map<String, String> headings;
 	List<String> imagePaths;
 
+	public static final String basicStyle = "<style>*{margin:0;padding:0;}body{text-align:justify;padding:0px 10px;line-height:18px;font-size:16px;}h1{line-height:36px;font-size:32px;margin-bottom:36px;}p{margin-bottom:18px;}</style>";
+
 	public HtmlParser(String html) {
 		original = html;
 		mod = new StringBuilder(html);
@@ -34,10 +36,8 @@ public class HtmlParser {
 
 			Map<String, String> headings = new HashMap<String, String>();
 
-			// with html: \\<h2.*\\>.*\\</h2>
-			// without end tag: ((<h2)(.*?)(>))(.*?)(?=(</h2>))
-			Pattern wrapperPattern = Pattern
-					.compile("((<h2)(.*?)(>))(.*?)(</h2>)");
+			Pattern wrapperPattern = Pattern.compile("(<h2)(.*?)(</h2>)",
+					Pattern.DOTALL);
 			Matcher html = wrapperPattern.matcher(original);
 
 			Map<Integer, String> indexList = new HashMap<Integer, String>();
@@ -45,25 +45,23 @@ public class HtmlParser {
 			while (html.find()) {
 				String match = html.group();
 
-				int start = match.indexOf(">");
-				int end = match.indexOf("<", start + 1);
-				String title = (match.subSequence(start + 1, end)).toString();
+				int start = match.indexOf(">")+1;
+				int end = match.indexOf("<", start);
+				String title = (match.subSequence(start, end)).toString();
 
-				int insert = html.start() - 1;
+				int insert = html.start();
 
 				indexList.put(insert, title);
 			}
 
-			ArrayList<Integer> indexes = new ArrayList<Integer>(
-					indexList.keySet());
-			Collections.sort(indexes);
+			List<Integer> indexArray = new ArrayList<Integer>(indexList.keySet());
+			Collections.sort(indexArray);
+			Collections.reverse(indexArray);
 
-			int offset = 0;
-			for (Integer i : indexes) {
+			for (Integer i : indexArray) {
 				String anchorName = String.valueOf(indexList.get(i).hashCode());
 				String tag = "<a name=\"" + anchorName + "\"/>";
-				mod.insert(i + offset, tag);
-				offset += tag.length();
+				mod.insert(i, tag);
 
 				headings.put(indexList.get(i), anchorName);
 			}
@@ -78,8 +76,9 @@ public class HtmlParser {
 
 		if (imagePaths == null) {
 
-			Pattern srcPattern = Pattern
-					.compile("<img[^>]+src\\s*=\\s*['\"]([^'\"]+)['\"][^>]*>");
+			Pattern srcPattern = Pattern.compile(
+					"<img[^>]+src\\s*=\\s*['\"]([^'\"]+)['\"][^>]*>",
+					Pattern.DOTALL);
 			Matcher srcs = srcPattern.matcher(original);
 
 			List<String> imgList = new ArrayList<String>();
@@ -95,32 +94,67 @@ public class HtmlParser {
 				indexList.put(srcs.start(), srcs.end());
 			}
 
-			String startDiv = "<div class=\"threebookImageContainer\">" + 
-					"<a class=\"threeBookImageLink\" href=\"#\" onClick=\"application.fireImageIntent(\""+"images/chap22.jpg"+"\");\" >";
-			String endDiv = "</a></div>";
+			String startDiv = "<div class=\"threebookImageContainer\">";
+			String endDiv = "</div>";
 			String height = "height=\"252px\"";
-			int offset = 0;
 
-			List<Integer> indexArray = new ArrayList<Integer>(
-					indexList.keySet());
+			List<Integer> indexArray = new ArrayList<Integer>(indexList.keySet());
 			Collections.sort(indexArray);
+			Collections.reverse(indexArray);
 
 			for (Integer i : indexArray) {
-				Integer valueIndex = indexList.get(i);
+				mod.insert(indexList.get(i), endDiv);
 
-				mod.insert(i + offset, startDiv);
-				offset += startDiv.length();
+				mod.insert(i + 5, height);
 
-				mod.insert(i+offset+5, height);
-				offset += height.length();
-
-				mod.insert(valueIndex + offset, endDiv);
-				offset += endDiv.length();
+				mod.insert(i, startDiv);
 			}
 
 			imagePaths = imgList;
 		}
 
 		return imagePaths;
+	}
+
+	public void injectCss(String style) {
+		removePattern("(<style)(.*?)(</style>)"); // in-file style tags
+		removePattern("(<link)(.*?)(rel=\"stylesheet\")(.*?)(/>)"); // linked
+																	// css
+
+		// Inject css
+		Pattern pattern = Pattern.compile("(<head)(.*?)(</head>)",
+				Pattern.DOTALL);
+		Matcher html = pattern.matcher(mod);
+
+		if (html.find()) {
+			mod.insert(html.end() - 7, style);
+		} else {
+			// No header tag
+			Pattern bodyPattern = Pattern.compile("<body");
+			Matcher bodyMatcher = bodyPattern.matcher(mod);
+
+			if (bodyMatcher.find()) {
+				mod.insert(bodyMatcher.start(), "<head>" + style + "</head>");
+			}
+		}
+	}
+
+	private void removePattern(String p) {
+		Pattern pattern = Pattern.compile(p, Pattern.DOTALL);
+		Matcher html = pattern.matcher(mod);
+
+		Map<Integer, Integer> indexList = new HashMap<Integer, Integer>();
+
+		while (html.find()) {
+			indexList.put(html.start(), html.end());
+		}
+
+		List<Integer> indexArray = new ArrayList<Integer>(indexList.keySet());
+		Collections.sort(indexArray);
+		Collections.reverse(indexArray);
+
+		for (Integer i : indexArray) {
+			mod.delete(i, indexList.get(i));
+		}
 	}
 }
