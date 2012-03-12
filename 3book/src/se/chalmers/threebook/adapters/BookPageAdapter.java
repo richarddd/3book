@@ -14,8 +14,6 @@ public class BookPageAdapter extends BaseAdapter {
 
 	private int lastPosition = 0;
 	private LayoutInflater mInflater;
-	// private LinkedList<Bitmap> items = new LinkedList<Bitmap>();
-	// private ListIterator<Bitmap> iterator = items.listIterator();
 	private Bitmap current;
 	private Bitmap next;
 	private Bitmap previous;
@@ -79,16 +77,6 @@ public class BookPageAdapter extends BaseAdapter {
 		lastPosition = position;
 		return item;
 	}
-
-	/*
-	 * Log.i(this.getClass().toString(),
-	 * "Adapter pos: "+String.valueOf(position)); Bitmap item; if(position ==
-	 * 0){ item = items.getFirst(); }else{ if (position > currentItem) { //item
-	 * = items.get(items.indexOf(items.get(position))+1); items.get
-	 * 
-	 * } else { item = items.get(items.indexOf(items.get(position))-1); } }
-	 * currentItem = position; return item;
-	 */
 
 	public long getItemId(int position) {
 		return position;

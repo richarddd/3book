@@ -401,6 +401,10 @@ public class ReadActivity extends ActionBarActivity {
 			startActivityForResult(tocIntent, GET_SECTION_REFERENCE);
 
 			break;
+		
+		case R.id.menu_overflow:
+			webView.zoomIn();
+			break;
 		}
 		return super.onOptionsItemSelected(item);
 	}
