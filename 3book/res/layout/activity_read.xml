@@ -68,8 +68,8 @@
                     android:layout_toLeftOf="@+id/txt_book_nav_chapter_no"
                     android:gravity="center_vertical"
                     android:paddingLeft="@dimen/padding_l"
-                    android:text="Chapter III: Loprem"
-                    android:textColor="@color/default_background" />
+                    android:textColor="@color/default_background" 
+                    android:singleLine="true" />
 
                 <TextView
                     android:id="@+id/txt_book_nav_chapter_no"

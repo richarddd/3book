@@ -1,24 +1,34 @@
 package se.chalmers.threebook.content;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
+
 import java.io.Reader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+
+import se.chalmers.threebook.util.HtmlParser;
+import se.chalmers.threebook.util.WriterHelper;
 
 import nl.siegmann.epublib.browsersupport.Navigator;
 import nl.siegmann.epublib.domain.Book;
 import nl.siegmann.epublib.domain.Resource;
 import nl.siegmann.epublib.domain.TOCReference;
 import se.chalmers.threebook.model.Bookmark;
+import android.app.Activity;
 import android.util.Log;
 
 public class EpubContentStream implements ContentStream {
 
 	private Navigator nav;
 //	private Map<String,Resource> tocCache;
+	private Activity parent; 
 	
-	public EpubContentStream(Book book){
+	public EpubContentStream(Book book, Activity parent){
 		nav = new Navigator(book);
+		this.parent = parent;
 //		tocCache = new HashMap<String,Resource>((int) (nav.getBook().getTableOfContents().size() * 1.25));
 	}
 	
@@ -39,19 +49,49 @@ public class EpubContentStream implements ContentStream {
 		return stripHeadFromHtml(getStringFromResource(nav.getCurrentResource()));
 	}
 
-	public String jumpToToc(TOCReference ref) throws IOException {
+	public String jumpToToc(TOCReference ref) throws IOException, FileNotFoundException {
 		Resource chapter = ref.getResource();
 		nav.gotoResource(chapter, 0, ref.getFragmentId(), this);
+		
+		if (WriterHelper.chapterCached(nav.getBook().getTitle(), ref.getTitle())){
+			Log.d("3", "file is cached, returning like a boss!");
+			return WriterHelper.getCachedFileName(nav.getBook().getTitle(), ref.getTitle());
+		}
 		//TODO: Inject anchor-jumping javascript
-		return stripHeadFromHtml(getStringFromResource(nav.getCurrentResource()));
+		String data = stripHeadFromHtml(getStringFromResource(nav.getCurrentResource()));
+		// TODO: PERFORM STRING PROCESSING
+		HtmlParser p = new HtmlParser(data);
+		List<String> imageNames = p.getImg();
+		Map <String, String> headers = p.getHeadings();
+		if (headers.size() > 0){
+			for (Entry<String,String> e : headers.entrySet()){
+				Log.d("3", "Heading key/value: " + e.getKey() + "/" + e.getValue());
+			}
+		}
+
+		// TODO: UNZIP AND PLACE IMAGES AS NEEDED
+		if (imageNames.size() > 0){ // rewrite HTML if we have any images.
+			data = p.getModifiedHtml();
+		}
+		for (String s : imageNames){
+			Log.d("3","trying to get image resource by href: ");
+			Resource r = nav.getBook().getResources().getByHref(s);
+			if (r != null){
+				Log.d("3", "title of resource is: " + r.getTitle());
+				WriterHelper.writeImage(r.getData(), nav.getBook().getTitle(), s, parent);
+			}
+		}
+		// FINALLY WRITE THE DAMN HTML FILE WITH THE BOOK
+		return WriterHelper.writeFile(data, nav.getBook().getTitle(), ref.getTitle(), parent); // GET PARENT!
 	}
 	
-	public String jumpTo(int index) throws IOException{
+	
+	public String jumpTo(int index) throws IOException, FileNotFoundException{
 		return jumpToToc(nav.getBook().getTableOfContents().getTocReferences().get(index));
 	}
 	
 	public String jumpTo(Position position){
-		Log.d("3", "jumpTo called, empty string returned - method not implemented yet");
+		Log.d("3", "jumpTo(Position position) called, empty string returned - method not implemented yet");
 		
 		return "";
 	}

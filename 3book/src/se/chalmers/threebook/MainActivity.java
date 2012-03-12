@@ -107,7 +107,7 @@ public class MainActivity extends ActionBarActivity {
                             }
                         }, 1000);
                 break;
-			*/
+                 */
             case R.id.menu_search:
                 Toast.makeText(this, "Tapped search", Toast.LENGTH_SHORT).show();
                 break;
