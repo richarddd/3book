@@ -108,6 +108,7 @@ public class ReadActivity extends ActionBarActivity {
 			//chapterListView.scrollTo(0);
 			//chapterListView.scrollTo((int)(chapWidth*(index-0.5))); // 1 to counter center-stuffies
 			chapterListView.scrollTo((int)(chapWidth*(index-1))); // 1 to counter center-stuffies
+			chapterAdapter.setCurrentChapterNumber(index, MyBook.get().book().getTableOfContents().size());
 		}
 		try { 
 			String curUrl = "file:///"+stream.jumpTo(index)+"#"+anchor;

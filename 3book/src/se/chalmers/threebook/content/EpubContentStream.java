@@ -61,7 +61,7 @@ public class EpubContentStream implements ContentStream {
 		String data = stripHeadFromHtml(getStringFromResource(nav.getCurrentResource()));
 		// PERFORM STRING PROCESSING
 		HtmlParser p = new HtmlParser(data);
-		p.injectCss(HtmlParser.basicStyle);
+		p.injectCss(HtmlParser.BASIC_STYLE);
 		List<String> imageNames = p.getImg();
 		Map <String, String> headers = p.getHeadings();
 		if (headers.size() > 0){

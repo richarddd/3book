@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -15,11 +16,14 @@ public class HtmlParser {
 	Map<String, String> headings;
 	List<String> imagePaths;
 
-	public static final String basicStyle = "<style>*{margin:0;padding:0;}body{text-align:justify;padding:0px 10px;line-height:18px;font-size:16px;}h1{line-height:36px;font-size:32px;margin-bottom:36px;}p{margin-bottom:18px;}</style>";
+	private int index;
+
+	public static final String BASIC_STYLE = "<style>*{margin:0;padding:0;}body{text-align:justify;padding:0px 10px;line-height:18px;font-size:16px;}h1{line-height:36px;font-size:32px;margin-bottom:36px;}p{margin-bottom:18px;}</style>";
 
 	public HtmlParser(String html) {
 		original = html;
 		mod = new StringBuilder(html);
+		index = 0;
 	}
 
 	public String getOriginalHtml() {
@@ -36,34 +40,31 @@ public class HtmlParser {
 
 			Map<String, String> headings = new HashMap<String, String>();
 
-			Pattern wrapperPattern = Pattern.compile("(<h2)(.*?)(</h2>)",
+			Pattern wrapperPattern = Pattern.compile("(<h[1-7])(.*?)(</h[1-7]>)",
 					Pattern.DOTALL);
 			Matcher html = wrapperPattern.matcher(original);
 
-			Map<Integer, String> indexList = new HashMap<Integer, String>();
+			Map<Integer, String> titleList = new HashMap<Integer, String>();
+
+			Pattern tagPattern = Pattern.compile("<.*?>", Pattern.DOTALL);
 
 			while (html.find()) {
 				String match = html.group();
-
-				int start = match.indexOf(">")+1;
-				int end = match.indexOf("<", start);
-				String title = (match.subSequence(start, end)).toString();
-
-				int insert = html.start();
-
-				indexList.put(insert, title);
+				Matcher heading = tagPattern.matcher(match);
+				String title = heading.replaceAll("");
+				titleList.put(html.start(), title);
 			}
 
-			List<Integer> indexArray = new ArrayList<Integer>(indexList.keySet());
+			List<Integer> indexArray = new ArrayList<Integer>(titleList.keySet());
 			Collections.sort(indexArray);
 			Collections.reverse(indexArray);
 
 			for (Integer i : indexArray) {
-				String anchorName = String.valueOf(indexList.get(i).hashCode());
+				String anchorName = String.valueOf(titleList.get(i).hashCode()) + "_" + this.index++;
 				String tag = "<a name=\"" + anchorName + "\"/>";
 				mod.insert(i, tag);
 
-				headings.put(indexList.get(i), anchorName);
+				headings.put(titleList.get(i), anchorName);
 			}
 
 			this.headings = headings;

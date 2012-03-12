@@ -49,6 +49,11 @@ public class BookNavAdapter extends BaseAdapter implements OnScrollListener {
 	public void setChapterNoTextView(TextView view){
 		chapterNoTextView = view;
 	}
+	
+	// XXX rather ugly thingie.
+	public void setCurrentChapterNumber(int chapterIndex, int chapterCount){
+		chapterNoTextView.setText((chapterIndex+1)+"/"+chapterCount);
+	}
 	/**
 	 * Sets the onItemClickListener for the contained listView
 	 */
@@ -132,7 +137,7 @@ public class BookNavAdapter extends BaseAdapter implements OnScrollListener {
 		}
 		if (chapterNoTextView != null){
 			// position+1 for CS-zeroindex->human-oneindex
-			chapterNoTextView.setText((position+1)+"/"+totalItemCount);
+			setCurrentChapterNumber(position, totalItemCount);
 		}
 		
 		/* end axel hacking */
