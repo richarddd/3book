@@ -24,8 +24,9 @@ public class BookPageAdapter extends BaseAdapter {
 	}
 
 	public int getCount() {
-		//return current == null || next == null ? 0 : Integer.MAX_VALUE;
-		return current == null || next == null ? 0 : 100;
+
+		return current == null || next == null ? 0 : Integer.MAX_VALUE;
+
 	}
 
 	public int getCurrentItem() {
@@ -66,12 +67,12 @@ public class BookPageAdapter extends BaseAdapter {
 			item = current;
 		} else {
 			if (position > lastPosition) {
-				Log.d("BookpagerAdapter", "Next adapter 'inflate' at: "
-						+ String.valueOf(position));
+				/*Log.d("BookpagerAdapter", "Next adapter 'inflate' at: "
+						+ String.valueOf(position));*/
 				item = next;
 			} else {
-				Log.d("BookpagerAdapter", "Prev adapter 'inflate' at: "
-						+ String.valueOf(position));
+				/*Log.d("BookpagerAdapter", "Prev adapter 'inflate' at: "
+						+ String.valueOf(position));*/
 				item = previous;
 			}
 		}

@@ -424,9 +424,10 @@ public class BookFlipper extends AdapterView<Adapter> {
 			mCurrentScreen = Math.max(0,
 					Math.min(mNextScreen, getChildCount() - 1));
 			mNextScreen = INVALID_SCREEN;
-			mPreViewSwitchedListener
-					.onPreViewSwitched((mLastScrollDirection > 0) ? mCurrentAdapterIndex + 1
-							: mCurrentAdapterIndex - 1); // XXX asfasf
+			mPreViewSwitchedListener.onPreViewSwitched(
+					(mLastScrollDirection > 0) ? mCurrentAdapterIndex + 1
+							: mCurrentAdapterIndex - 1, mLastScrollDirection);
+			// XXX asfasf
 			postViewSwitched(mLastScrollDirection);
 		}
 	}
@@ -504,7 +505,7 @@ public class BookFlipper extends AdapterView<Adapter> {
 
 	@Override
 	public void setSelection(int position) {
-		//mPreViewSwitchedListener.onPreViewSwitched(position);
+		// mPreViewSwitchedListener.onPreViewSwitched(position);
 		mNextScreen = INVALID_SCREEN;
 		mScroller.forceFinished(true);
 		if (mAdapter == null)
@@ -563,6 +564,7 @@ public class BookFlipper extends AdapterView<Adapter> {
 		for (int i = Math.max(0, mCurrentAdapterIndex - mSideBuffer); i < Math
 				.min(mAdapter.getCount(), mCurrentAdapterIndex + mSideBuffer
 						+ 1); i++) {
+
 			mLoadedViews.addLast(makeAndAddView(i, true, null));
 			if (i == mCurrentAdapterIndex)
 				mCurrentBufferIndex = mLoadedViews.size() - 1;
@@ -572,6 +574,7 @@ public class BookFlipper extends AdapterView<Adapter> {
 	}
 
 	private void postViewSwitched(int direction) {
+
 		if (direction == 0)
 			return;
 
@@ -650,15 +653,13 @@ public class BookFlipper extends AdapterView<Adapter> {
 
 		@Override
 		public void onChanged() {
-			Log.d("fasf", "Runns on changed");
 			View v = getChildAt(mCurrentBufferIndex);
 			if (v != null) {
-				for (int index = 0; index < mAdapter.getCount(); index++) {
-					if (v.equals(mAdapter.getItem(index))) {
-						mCurrentAdapterIndex = index;
-						break;
-					}
-				}
+				/*
+				 * for (int index = 0; index < mAdapter.getCount(); index++) {
+				 * Log.d("this", "loop"); if (v.equals(mAdapter.getItem(index)))
+				 * { mCurrentAdapterIndex = index; break; } }
+				 */
 			}
 			resetFocus();
 		}
@@ -684,7 +685,7 @@ public class BookFlipper extends AdapterView<Adapter> {
 
 	public class PreViewSwitchedListener {
 
-		public void onPreViewSwitched(int targetIndex) {
+		public void onPreViewSwitched(int targetIndex, int direction) {
 		};
 
 	}
