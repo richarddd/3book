@@ -10,6 +10,7 @@ import se.chalmers.threebook.core.Helper;
 import se.chalmers.threebook.ui.actionbarcompat.ActionBarActivity;
 import android.app.ActionBar;
 import android.app.AlertDialog;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.KeyEvent;
 import android.view.Menu;
@@ -119,13 +120,13 @@ public class FileBrowserActivity extends ActionBarActivity {
 
 	}
 
-	private void openFile(File file) {
-
-		/*
-		 * Intent myIntent = new Intent(android.content.Intent.ACTION_VIEW,
-		 * Uri.parse("file://" + aFile.getAbsolutePath()));
-		 * startActivity(myIntent);
-		 */
+	private void openFile(File file) {	
+		if(file.getName().endsWith(".epub")){		
+			Intent displayBook= new Intent(this, ReadActivity.class);
+			displayBook.putExtra(ReadActivity.IntentKey.FILE_PATH.toString(), file.getAbsolutePath());
+			displayBook.putExtra(ReadActivity.IntentKey.INTENT_TYPE.toString(), ReadActivity.IntentType.READ_BOOK_FROM_LIBRARY);
+			startActivity(displayBook);
+		}
 	}
 
 	@Override

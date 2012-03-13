@@ -3,20 +3,19 @@ package se.chalmers.threebook.ui;
 import java.util.LinkedList;
 import java.util.Queue;
 
-import se.chalmers.threebook.adapters.BookNavAdapter;
-
 import android.content.Context;
 import android.database.DataSetObserver;
 import android.graphics.Rect;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.GestureDetector;
 import android.view.GestureDetector.OnGestureListener;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.AbsListView.OnScrollListener;
 import android.widget.AdapterView;
 import android.widget.ListAdapter;
 import android.widget.Scroller;
-import android.widget.AbsListView.OnScrollListener;
 
 public class HorizontalListView extends AdapterView<ListAdapter> {
 
@@ -272,9 +271,10 @@ public class HorizontalListView extends AdapterView<ListAdapter> {
 		return handled;
 	}
 
-	protected boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX,
+	protected boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, //XXX here we are
 				float velocityY) {
 		synchronized(HorizontalListView.this){
+			Log.d("Horizontal", "hejsan");
 			mScroller.fling(mNextX, 0, (int)-velocityX, 0, 0, mMaxX, 0, 0);
 		}
 		requestLayout();
@@ -363,6 +363,13 @@ public class HorizontalListView extends AdapterView<ListAdapter> {
 
 	public void setOnScrollListener(OnScrollListener scrollListener) {
 		this.mOnScroll = scrollListener;	
+	}
+	
+	
+	
+	public static class OnFlingListener{
+		
+		
 	}
 
 

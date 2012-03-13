@@ -22,6 +22,7 @@ public class FileBrowserAdapter extends BaseAdapter {
 	private static final int FILETYPE_FOLDER = R.drawable.ic_folder;
 	private static final int FILETYPE_FILE = R.drawable.ic_file;
 	private static final int FILETYPE_EBOOK = R.drawable.ic_ebook;
+	private static final List<String> SUPPORTED_FILES = new ArrayList<String>();
 
 	public FileBrowserAdapter(Context context) {
 		layoutInflater = (LayoutInflater) context
@@ -63,8 +64,7 @@ public class FileBrowserAdapter extends BaseAdapter {
 		holder.text.setText(name);
 		if (items.get(position).isDirectory()) {
 			imageId = FILETYPE_FOLDER;
-		} else if (name.endsWith(".zip") || name.endsWith(".epub")
-				|| name.endsWith(".mobi")) {
+		} else if (name.endsWith(".epub")) {
 			imageId = FILETYPE_EBOOK;
 		} else {
 			imageId = FILETYPE_FILE;

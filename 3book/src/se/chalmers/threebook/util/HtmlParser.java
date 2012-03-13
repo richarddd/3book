@@ -18,7 +18,7 @@ public class HtmlParser {
 
 	private int index;
 
-	public static final String BASIC_STYLE = "<style>*{margin:0;padding:0;}body{text-align:justify;padding:0px 10px;line-height:18px;font-size:16px;}h1{line-height:36px;font-size:32px;margin-bottom:36px;}p{margin-bottom:18px;}</style>";
+	public static final String BASIC_STYLE = "<style>*{margin:0;padding:0;}body{text-align:justify;padding:0px 10px;line-height:18px;font-size:16px;}h1{line-height:36px;font-size:32px;margin-bottom:36px;}h2{line-height:36px;font-size:32px;margin-bottom:36px;}h3{line-height:36px;font-size:32px;margin-bottom:36px;}hr{line-height:18px}p{margin-bottom:18px;}</style>";
 
 	public HtmlParser(String html) {
 		original = html;
@@ -95,9 +95,9 @@ public class HtmlParser {
 				indexList.put(srcs.start(), srcs.end());
 			}
 
-			String startDiv = "<div class=\"threebookImageContainer\">";
+			String startDiv = "<div style='text-align:center;' class=\"threebookImageContainer\">";
 			String endDiv = "</div>";
-			String height = "height=\"252px\"";
+			String height = "height=\"270px\"";
 
 			List<Integer> indexArray = new ArrayList<Integer>(indexList.keySet());
 			Collections.sort(indexArray);

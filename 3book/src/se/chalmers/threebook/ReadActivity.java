@@ -1,6 +1,8 @@
 package se.chalmers.threebook;
 
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
@@ -32,6 +34,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.View.OnLongClickListener;
 import android.view.WindowManager;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
@@ -43,6 +46,7 @@ import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class ReadActivity extends ActionBarActivity {
 
@@ -63,6 +67,8 @@ public class ReadActivity extends ActionBarActivity {
 	private boolean setupLayout = true;
 	private int currentPosition = 0;
 	private boolean endOfFile = false;
+	private float lastDownX;
+	private boolean webviewOnTouch = false;
 
 	private ContentStream stream = null;
 
@@ -120,11 +126,14 @@ public class ReadActivity extends ActionBarActivity {
 
 	}
 
+
 	/** Called when the activity is first created. */
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_read);
+		
+		Log.d("ReadActivity", "View is created");
 
 		Display display = getWindowManager().getDefaultDisplay();
 		Point size = new Point();
@@ -164,15 +173,34 @@ public class ReadActivity extends ActionBarActivity {
 					int position, long id) {
 				dialog.show();
 				display((int) id);
-				menuShown = false;
 				showOverlay(false);
 
 			}
 
 		});
+		
+		webView.setOnLongClickListener(new OnLongClickListener() {
+			
+			public boolean onLongClick(View v) {
+				
+				Log.d("webview", "long press invoked");
+				
+				float diff = lastDownX / screenWidth;
+				if(diff < 0.33){
+					fastFlip(-1);
+				}else if(diff > 0.66){
+					fastFlip(1);
+				}
+				return true;
+			}
+		});
 
 		pagerAdapter = new BookPageAdapter(this);
 		bookFlipper.setAdapter(pagerAdapter);
+		
+		
+		
+		
 		chapterListView.setAdapter(chapterAdapter);
 		chapterListView.setOnScrollListener(chapterAdapter);
 
@@ -225,28 +253,7 @@ public class ReadActivity extends ActionBarActivity {
 					}
 				});
 
-		/*
-		 * bookFlipper.setOnTouchListener(new OnTouchListener() {
-		 * 
-		 * private float lastDownX;
-		 * 
-		 * public boolean onTouch(View v, MotionEvent event) { switch
-		 * (event.getAction()) {
-		 * 
-		 * case MotionEvent.ACTION_DOWN: lastDownX = event.getX(); break; case
-		 * MotionEvent.ACTION_UP: float diff = event.getX() / screenWidth; float
-		 * diffOld = lastDownX / screenWidth; if (diff <= 0.33 && diffOld <=
-		 * 0.33 && !menuShown) { // left prevPage(); } else if (diff >= 0.66 &&
-		 * diffOld >= 0.66 && !menuShown) {// right nextPage(); } else if (diff
-		 * < 0.66 && diff > 0.33 && diffOld < 0.66 && diffOld > 0.33) { //
-		 * middle menuShown = !menuShown; if (menuShown) { showOverlay(false); }
-		 * else { showOverlay(true); } } break; default: break; } return false;
-		 * }
-		 * 
-		 * });
-		 */
-
-		dialog = ProgressDialog.show(this, "",
+			dialog = ProgressDialog.show(this, "",
 				this.getString(R.string.loading_please_wait), true);
 
 		webView.setVerticalScrollBarEnabled(false);
@@ -258,11 +265,15 @@ public class ReadActivity extends ActionBarActivity {
 				view.setPictureListener(null);
 			}
 		});
+		
 
-		webView.setWebViewClient(new WebViewClient() {
+		webView.setWebViewClient(new WebViewClient(){
 
 			@Override
 			public void onPageFinished(WebView view, String url) {
+				
+				Log.d("asfasfasf", "Runns on finnished");
+				
 				if (setupLayout) {
 					setupLayout = false;
 					viewHeight = view.getHeight();
@@ -304,22 +315,29 @@ public class ReadActivity extends ActionBarActivity {
 
 		webView.setOnTouchListener(new View.OnTouchListener() {
 
-			private float lastDownX;
+			
 
 			public boolean onTouch(View v, MotionEvent event) {
-
-				bookFlipper.onTouchEvent(event);
+				
+				
+				if(!menuShown){
+					bookFlipper.onTouchEvent(event);
+				}
 
 				switch (event.getAction()) {
 
 				case MotionEvent.ACTION_MOVE:
-					webView.setVisibility(View.INVISIBLE);
+					if(!menuShown){
+						webView.setVisibility(View.INVISIBLE);
+					}
 					// bookFlipper.setVisibility(View.VISIBLE);
-					break;
+					return true;
 				case MotionEvent.ACTION_DOWN:
 					lastDownX = event.getX();
+					webviewOnTouch = true;
 					break;
 				case MotionEvent.ACTION_UP:
+					webviewOnTouch = false;
 					float diff = event.getX() / screenWidth;
 					float diffOld = lastDownX / screenWidth;
 					if (diff <= 0.33 && diffOld <= 0.33 && !menuShown) { // left
@@ -328,12 +346,7 @@ public class ReadActivity extends ActionBarActivity {
 						nextPage();
 					} else if (diff < 0.66 && diff > 0.33 && diffOld < 0.66
 							&& diffOld > 0.33) { // middle
-						menuShown = !menuShown;
-						if (menuShown) {
-							showOverlay(false);
-						} else {
-							showOverlay(true);
-						}
+						showOverlay(!menuShown);
 					}
 					break;
 				default:
@@ -341,24 +354,6 @@ public class ReadActivity extends ActionBarActivity {
 				}
 				return false;
 			}
-
-			/*
-			 * public boolean onTouch(View v, MotionEvent event) {
-			 * 
-			 * bookFlipper.onTouchEvent(event); switch (event.getAction()) {
-			 * case MotionEvent.ACTION_MOVE:
-			 * webView.setVisibility(View.INVISIBLE); //
-			 * bookFlipper.setVisibility(View.VISIBLE); break; }
-			 * 
-			 * return true;
-			 * 
-			 * 
-			 * 
-			 * return selectionMode ? false : (event.getAction() ==
-			 * MotionEvent.ACTION_MOVE);
-			 * 
-			 * }
-			 */
 		});
 
 		// Handle Schtuff
@@ -376,13 +371,14 @@ public class ReadActivity extends ActionBarActivity {
 					IntentKey.FILE_PATH.toString());
 			// int lastIndex = getFromDatabase.lastChapterForUserDude(); // TODO
 			// implement this plz
-			int lastIndex = 5;
+			int lastIndex = 2;
 
 			
 			try { // Open and store ye olde book
 				long t1 = System.currentTimeMillis();
-				InputStream epubInputStream = assetManager.open("books/"
-						+ fileName);
+				InputStream epubInputStream = new FileInputStream(fileName);
+				/*InputStream epubInputStream = assetManager.open("books/"
+						+ fileName);*/
 				MyBook.setBook(new EpubReader().readEpub(epubInputStream));
 				stream = new EpubContentStream(MyBook.get().book(), this);
 				long t2 = System.currentTimeMillis();
@@ -415,8 +411,32 @@ public class ReadActivity extends ActionBarActivity {
 		}
 
 	}
+	
+	private void fastFlip(int direction){
+		new Runnable() {
+			public void run() {
+				
+				int loopCount = 0;
+				
+				while(webviewOnTouch){
+					try {
+						int sleepVal = 500-(25*loopCount);
+						Log.d("Should sleep in fastflip as", "Sleep value = "+String.valueOf(sleepVal));
+						Thread.sleep(sleepVal);
+						///XXX penis
+						Toast.makeText(ReadActivity.this, String.valueOf(loopCount+1), Toast.LENGTH_SHORT).show();
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					loopCount++;
+				}
+			}
+		};
+	}
 
 	private void showOverlay(boolean show) {
+		menuShown = show;
 		setFullScreen(!show);
 
 		int visibility = show ? View.VISIBLE : View.INVISIBLE;
@@ -510,12 +530,10 @@ public class ReadActivity extends ActionBarActivity {
 		case R.id.menu_settings:
 			break;
 		case R.id.menu_zoom_in:
-			menuShown = false;
 			showOverlay(false);
 			webView.zoomIn();
 			break;
 		case R.id.menu_zoom_out:
-			menuShown = false;
 			showOverlay(false);
 			webView.zoomOut();
 			break;
@@ -546,17 +564,14 @@ public class ReadActivity extends ActionBarActivity {
 		// Log.d("asfasf", String.valueOf(keyCode));
 		if (keyCode == 82) {
 			if (!menuShown) {
-				menuShown = true;
 				openOptionsMenu();
 				showOverlay(true);
 			} else {
-				menuShown = false;
 				showOverlay(false);
 			}
 
 			return true;
 		} else if (keyCode == 4 && menuShown) {
-			menuShown = false;
 			showOverlay(false);
 			return true;
 		} else if (keyCode == 25 && !menuShown) {

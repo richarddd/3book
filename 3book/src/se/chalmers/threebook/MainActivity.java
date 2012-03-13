@@ -1,6 +1,7 @@
 package se.chalmers.threebook;
 
 import java.util.List;
+import java.util.ListResourceBundle;
 
 import se.chalmers.threebook.R;
 import se.chalmers.threebook.adapters.RecentBookAdapter;
@@ -14,6 +15,8 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
@@ -40,17 +43,25 @@ public class MainActivity extends ActionBarActivity {
 		lstRecentBooks = (HorizontalListView) findViewById(R.id.lst_recent_books);
 		
 		adapter = new RecentBookAdapter(this);
+		
+		lstRecentBooks.setOnItemClickListener(new OnItemClickListener() {
 
-		//layOpenImport.setOnClickListener(new StartOnClick(FileBrowserActivity.class));
-		layOpenImport.setOnClickListener(new OnClickListener() {
-			
-			public void onClick(View v) {
+			public void onItemClick(AdapterView<?> arg0, View arg1, int arg2,
+					long arg3) {
 				Intent displayBook= new Intent(MainActivity.this, ReadActivity.class);
 				displayBook.putExtra(ReadActivity.IntentKey.FILE_PATH.toString(), "pg11.epub");
 				displayBook.putExtra(ReadActivity.IntentKey.INTENT_TYPE.toString(), ReadActivity.IntentType.READ_BOOK_FROM_LIBRARY);
 				startActivity(displayBook);
 			}
 		});
+
+		layOpenImport.setOnClickListener(new StartOnClick(FileBrowserActivity.class));
+		/*layOpenImport.setOnClickListener(new OnClickListener() {
+			
+			public void onClick(View v) {
+				
+			}
+		});*/
 		//laySettings.setOnClickListener(new StartOnClick(ReadActivity.class));
 		laySettings.setOnClickListener(new OnClickListener() {
 			

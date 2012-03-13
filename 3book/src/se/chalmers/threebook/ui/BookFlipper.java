@@ -386,13 +386,18 @@ public class BookFlipper extends AdapterView<Adapter> {
 	}
 
 	public void nextScreen() {
-		if (mCurrentAdapterIndex < mAdapter.getCount())
+		if (mCurrentAdapterIndex < mAdapter.getCount()) {
+			mScroller.forceFinished(true);
 			snapToScreen(mCurrentScreen + 1, 1);
+		}
+
 	}
 
 	public void prevousScreen() {
-		if (mCurrentAdapterIndex > 0)
+		if (mCurrentAdapterIndex > 0) {
+			mScroller.forceFinished(true);
 			snapToScreen(mCurrentScreen - 1, 1);
+		}
 	}
 
 	private void snapToScreen(int whichScreen) {
