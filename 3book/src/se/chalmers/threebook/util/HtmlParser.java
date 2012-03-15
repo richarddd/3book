@@ -5,7 +5,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -85,17 +84,18 @@ public class HtmlParser {
 			List<String> imgList = new ArrayList<String>();
 
 			Map<Integer, Integer> indexList = new HashMap<Integer, Integer>();
+			Map<Integer, String> uriList = new HashMap<Integer, String>();
 
 			while (srcs.find()) {
 				String match = srcs.group();
 				int start = match.indexOf("src=");
 				int end = match.indexOf(match.charAt(start + 4), start + 5);
-				imgList.add((match.subSequence(start + 5, end)).toString());
-
+				uriList.put(srcs.start(), match.subSequence(start + 5, end).toString());
+				
 				indexList.put(srcs.start(), srcs.end());
 			}
 
-			String startDiv = "<div class=\"threebookImageContainer\"><a class=\"threebookImageLink\" href=\"#\", onClick=\"application.fireImageIntent('images/chap06.jpg');\" >";
+			String startDiv = "<div class=\"threebookImageContainer\"><a class=\"threebookImageLink\" href=\"#\", onClick=\"application.fireImageIntent('";
 			String endDiv = "</a></div>";
 			String height = "height=\"252px\"";
 
@@ -107,11 +107,12 @@ public class HtmlParser {
 				mod.insert(indexList.get(i), endDiv);
 
 				mod.insert(i + 5, height);
-
-				mod.insert(i, startDiv);
+				
+				String modifiedStartDiv = startDiv + uriList.get(i) + "');\" >"; 
+				mod.insert(i, modifiedStartDiv);
 			}
 
-			imagePaths = imgList;
+			imagePaths =  new ArrayList<String>(uriList.values());
 		}
 
 		return imagePaths;
