@@ -5,6 +5,7 @@
     <string name="app_name">3book</string>
     <string name="my_collection">My Collection</string>
     <string name="view_image">View image</string>
+    <string name="preferences">Preferences</string>
     <string name="favourites">Favourites</string>
     <string name="open_import">Open/Import</string>
     <string name="settings">Settings</string>
@@ -48,6 +49,6 @@
     <string name="background_color_summary">Change background color</string>
     <string name="application">Application</string>
     <string name="open_at_startup">Open at startup</string>
-    <string name="open_at_startup_on">Open the last read book when application starts</string>
-    <string name="open_at_startup_off">Open the main screen when application starts</string>
+    <string name="open_at_startup_on">Opens the last read book when application starts</string>
+    <string name="open_at_startup_off">Opens the main screen when application starts</string>
 </resources>
