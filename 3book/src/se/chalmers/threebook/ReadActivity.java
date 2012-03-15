@@ -398,7 +398,7 @@ public class ReadActivity extends ActionBarActivity {
 				/*InputStream epubInputStream = assetManager.open("books/"
 						+ fileName);*/
 				MyBook.setBook(new EpubReader().readEpub(epubInputStream));
-				stream = new EpubContentStream(MyBook.get().book(), this);
+				stream = new EpubContentStream(MyBook.get().book(), getCacheDir());
 				long t2 = System.currentTimeMillis();
 				Log.d("3", "opening book took " + (t2-t1) + "ms.");
 			
@@ -415,7 +415,8 @@ public class ReadActivity extends ActionBarActivity {
 				chapters.add(new BookNavItem(title, null));
 			}
 
-			((TextView) findViewById(R.id.txt_book_nav_chapter_no)).setText(lastIndex + "/" + stream.getToc().size());
+			((TextView) findViewById(R.id.txt_book_nav_chapter_no)).
+			setText(lastIndex + "/" + stream.getToc().size());
 
 			display(lastIndex);
 			break;
@@ -605,16 +606,12 @@ public class ReadActivity extends ActionBarActivity {
 
 	class JsInterface {
 		public void fireImageIntent(String fileName) {
-			Log.d("3", "Firing external image intent!");
-			File cacheDir = getCacheDir(); 
-			//File bookDir = new File(cacheDir, "Price and Prejudice");
 			String path = "Pride and Prejudice/";
 			
-			Log.d("3", "This is the filename: " + path + fileName);
+			Log.d("3", "Image intent filename: " + path + fileName);
 			Intent intent = new Intent(ReadActivity.this, ImageViewActivity.class);
-			intent.putExtra("imagePath", path+ fileName);
+			intent.putExtra("imagePath", path+ fileName); // TODO remove literal
 			startActivity(intent);
-			Log.d("3", "Done firing external image intent");
 		}
 	}
 

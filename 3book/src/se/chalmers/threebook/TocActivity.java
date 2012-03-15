@@ -1,5 +1,7 @@
 package se.chalmers.threebook;
 
+import java.io.IOException;
+
 import se.chalmers.threebook.content.ContentStream;
 import se.chalmers.threebook.content.EpubContentStream;
 import se.chalmers.threebook.content.MyBook;
@@ -37,7 +39,13 @@ public class TocActivity extends ActionBarActivity {
 		view = (ListView) findViewById(R.id.lst_toc);
 		Log.d("3", "==== Running TocActivity onCreate ====");
 
-		ContentStream book = new EpubContentStream(MyBook.get().book(), this);
+		ContentStream book = null;
+		try {
+			book = new EpubContentStream(MyBook.get().book(), getCacheDir());
+		} catch (IOException e) {
+			Log.d("3", "Could not open book in TocActivity, crapcakes!");
+			e.printStackTrace();
+		}
 		String[] tocStr = new String[book.getToc().size()];
 		int i = 0;
 		for (String s : book.getToc()) {

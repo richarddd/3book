@@ -31,7 +31,7 @@ public class EpubCache implements BookCache {
 		//this.cacheDir = cacheDir;
 		bookDir = new File(cacheDir, bookIdentifier);
 		boolean dirs = bookDir.mkdirs();
-		if (!dirs){
+		if (!bookDir.exists()){
 			throw new IOException("Could not ensure presence of book cache dir: " + bookDir.getAbsolutePath());
 		}
 	}
@@ -45,7 +45,21 @@ public class EpubCache implements BookCache {
 		FileOutputStream out = null;
 		File cacheFile = null;
 		try {
+			
+			// XXX TODO remove one Daniel fixes the HTML parser to hash image names
+			//File imageLocation = new File(bookCacheLocation, href);
+			int separator = identifier.lastIndexOf("/");
+			if (separator != -1){ // we need to make some dirs!
+				String path = identifier.substring(0, separator);;
+				boolean dirSuccess = new File(bookDir, path).mkdirs(); // TODO handle failure 'ere!
+			}
+			
 			cacheFile = new File(bookDir, identifier);
+			
+			// END xxx todo
+			
+			
+			//cacheFile = new File(bookDir, identifier);// TODO change this back!
 			out = new FileOutputStream(cacheFile, false);
 			out.write(data);
 			out.flush();
