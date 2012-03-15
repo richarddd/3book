@@ -41,4 +41,13 @@
     <string name="control_next_chapter">Next</string>
     <string name="control_prev_chapter">Prev</string>
     <string name="control_display_toc">TOC</string>
+    <string name="reader_settings">Reader settings</string>
+    <string name="adjust_margins">Adjust margins</string>
+    <string name="adjust_margins_summary">Change left &amp; right page margin</string>
+    <string name="background_color">Background color</string>
+    <string name="background_color_summary">Change background color</string>
+    <string name="application">Application</string>
+    <string name="open_at_startup">Open at startup</string>
+    <string name="open_at_startup_on">Open the last read book when application starts</string>
+    <string name="open_at_startup_off">Open the main screen when application starts</string>
 </resources>
