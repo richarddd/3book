@@ -63,16 +63,7 @@ public class MainActivity extends ActionBarActivity {
 			}
 		});*/
 		//laySettings.setOnClickListener(new StartOnClick(ReadActivity.class));
-		laySettings.setOnClickListener(new OnClickListener() {
-			
-			public void onClick(View v) {
-				Intent displayBook= new Intent(MainActivity.this, ReadActivity.class);
-				displayBook.putExtra(ReadActivity.IntentKey.FILE_PATH.toString(), "pride-prejudice.epub");
-				displayBook.putExtra(ReadActivity.IntentKey.INTENT_TYPE.toString(), ReadActivity.IntentType.READ_BOOK_FROM_LIBRARY);
-				startActivity(displayBook);
-				
-			}
-		});
+		laySettings.setOnClickListener(new StartOnClick(ImageViewActivity.class));
 		//laySettings.setOnClickListener(new StartOnClick(DisplayActivity.class));
 		layCollection.setOnClickListener(new StartOnClick(CollectionActivity.class));
 		layFavourites.setOnClickListener(new StartOnClick(FileBrowserActivity.class));

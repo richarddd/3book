@@ -4,6 +4,7 @@
     <string name="hello">Hello World, threebookActivity!</string>
     <string name="app_name">3book</string>
     <string name="my_collection">My Collection</string>
+    <string name="view_image">View image</string>
     <string name="favourites">Favourites</string>
     <string name="open_import">Open/Import</string>
     <string name="settings">Settings</string>
@@ -31,6 +32,7 @@
     <!-- ERRORS -->
     <string name="err_general">Error</string>
     <string name="err_file_browser_general">Unable to access file/folder</string>
+     <string name="err_image">Unable to open image</string>
     
     <!-- MENU -->
 	<string name="menu_refresh">Refresh</string>

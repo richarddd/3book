@@ -43,7 +43,7 @@ import android.widget.Scroller;
  * buffer size can be changed using the {@code sidebuffer} xml attribute.
  * 
  */
-public class BookFlipper extends AdapterView<Adapter> {
+public class FlipperView extends AdapterView<Adapter> {
 
 	private static final int SNAP_VELOCITY = 1000;
 	private static final int INVALID_SCREEN = -1;
@@ -97,19 +97,25 @@ public class BookFlipper extends AdapterView<Adapter> {
 
 	}
 
-	public BookFlipper(Context context) {
+	public static interface PreViewSwitchedListener {
+
+		void onPreViewSwitched(int targetIndex, int direction);
+
+	}
+
+	public FlipperView(Context context) {
 		super(context);
 		mSideBuffer = 1;
 		init();
 	}
 
-	public BookFlipper(Context context, int sideBuffer) {
+	public FlipperView(Context context, int sideBuffer) {
 		super(context);
 		mSideBuffer = sideBuffer;
 		init();
 	}
 
-	public BookFlipper(Context context, AttributeSet attrs) {
+	public FlipperView(Context context, AttributeSet attrs) {
 		super(context, attrs);
 		mSideBuffer = 1;
 		init();
@@ -660,17 +666,22 @@ public class BookFlipper extends AdapterView<Adapter> {
 		public void onChanged() {
 			View v = getChildAt(mCurrentBufferIndex);
 			if (v != null) {
-				/*
-				 * for (int index = 0; index < mAdapter.getCount(); index++) {
-				 * Log.d("this", "loop"); if (v.equals(mAdapter.getItem(index)))
-				 * { mCurrentAdapterIndex = index; break; } }
-				 */
+				/*for (int index = 0; index < mAdapter.getCount(); index++) {
+					Log.d("this", "loop");
+					if (v.equals(mAdapter.getItem(index))) {
+						mCurrentAdapterIndex = index;
+						break;
+					}
+				}*/
+
 			}
 			resetFocus();
 		}
 
 		@Override
 		public void onInvalidated() {
+			mCurrentAdapterIndex = 0;
+			resetFocus();
 			// Not yet implemented!
 		}
 
@@ -686,12 +697,5 @@ public class BookFlipper extends AdapterView<Adapter> {
 				+ "X: " + mScroller.getCurrX() + ", Y: " + mScroller.getCurrY());
 		Log.d("viewflow", "IndexInAdapter: " + mCurrentAdapterIndex
 				+ ", IndexInBuffer: " + mCurrentBufferIndex);
-	}
-
-	public class PreViewSwitchedListener {
-
-		public void onPreViewSwitched(int targetIndex, int direction) {
-		};
-
 	}
 }

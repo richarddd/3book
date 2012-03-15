@@ -5,7 +5,7 @@
     android:versionName="1.0" >
 
     <uses-sdk
-        android:minSdkVersion="7"
+        android:minSdkVersion="8"
         android:targetSdkVersion="14" />
 
     <uses-permission android:name="android.permission.INTERNET" />
@@ -30,6 +30,10 @@
         <activity
             android:name="se.chalmers.threebook.CollectionActivity"
             android:label="@string/my_collection" />
+        
+        <activity
+            android:name="se.chalmers.threebook.ImageViewActivity"
+            android:label="@string/view_image" />
         
         <activity
             android:name="se.chalmers.threebook.ReadActivity"

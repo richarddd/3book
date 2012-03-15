@@ -64,7 +64,7 @@ public class FileBrowserActivity extends ActionBarActivity {
 						e.printStackTrace();
 
 						new AlertDialog.Builder(FileBrowserActivity.this)
-								.setMessage(R.string.err_file_browser_general)
+								.setMessage(R.string.err_image)
 								.setIcon(android.R.drawable.ic_dialog_alert)
 								.setTitle(getString(R.string.err_general))
 								.setPositiveButton(getString(R.string.ok), null)

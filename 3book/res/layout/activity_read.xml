@@ -6,7 +6,7 @@
     android:background="@color/default_background"
     android:orientation="vertical" >
     
-    <se.chalmers.threebook.ui.BookFlipper
+    <se.chalmers.threebook.ui.FlipperView
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         android:id="@+id/pgr_book"

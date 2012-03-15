@@ -14,7 +14,7 @@ import se.chalmers.threebook.content.ContentStream;
 import se.chalmers.threebook.content.EpubContentStream;
 import se.chalmers.threebook.content.MyBook;
 import se.chalmers.threebook.core.Helper;
-import se.chalmers.threebook.ui.BookFlipper;
+import se.chalmers.threebook.ui.FlipperView;
 import se.chalmers.threebook.ui.HorizontalListView;
 import se.chalmers.threebook.ui.actionbarcompat.ActionBarActivity;
 import se.chalmers.threebook.ui.util.BookNavItem;
@@ -63,7 +63,7 @@ public class ReadActivity extends ActionBarActivity {
 	private HorizontalListView chapterListView;
 	private BookNavAdapter chapterAdapter;
 	private BookPageAdapter pagerAdapter;
-	private BookFlipper bookFlipper;
+	private FlipperView bookFlipper;
 	private boolean setupLayout = true;
 	private int currentPosition = 0;
 	private boolean endOfFile = false;
@@ -156,7 +156,7 @@ public class ReadActivity extends ActionBarActivity {
 		layoutOverlay = (RelativeLayout) findViewById(R.id.lay_book_overlay);
 
 		chapterListView = (HorizontalListView) findViewById(R.id.lst_chapters);
-		bookFlipper = (BookFlipper) findViewById(R.id.pgr_book);
+		bookFlipper = (FlipperView) findViewById(R.id.pgr_book);
 
 		webView.getSettings().setJavaScriptEnabled(true);
 		webView.addJavascriptInterface(new JsInterface(), "application");
@@ -205,9 +205,8 @@ public class ReadActivity extends ActionBarActivity {
 		chapterListView.setOnScrollListener(chapterAdapter);
 
 		bookFlipper
-				.setPreViewSwitchedListener(bookFlipper.new PreViewSwitchedListener() {
+				.setPreViewSwitchedListener(new FlipperView.PreViewSwitchedListener() {
 
-					@Override
 					public void onPreViewSwitched(int targetIndex, int direction) {
 						webView.setVisibility(View.VISIBLE);
 						if (direction != 0) {
@@ -299,6 +298,7 @@ public class ReadActivity extends ActionBarActivity {
 				}
 
 				if (currentPosition != 0) {
+					pagerAdapter.notifyDataSetInvalidated();
 					bookFlipper.setSelection(0);
 				}
 
@@ -306,7 +306,8 @@ public class ReadActivity extends ActionBarActivity {
 				view.scrollTo(0, view.getScrollY() + viewHeight);
 				pagerAdapter.setNext(Helper.getBitmapFromView(view));
 				view.scrollTo(0, 0);
-				pagerAdapter.notifyDataSetInvalidated();
+				
+				
 				pagerAdapter.notifyDataSetChanged();
 				dialog.dismiss();
 
