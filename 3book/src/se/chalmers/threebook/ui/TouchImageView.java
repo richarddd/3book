@@ -153,7 +153,7 @@ public class TouchImageView extends ImageView {
 		@Override
 		public boolean onScale(ScaleGestureDetector detector) {
 			float mScaleFactor = (float) Math.min(
-					Math.max(.90f, detector.getScaleFactor()), 1.10);
+					Math.max(.80f, detector.getScaleFactor()), 1.20);
 			float origScale = saveScale;
 			saveScale *= mScaleFactor;
 			if (saveScale > maxScale) {

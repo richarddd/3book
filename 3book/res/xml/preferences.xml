@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
+    <PreferenceCategory android:title="@string/reader_settings">
+        <Preference android:title="@string/adjust_margins" android:key="margins" android:summary="@string/adjust_margins_summary"/>
+        <Preference android:title="@string/background_color" android:summary="@string/background_color_summary" android:key="background"/>
+    </PreferenceCategory>
+    <PreferenceCategory android:title="@string/application">
+        <CheckBoxPreference android:key="open_startup" android:title="@string/open_at_startup" android:summaryOff="@string/open_at_startup_off" android:summaryOn="@string/open_at_startup_on" android:defaultValue="true"/>
+    </PreferenceCategory>
+    
+
+</PreferenceScreen>

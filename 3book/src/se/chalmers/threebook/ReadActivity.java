@@ -106,13 +106,16 @@ public class ReadActivity extends ActionBarActivity {
 
 		Log.d("3", "Trying to jump via toc. Index: " + index +", Anchor: " + anchor);
 		
+		
+		
 		// Scroll the chapter picker to an appropriate location
-		if (chapterListView.getChildAt(0) != null){
+		if (chapterListView.getChildAt(0) != null){ // TODO precludes setting on first thingy
 			int chapWidth = chapterListView.getChildAt(0).getWidth();
 			//chapterListView.scrollTo(0);
 			//chapterListView.scrollTo((int)(chapWidth*(index-0.5))); // 1 to counter center-stuffies
 			chapterListView.scrollTo((int)(chapWidth*(index-1))); // 1 to counter center-stuffies
 			chapterAdapter.setCurrentChapterNumber(index, MyBook.get().book().getTableOfContents().size());
+			chapterAdapter.setCurrentChapterName(MyBook.get().book().getTableOfContents().getTocReferences().get(index).getTitle()); // TODO this needs to get outside of this if clause, and fix for nullpointer
 		}
 		try { 
 			String curUrl = "file:///"+stream.jumpTo(index)+"#"+anchor;

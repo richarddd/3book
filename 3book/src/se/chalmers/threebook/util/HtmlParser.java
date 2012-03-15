@@ -91,7 +91,6 @@ public class HtmlParser {
 				int start = match.indexOf("src=");
 				int end = match.indexOf(match.charAt(start + 4), start + 5);
 				uriList.put(srcs.start(), match.subSequence(start + 5, end).toString());
-
 				indexList.put(srcs.start(), srcs.end());
 			}
 
@@ -107,7 +106,6 @@ public class HtmlParser {
 				mod.insert(indexList.get(i), endDiv);
 
 				mod.insert(i + 5, height);
-
 				String modifiedStartDiv = startDiv + uriList.get(i) + "');\" >"; 
 				mod.insert(i, modifiedStartDiv);
 			}

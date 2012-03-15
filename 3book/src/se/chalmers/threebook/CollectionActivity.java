@@ -2,7 +2,7 @@ package se.chalmers.threebook;
 
 import se.chalmers.threebook.R;
 import se.chalmers.threebook.core.Helper;
-import se.chalmers.threebook.ui.ActionBarTabActivity;
+import se.chalmers.threebook.ui.actionbarcompat.ActionBarTabActivity;
 import se.chalmers.threebook.ui.fragments.AuthorsFragment;
 import se.chalmers.threebook.ui.fragments.BooksFragment;
 import se.chalmers.threebook.ui.fragments.TagsFragment;

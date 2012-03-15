@@ -33,7 +33,12 @@
         
         <activity
             android:name="se.chalmers.threebook.ImageViewActivity"
-            android:label="@string/view_image" />
+            android:label="@string/view_image"
+            android:theme="@android:style/Theme.DeviceDefault.NoActionBar.Fullscreen" />
+        
+        <activity
+            android:name="se.chalmers.threebook.PreferencesActivity"
+            android:label="@string/preferences" />
         
         <activity
             android:name="se.chalmers.threebook.ReadActivity"

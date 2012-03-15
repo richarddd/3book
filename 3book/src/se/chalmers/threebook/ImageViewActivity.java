@@ -4,6 +4,7 @@ import java.io.File;
 
 import se.chalmers.threebook.ui.TouchImageView;
 import se.chalmers.threebook.ui.actionbarcompat.ActionBarActivity;
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
@@ -12,7 +13,7 @@ import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.util.Log;
 
-public class ImageViewActivity extends ActionBarActivity {
+public class ImageViewActivity extends Activity {
 
 	// private TouchImageView view;
 

@@ -63,7 +63,7 @@ public class MainActivity extends ActionBarActivity {
 			}
 		});*/
 		//laySettings.setOnClickListener(new StartOnClick(ReadActivity.class));
-		laySettings.setOnClickListener(new StartOnClick(ImageViewActivity.class));
+		laySettings.setOnClickListener(new StartOnClick(PreferencesActivity.class));
 		//laySettings.setOnClickListener(new StartOnClick(DisplayActivity.class));
 		layCollection.setOnClickListener(new StartOnClick(CollectionActivity.class));
 		layFavourites.setOnClickListener(new StartOnClick(FileBrowserActivity.class));
