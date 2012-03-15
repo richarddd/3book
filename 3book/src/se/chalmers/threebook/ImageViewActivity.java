@@ -10,6 +10,7 @@ import android.content.DialogInterface.OnClickListener;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
+import android.util.Log;
 
 public class ImageViewActivity extends ActionBarActivity {
 
@@ -22,14 +23,25 @@ public class ImageViewActivity extends ActionBarActivity {
 
 		TouchImageView touch = new TouchImageView(this);
 		String path = (String) getIntent().getSerializableExtra("imagePath");
+		Log.d("3", "Here's the image path we get in imagevewact: " + path);
+		
+		
+		
 		boolean success = false;
 		if (path != null && !path.equals("")) {
-			File imgFile = new File(path);
+			File cacheDir = getCacheDir();
+			File imgFile = new File(cacheDir, path);
+			//File imgFile = new File(path);
 			if (imgFile.exists()) {
+				Log.d("3", "Image exists.");
 				success = true;
 				Bitmap myBitmap = BitmapFactory.decodeFile(imgFile
 						.getAbsolutePath());
+				
 				touch.setImageBitmap(myBitmap);
+				
+			} else {
+				Log.d("3", "Image does NOT exist.");
 			}
 		}
 

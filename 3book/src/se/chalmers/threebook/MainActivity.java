@@ -49,7 +49,7 @@ public class MainActivity extends ActionBarActivity {
 			public void onItemClick(AdapterView<?> arg0, View arg1, int arg2,
 					long arg3) {
 				Intent displayBook= new Intent(MainActivity.this, ReadActivity.class);
-				displayBook.putExtra(ReadActivity.IntentKey.FILE_PATH.toString(), "pg11.epub");
+				displayBook.putExtra(ReadActivity.IntentKey.FILE_PATH.toString(), "pride-prejudice.epub");
 				displayBook.putExtra(ReadActivity.IntentKey.INTENT_TYPE.toString(), ReadActivity.IntentType.READ_BOOK_FROM_LIBRARY);
 				startActivity(displayBook);
 			}

@@ -95,9 +95,9 @@ public class HtmlParser {
 				indexList.put(srcs.start(), srcs.end());
 			}
 
-			String startDiv = "<div style='text-align:center;' class=\"threebookImageContainer\">";
-			String endDiv = "</div>";
-			String height = "height=\"270px\"";
+			String startDiv = "<div class=\"threebookImageContainer\"><a class=\"threebookImageLink\" href=\"#\", onClick=\"application.fireImageIntent('images/chap06.jpg');\" >";
+			String endDiv = "</a></div>";
+			String height = "height=\"252px\"";
 
 			List<Integer> indexArray = new ArrayList<Integer>(indexList.keySet());
 			Collections.sort(indexArray);

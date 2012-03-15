@@ -1,5 +1,6 @@
 package se.chalmers.threebook;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -71,6 +72,8 @@ public class ReadActivity extends ActionBarActivity {
 	private boolean webviewOnTouch = false;
 
 	private ContentStream stream = null;
+	private String curAnchor = "";
+	private boolean useAnchor = false;
 
 	public enum IntentType {
 		READ_BOOK_NOT_IN_LIBRARY, READ_BOOK_FROM_LIBRARY, GO_TO_TOC_INDEX;
@@ -272,6 +275,20 @@ public class ReadActivity extends ActionBarActivity {
 			public void onPageFinished(WebView view, String url) {
 				
 				Log.d("asfasfasf", "Runns on finnished");
+				
+				if (useAnchor){
+					Log.d("3", "loading anchor : " + curAnchor);
+					Log.d("3", "String sent to window.location: " + "javascript:window.location.href = "+url+"#"+curAnchor+";");
+					/*useAnchor = false;
+					view.loadUrl(url+"#"+curAnchor); */
+					//webView.loadUrl("javascript:document.getElementById('"+curAnchor+"').innerHTML = 'kuksatan!';");
+					webView.loadUrl("javascript:window.location.href = "+url+"#"+curAnchor+";");
+					//webView.loadUrl("javascript:document.getElementById('"+curAnchor+"').scrollIntoView();");
+					//webView.loadUrl("javascript:document.getElementById('"+curAnchor+"').innerHTML = 'ROCKAR ... INTE!';");
+					
+				}
+				
+				
 				
 				if (setupLayout) {
 					setupLayout = false;
@@ -589,9 +606,13 @@ public class ReadActivity extends ActionBarActivity {
 	class JsInterface {
 		public void fireImageIntent(String fileName) {
 			Log.d("3", "Firing external image intent!");
-			Intent intent = new Intent();
-			intent.setAction(Intent.ACTION_VIEW);
-			intent.setDataAndType(Uri.parse(fileName), "image/*");
+			File cacheDir = getCacheDir(); 
+			//File bookDir = new File(cacheDir, "Price and Prejudice");
+			String path = "Pride and Prejudice/";
+			
+			Log.d("3", "This is the filename: " + path + fileName);
+			Intent intent = new Intent(ReadActivity.this, ImageViewActivity.class);
+			intent.putExtra("imagePath", path+ fileName);
 			startActivity(intent);
 			Log.d("3", "Done firing external image intent");
 		}

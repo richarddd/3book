@@ -73,7 +73,7 @@ public class WriterHelper {
 		String fileHash = ((Integer)(bookName+chapterName).hashCode()).toString(); // XXX this is retarded 
 		
 		if (cache.containsKey(fileHash)){
-			Log.d("3", "Found file in cache, returning. Key: " + fileHash);
+			Log.d("3", "Found file in cache, returning. Key: " + fileHash+", value: "+ cache.get(fileHash).getAbsolutePath());
 			return cache.get(fileHash).getAbsolutePath();
 		}
 		Log.d("3", "File not found in cache. Key: " + fileHash);
@@ -127,6 +127,7 @@ public class WriterHelper {
 				out.write(data);
 				out.flush();
 				cache.put(href, cacheFile);
+				Log.d("3", "Put image into cache. Path: " + cache.get(href).getAbsolutePath());
 			} catch (Exception e){
 				Log.d("3", "Caught imageexception: " + e.getMessage());
 				Log.d("3", "Trace: " + e.getStackTrace().toString());
