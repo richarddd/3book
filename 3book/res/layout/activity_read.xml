@@ -12,6 +12,8 @@
         android:id="@+id/pgr_book"
         android:visibility="visible" />
     
+    
+    
     <WebView
         android:id="@+id/web_book"
         android:layout_width="fill_parent"
@@ -20,8 +22,12 @@
         android:visibility="visible" />
      
     
-    
-    
+    <se.chalmers.threebook.ui.BookView
+        android:id="@+id/view_book_view"
+          android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:background="@color/default_background" />
+
 
     <RelativeLayout
         android:id="@+id/lay_book_overlay"

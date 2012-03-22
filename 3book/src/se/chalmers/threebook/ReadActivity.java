@@ -15,6 +15,7 @@ import se.chalmers.threebook.content.ContentStream;
 import se.chalmers.threebook.content.EpubContentStream;
 import se.chalmers.threebook.content.MyBook;
 import se.chalmers.threebook.core.Helper;
+import se.chalmers.threebook.ui.BookView;
 import se.chalmers.threebook.ui.FlipperView;
 import se.chalmers.threebook.ui.HorizontalListView;
 import se.chalmers.threebook.ui.actionbarcompat.ActionBarActivity;
@@ -23,6 +24,7 @@ import android.app.ActionBar;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.res.AssetManager;
+import android.graphics.Canvas;
 import android.graphics.Picture;
 import android.graphics.Point;
 import android.net.Uri;
@@ -70,6 +72,8 @@ public class ReadActivity extends ActionBarActivity {
 	private boolean endOfFile = false;
 	private float lastDownX;
 	private boolean webviewOnTouch = false;
+	
+	private BookView bookView;
 
 	private ContentStream stream = null;
 	private String curAnchor = "";
@@ -160,6 +164,8 @@ public class ReadActivity extends ActionBarActivity {
 
 		webView = (WebView) findViewById(R.id.web_book);
 		layoutOverlay = (RelativeLayout) findViewById(R.id.lay_book_overlay);
+		
+		bookView = (BookView) findViewById(R.id.view_book_view);
 
 		chapterListView = (HorizontalListView) findViewById(R.id.lst_chapters);
 		bookFlipper = (FlipperView) findViewById(R.id.pgr_book);
