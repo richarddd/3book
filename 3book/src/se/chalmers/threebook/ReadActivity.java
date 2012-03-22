@@ -178,7 +178,10 @@ public class ReadActivity extends ActionBarActivity {
 			public void onItemClick(AdapterView<?> parent, View view,
 					int position, long id) {
 				dialog.show();
-				display((int) id);
+				
+				String anchor = MyBook.get().book().getTableOfContents().getTocReferences().get((int)id).getFragmentId();
+				
+				display((int) id, anchor);
 				showOverlay(false);
 
 			}
@@ -277,18 +280,10 @@ public class ReadActivity extends ActionBarActivity {
 			@Override
 			public void onPageFinished(WebView view, String url) {
 				
-				Log.d("asfasfasf", "Runns on finnished");
 				
 				if (useAnchor){
-					Log.d("3", "loading anchor : " + curAnchor);
-					Log.d("3", "String sent to window.location: " + "javascript:window.location.href = "+url+"#"+curAnchor+";");
-					/*useAnchor = false;
-					view.loadUrl(url+"#"+curAnchor); */
-					//webView.loadUrl("javascript:document.getElementById('"+curAnchor+"').innerHTML = 'kuksatan!';");
-					webView.loadUrl("javascript:window.location.href = "+url+"#"+curAnchor+";");
-					//webView.loadUrl("javascript:document.getElementById('"+curAnchor+"').scrollIntoView();");
-					//webView.loadUrl("javascript:document.getElementById('"+curAnchor+"').innerHTML = 'ROCKAR ... INTE!';");
-					
+					useAnchor = false;
+					view.loadUrl(url+"#"+curAnchor); 
 				}
 				
 				
@@ -312,9 +307,6 @@ public class ReadActivity extends ActionBarActivity {
 					bookFlipper.setLayoutParams(flipperParams);
 					view.requestLayout();
 					bookFlipper.requestLayout();
-					// webView.setAlpha(WEBVIEW_TRANSPARENCY_VALUE);
-					// webVie
-
 				}
 
 				if (currentPosition != 0) {
@@ -414,7 +406,7 @@ public class ReadActivity extends ActionBarActivity {
 			// Set up listeners and data for the overlay chapter-scroller
 
 			List<BookNavItem> chapters = chapterAdapter.getItems();
-			for (String title : stream.getToc()) {
+			for (String title : stream.getTocNames()) {
 				chapters.add(new BookNavItem(title, null));
 			}
 

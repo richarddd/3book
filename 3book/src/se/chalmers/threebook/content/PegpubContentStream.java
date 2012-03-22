@@ -17,7 +17,7 @@ import se.chalmers.threebook.model.TocReference;
 import se.chalmers.threebook.util.HtmlParser;
 import android.util.Log;
 
-public class EpubContentStream implements ContentStream {
+public class PegpubContentStream implements ContentStream {
 
 	private Navigator nav;
 	private BookCache cache;
@@ -29,7 +29,7 @@ public class EpubContentStream implements ContentStream {
 	 * @param cacheDir
 	 * @throws IOException if cache directories cannot be created
 	 */
-	public EpubContentStream(Book book, File cacheDir) throws IOException{
+	public PegpubContentStream(Book book, File cacheDir) throws IOException{
 		nav = new Navigator(book);
 		cache = new EpubCache(book.getTitle(), cacheDir);
 		toc = new EpubTableOfContents(book.getTableOfContents());
@@ -50,7 +50,7 @@ public class EpubContentStream implements ContentStream {
 		throw new UnsupportedOperationException("previous() not implemented yet");
 	}
 
-	public String jumpToToc(TOCReference ref) throws IOException, FileNotFoundException {
+	private String jumpToToc(TOCReference ref) throws IOException, FileNotFoundException {
 		Resource chapter = ref.getResource();
 		nav.gotoResource(chapter, 0, ref.getFragmentId(), this);
 		String chapIdent = ref.getTitle();
@@ -113,8 +113,6 @@ public class EpubContentStream implements ContentStream {
 	public TableOfContents getToc() {
 		return toc;
 	}
-	
-	
 
 	/**
 	 * Return the top-level wi

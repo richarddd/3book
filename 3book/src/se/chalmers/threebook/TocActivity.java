@@ -6,6 +6,7 @@ import se.chalmers.threebook.content.ContentStream;
 import se.chalmers.threebook.content.EpubContentStream;
 import se.chalmers.threebook.content.MyBook;
 import se.chalmers.threebook.core.Helper;
+import se.chalmers.threebook.model.TocReference;
 import se.chalmers.threebook.ui.actionbarcompat.ActionBarActivity;
 import android.app.ActionBar;
 import android.content.Intent;
@@ -29,7 +30,6 @@ public class TocActivity extends ActionBarActivity {
 	}
 
 	EpubContentStream book;
-	// TableOfContents toc;
 	ListView view;
 
 	@Override
@@ -48,9 +48,10 @@ public class TocActivity extends ActionBarActivity {
 		}
 		String[] tocStr = new String[book.getToc().size()];
 		int i = 0;
-		for (String s : book.getToc()) {
-			tocStr[i++] = s;
+		for (TocReference r : book.getToc().getLinearToc()){
+			tocStr[i++] = r.getTitle();
 		}
+		
 
 		if (Helper.SupportsNewApi()) {
 			ActionBar actionBar = getActionBar();
