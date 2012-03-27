@@ -13,13 +13,13 @@
         android:visibility="visible" />
     
     
-    
+    <!-- 
     <WebView
         android:id="@+id/web_book"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         android:background="@color/default_background"
-        android:visibility="visible" />
+        android:visibility="invisible" />  -->
      
     
     <se.chalmers.threebook.ui.BookView

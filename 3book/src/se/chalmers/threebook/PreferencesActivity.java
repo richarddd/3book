@@ -1,7 +1,7 @@
 package se.chalmers.threebook;
 
-import se.chalmers.threebook.core.Helper;
 import se.chalmers.threebook.ui.actionbarcompat.ActionBarPreferenceActivity;
+import se.chalmers.threebook.util.Helper;
 import android.os.Bundle;
 import android.view.MenuItem;
 import android.view.Window;

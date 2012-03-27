@@ -1,11 +1,11 @@
 package se.chalmers.threebook;
 
 import se.chalmers.threebook.R;
-import se.chalmers.threebook.core.Helper;
 import se.chalmers.threebook.ui.actionbarcompat.ActionBarTabActivity;
 import se.chalmers.threebook.ui.fragments.AuthorsFragment;
 import se.chalmers.threebook.ui.fragments.BooksFragment;
 import se.chalmers.threebook.ui.fragments.TagsFragment;
+import se.chalmers.threebook.util.Helper;
 import android.app.ActionBar;
 import android.os.Bundle;
 import android.view.Menu;

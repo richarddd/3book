@@ -1,9 +1,7 @@
 package se.chalmers.threebook;
 
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
@@ -14,20 +12,18 @@ import se.chalmers.threebook.adapters.BookPageAdapter;
 import se.chalmers.threebook.content.ContentStream;
 import se.chalmers.threebook.content.EpubContentStream;
 import se.chalmers.threebook.content.MyBook;
-import se.chalmers.threebook.core.Helper;
 import se.chalmers.threebook.ui.BookView;
+import se.chalmers.threebook.ui.BookView.OnDrawCompleteListener;
 import se.chalmers.threebook.ui.FlipperView;
 import se.chalmers.threebook.ui.HorizontalListView;
 import se.chalmers.threebook.ui.actionbarcompat.ActionBarActivity;
 import se.chalmers.threebook.ui.util.BookNavItem;
+import se.chalmers.threebook.util.Helper;
 import android.app.ActionBar;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.res.AssetManager;
-import android.graphics.Canvas;
-import android.graphics.Picture;
 import android.graphics.Point;
-import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Display;
@@ -39,13 +35,8 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnLongClickListener;
 import android.view.WindowManager;
-import android.webkit.WebSettings;
-import android.webkit.WebView;
-import android.webkit.WebView.PictureListener;
-import android.webkit.WebViewClient;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
-import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -53,7 +44,7 @@ import android.widget.Toast;
 
 public class ReadActivity extends ActionBarActivity {
 
-	private WebView webView;
+	// private WebView webView;
 	private Boolean selectionMode = false;
 	private float screenWidth;
 	private float screenHeight;
@@ -72,7 +63,7 @@ public class ReadActivity extends ActionBarActivity {
 	private boolean endOfFile = false;
 	private float lastDownX;
 	private boolean webviewOnTouch = false;
-	
+
 	private BookView bookView;
 
 	private ContentStream stream = null;
@@ -106,43 +97,60 @@ public class ReadActivity extends ActionBarActivity {
 	}
 
 	public void display(int index, String anchor) {
-		anchor = anchor == null ? "" : anchor;
 
-		Log.d("3", "Trying to jump via toc. Index: " + index +", Anchor: " + anchor);
-		
-		
-		
-		// Scroll the chapter picker to an appropriate location
-		if (chapterListView.getChildAt(0) != null){ // TODO precludes setting on first thingy
-			int chapWidth = chapterListView.getChildAt(0).getWidth();
-			//chapterListView.scrollTo(0);
-			//chapterListView.scrollTo((int)(chapWidth*(index-0.5))); // 1 to counter center-stuffies
-			chapterListView.scrollTo((int)(chapWidth*(index-1))); // 1 to counter center-stuffies
-			chapterAdapter.setCurrentChapterNumber(index, MyBook.get().book().getTableOfContents().size());
-			chapterAdapter.setCurrentChapterName(MyBook.get().book().getTableOfContents().getTocReferences().get(index).getTitle()); // TODO this needs to get outside of this if clause, and fix for nullpointer
-		}
-		try { 
-			String curUrl = "file:///"+stream.jumpTo(index)+"#"+anchor;
-			Log.d("3", "time to load url into view! url is: " + curUrl);
+		try {
 
-			webView.loadUrl(curUrl);
+			// String path =
+			// getCacheDir().getAbsolutePath()+stream.jumpTo(index).replace("/data/data/se.chalmers.threebook/cache",
+			// "");
 
-			Log.d("3", "loading done, lol wut?");
+			// Log.d("read", path);
+
+			// File cd = File(+;
+			// XXX Axel you should fix this, no idea what happens behind the
+			// scenes...
+			bookView.setHtmlSource(Helper.streamToString(new FileInputStream(
+					stream.jumpTo(index))));
 		} catch (FileNotFoundException e) {
 			Log.d("3", "FNFE in display: " + e.getMessage());
 		} catch (IOException e) {
 			Log.d("3", "IOE in display: " + e.getMessage());
 		}
 
-	}
+		/*
+		 * anchor = anchor == null ? "" : anchor;
+		 * 
+		 * Log.d("3", "Trying to jump via toc. Index: " + index +", Anchor: " +
+		 * anchor);
+		 * 
+		 * // Scroll the chapter picker to an appropriate location if
+		 * (chapterListView.getChildAt(0) != null){ int chapWidth =
+		 * chapterListView.getChildAt(0).getWidth();
+		 * //chapterListView.scrollTo(0);
+		 * //chapterListView.scrollTo((int)(chapWidth*(index-0.5))); // 1 to
+		 * counter center-stuffies
+		 * chapterListView.scrollTo((int)(chapWidth*(index-1))); // 1 to counter
+		 * center-stuffies chapterAdapter.setCurrentChapterNumber(index,
+		 * MyBook.get().book().getTableOfContents().size()); } try { String
+		 * curUrl = "file:///"+stream.jumpTo(index)+"#"+anchor; Log.d("3",
+		 * "time to load url into view! url is: " + curUrl);
+		 * 
+		 * 
+		 * //webView.loadUrl(curUrl);
+		 * 
+		 * Log.d("3", "loading done, lol wut?"); } catch (FileNotFoundException
+		 * e) { Log.d("3", "FNFE in display: " + e.getMessage()); } catch
+		 * (IOException e) { Log.d("3", "IOE in display: " + e.getMessage()); }
+		 */
 
+	}
 
 	/** Called when the activity is first created. */
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_read);
-		
+
 		Log.d("ReadActivity", "View is created");
 
 		Display display = getWindowManager().getDefaultDisplay();
@@ -162,16 +170,12 @@ public class ReadActivity extends ActionBarActivity {
 			actionBar.setDisplayHomeAsUpEnabled(true);
 		}
 
-		webView = (WebView) findViewById(R.id.web_book);
 		layoutOverlay = (RelativeLayout) findViewById(R.id.lay_book_overlay);
-		
+
 		bookView = (BookView) findViewById(R.id.view_book_view);
 
 		chapterListView = (HorizontalListView) findViewById(R.id.lst_chapters);
 		bookFlipper = (FlipperView) findViewById(R.id.pgr_book);
-
-		webView.getSettings().setJavaScriptEnabled(true);
-		webView.addJavascriptInterface(new JsInterface(), "application");
 
 		chapterAdapter = new BookNavAdapter(this, chapterListView);
 		chapterAdapter
@@ -184,38 +188,30 @@ public class ReadActivity extends ActionBarActivity {
 			public void onItemClick(AdapterView<?> parent, View view,
 					int position, long id) {
 				dialog.show();
-				
-				String anchor = MyBook.get().book().getTableOfContents().getTocReferences().get((int)id).getFragmentId();
-				
-				display((int) id, anchor);
+				display((int) id);
 				showOverlay(false);
 
 			}
 
 		});
-		
-		webView.setOnLongClickListener(new OnLongClickListener() {
-			
+
+		// TODO longclick
+		bookView.setOnLongClickListener(new OnLongClickListener() {
+
 			public boolean onLongClick(View v) {
-				
-				Log.d("webview", "long press invoked");
-				
-				float diff = lastDownX / screenWidth;
-				if(diff < 0.33){
-					fastFlip(-1);
-				}else if(diff > 0.66){
-					fastFlip(1);
-				}
+
+				Log.d("bookView", "long press invoked");
+				/*
+				 * float diff = lastDownX / screenWidth; if(diff < 0.33){
+				 * fastFlip(-1); }else if(diff > 0.66){ fastFlip(1); }
+				 */
 				return true;
 			}
 		});
 
 		pagerAdapter = new BookPageAdapter(this);
 		bookFlipper.setAdapter(pagerAdapter);
-		
-		
-		
-		
+
 		chapterListView.setAdapter(chapterAdapter);
 		chapterListView.setOnScrollListener(chapterAdapter);
 
@@ -223,133 +219,58 @@ public class ReadActivity extends ActionBarActivity {
 				.setPreViewSwitchedListener(new FlipperView.PreViewSwitchedListener() {
 
 					public void onPreViewSwitched(int targetIndex, int direction) {
-						webView.setVisibility(View.VISIBLE);
+						bookView.setVisibility(View.VISIBLE);
 						if (direction != 0) {
-							Log.d("ReadActivity",
-									"Targetindex: "
-											+ String.valueOf(targetIndex));
-
-							// webView.setAlpha(WEBVIEW_TRANSPARENCY_VALUE);
-							// bookFlipper.setVisibility(View.INVISIBLE);
-							if (targetIndex > 0) {
-								if (targetIndex > currentPosition) {
-									int scrollTo = viewHeight
-											* (targetIndex + 1);
-									/*
-									 * if(scrollTo >=
-									 * webView.getContentHeight()+
-									 * (viewHeight*2)){ endOfFile = true; }
-									 */
-									Log.d("ReadActivity",
-											"Content height: "
-													+ String.valueOf(webView
-															.getContentHeight()));
-									webView.scrollTo(0, scrollTo);
-									Log.d("ReadActivity", "Next scroll to: "
-											+ String.valueOf(scrollTo));
-									pagerAdapter.setNext(Helper
-											.getBitmapFromView(webView));
-								} else {
-									endOfFile = false;
-									int scrollTo = viewHeight
-											* (targetIndex - 1);
-									webView.scrollTo(0, scrollTo);
-									Log.d("ReadActivity", "Prev scroll to: "
-											+ String.valueOf(scrollTo));
-									pagerAdapter.setPrevious(Helper
-											.getBitmapFromView(webView));
-								}
-
+							//bookFlipper.setVisibility(View.INVISIBLE);
+							if (targetIndex > currentPosition) {
+								bookView.nextPage();
+								pagerAdapter.setNext(Helper.getBitmapFromView(bookView));
+							} else {
+								bookView.prevPage();
+								pagerAdapter.setPrevious(Helper.getBitmapFromView(bookView));
 							}
-							webView.scrollTo(0, viewHeight * targetIndex);
 							currentPosition = targetIndex;
 						}
 					}
 				});
 
-			dialog = ProgressDialog.show(this, "",
+		dialog = ProgressDialog.show(this, "",
 				this.getString(R.string.loading_please_wait), true);
 
-		webView.setVerticalScrollBarEnabled(false);
-		webView.setHorizontalScrollBarEnabled(false);
-		webView.getSettings().setDefaultZoom(WebSettings.ZoomDensity.MEDIUM);
+		if (currentPosition != 0) {
+			pagerAdapter.notifyDataSetInvalidated();
+			bookFlipper.setSelection(0);
+		}
 
-		webView.setPictureListener(new PictureListener() { // XXX Fokkat!
-			public void onNewPicture(WebView view, Picture picture) {
-				view.setPictureListener(null);
-			}
-		});
-		
-
-		webView.setWebViewClient(new WebViewClient(){
-
+		bookView.setOnDrawCompleteListener(new OnDrawCompleteListener() {
 			@Override
-			public void onPageFinished(WebView view, String url) {
-				
-				
-				if (useAnchor){
-					useAnchor = false;
-					view.loadUrl(url+"#"+curAnchor); 
-				}
-				
-				
-				
-				if (setupLayout) {
-					setupLayout = false;
-					viewHeight = view.getHeight();
-					FrameLayout.LayoutParams webviewParams = (FrameLayout.LayoutParams) view
-							.getLayoutParams();
+			public void drawComplete() {
 
-					FrameLayout.LayoutParams flipperParams = (FrameLayout.LayoutParams) bookFlipper
-							.getLayoutParams();
+				bookView.setOnDrawCompleteListener(null);
 
-					flipperParams.setMargins(0, 0, 0,
-							(int) (viewHeight % (18 * 1.5)));
-
-					webviewParams.setMargins(0, 0, 0,
-							(int) (viewHeight % (18 * 1.5)));
-					viewHeight -= viewHeight % (18 * 1.5);
-					view.setLayoutParams(webviewParams);
-					bookFlipper.setLayoutParams(flipperParams);
-					view.requestLayout();
-					bookFlipper.requestLayout();
-				}
-
-				if (currentPosition != 0) {
-					pagerAdapter.notifyDataSetInvalidated();
-					bookFlipper.setSelection(0);
-				}
-
-				pagerAdapter.setCurrent(Helper.getBitmapFromView(view));
-				view.scrollTo(0, view.getScrollY() + viewHeight);
-				pagerAdapter.setNext(Helper.getBitmapFromView(view));
-				view.scrollTo(0, 0);
-				
-				
+				pagerAdapter.setCurrent(Helper.getBitmapFromView(bookView));
+				bookView.nextPage();
+				pagerAdapter.setNext(Helper.getBitmapFromView(bookView));
 				pagerAdapter.notifyDataSetChanged();
 				dialog.dismiss();
 
 			}
 		});
 
-		webView.setOnTouchListener(new View.OnTouchListener() {
-
-			
+		bookView.setOnTouchListener(new View.OnTouchListener() {
 
 			public boolean onTouch(View v, MotionEvent event) {
-				
-				
-				if(!menuShown){
+
+				if (!menuShown) {
 					bookFlipper.onTouchEvent(event);
 				}
 
 				switch (event.getAction()) {
 
 				case MotionEvent.ACTION_MOVE:
-					if(!menuShown){
-						webView.setVisibility(View.INVISIBLE);
+					if (!menuShown) {
+						bookView.setVisibility(View.INVISIBLE);
 					}
-					// bookFlipper.setVisibility(View.VISIBLE);
 					return true;
 				case MotionEvent.ACTION_DOWN:
 					lastDownX = event.getX();
@@ -384,7 +305,7 @@ public class ReadActivity extends ActionBarActivity {
 			break;
 		case READ_BOOK_FROM_LIBRARY:
 			Log.d("3", "reading from files and shit!");
-			
+
 			AssetManager assetManager = getAssets();
 			String fileName = (String) getIntent().getSerializableExtra(
 					IntentKey.FILE_PATH.toString());
@@ -392,23 +313,25 @@ public class ReadActivity extends ActionBarActivity {
 			// implement this plz
 			int lastIndex = 2;
 
-			
 			try { // Open and store ye olde book
 				long t1 = System.currentTimeMillis();
 				InputStream epubInputStream = new FileInputStream(fileName);
-				/*InputStream epubInputStream = assetManager.open("books/"
-						+ fileName);*/
+				/*
+				 * InputStream epubInputStream = assetManager.open("books/" +
+				 * fileName);
+				 */
 				MyBook.setBook(new EpubReader().readEpub(epubInputStream));
+				//stream = new EpubContentStream(MyBook.get().book(), this);
 				stream = new EpubContentStream(MyBook.get().book(), getCacheDir());
 				long t2 = System.currentTimeMillis();
-				Log.d("3", "opening book took " + (t2-t1) + "ms.");
-			
-			} catch (FileNotFoundException e){
-				Log.e("3", "ReadActivity FNFE: " + e.getMessage() );
+				Log.d("3", "opening book took " + (t2 - t1) + "ms.");
+
+			} catch (FileNotFoundException e) {
+				Log.e("3", "ReadActivity FNFE: " + e.getMessage());
 			} catch (IOException e) {
 				Log.e("3", "ReadActivity IOE: " + e.getMessage());
 			}
-			
+
 			// Set up listeners and data for the overlay chapter-scroller
 
 			List<BookNavItem> chapters = chapterAdapter.getItems();
@@ -416,8 +339,8 @@ public class ReadActivity extends ActionBarActivity {
 				chapters.add(new BookNavItem(title, null));
 			}
 
-			((TextView) findViewById(R.id.txt_book_nav_chapter_no)).
-			setText(lastIndex + "/" + stream.getToc().size());
+			((TextView) findViewById(R.id.txt_book_nav_chapter_no))
+					.setText(lastIndex + "/" + stream.getToc().size());
 
 			display(lastIndex);
 			break;
@@ -431,20 +354,23 @@ public class ReadActivity extends ActionBarActivity {
 		}
 
 	}
-	
-	private void fastFlip(int direction){
+
+	private void fastFlip(int direction) {
 		new Runnable() {
 			public void run() {
-				
+
 				int loopCount = 0;
-				
-				while(webviewOnTouch){
+
+				while (webviewOnTouch) {
 					try {
-						int sleepVal = 500-(25*loopCount);
-						Log.d("Should sleep in fastflip as", "Sleep value = "+String.valueOf(sleepVal));
+						int sleepVal = 500 - (25 * loopCount);
+						Log.d("Should sleep in fastflip as", "Sleep value = "
+								+ String.valueOf(sleepVal));
 						Thread.sleep(sleepVal);
-						///XXX penis
-						Toast.makeText(ReadActivity.this, String.valueOf(loopCount+1), Toast.LENGTH_SHORT).show();
+						// /XXX penis
+						Toast.makeText(ReadActivity.this,
+								String.valueOf(loopCount + 1),
+								Toast.LENGTH_SHORT).show();
 					} catch (InterruptedException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
@@ -472,13 +398,13 @@ public class ReadActivity extends ActionBarActivity {
 			((View) ((LinearLayout) findViewById(R.id.actionbar_compat))
 					.getParent()).setVisibility(gone);
 		}
-		
+
 		layoutOverlay.setVisibility(visibility);
 	}
 
 	private void nextPage() {
 		if (!endOfFile) {
-			webView.setVisibility(View.INVISIBLE);
+			bookView.setVisibility(View.INVISIBLE);
 			bookFlipper.nextScreen();
 		} else {
 			// /TODO nextChapter
@@ -487,11 +413,9 @@ public class ReadActivity extends ActionBarActivity {
 
 	private void prevPage() {
 		if (currentPosition != 0) {
-			webView.setVisibility(View.INVISIBLE);
+			bookView.setVisibility(View.INVISIBLE);
 			bookFlipper.prevousScreen();
 		}
-		// bookFlipper.setSelection(bookFlipper.getSelectedItemPosition()-1);
-		// bookFlipper.setCurrentItem(0);
 	}
 
 	public void setFullScreen(boolean fullscreen) {
@@ -502,17 +426,6 @@ public class ReadActivity extends ActionBarActivity {
 			attrs.flags &= (~WindowManager.LayoutParams.FLAG_FULLSCREEN);
 		}
 		getWindow().setAttributes(attrs);
-	}
-
-	public void selectText() {
-		selectionMode = true;
-		try {
-			KeyEvent shiftPressEvent = new KeyEvent(0, 0, KeyEvent.ACTION_DOWN,
-					KeyEvent.KEYCODE_SHIFT_LEFT, 0, 0);
-			shiftPressEvent.dispatch(webView);
-		} catch (Exception e) {
-			throw new AssertionError(e);
-		}
 	}
 
 	@Override
@@ -551,15 +464,12 @@ public class ReadActivity extends ActionBarActivity {
 			break;
 		case R.id.menu_zoom_in:
 			showOverlay(false);
-			webView.zoomIn();
 			break;
 		case R.id.menu_zoom_out:
 			showOverlay(false);
-			webView.zoomOut();
 			break;
 		case R.id.menu_table_of_contents:
-			Intent tocIntent = new Intent(webView.getContext(),
-					TocActivity.class);
+			Intent tocIntent = new Intent(this, TocActivity.class);
 			int GET_SECTION_REFERENCE = 1;
 			startActivityForResult(tocIntent, GET_SECTION_REFERENCE);
 			break;
@@ -580,8 +490,6 @@ public class ReadActivity extends ActionBarActivity {
 
 	@Override
 	public boolean onKeyUp(int keyCode, KeyEvent event) {
-
-		// Log.d("asfasf", String.valueOf(keyCode));
 		if (keyCode == 82) {
 			if (!menuShown) {
 				openOptionsMenu();
@@ -603,17 +511,6 @@ public class ReadActivity extends ActionBarActivity {
 		}
 
 		return super.onKeyUp(keyCode, event);
-	}
-
-	class JsInterface {
-		public void fireImageIntent(String fileName) {
-			String path = "Pride and Prejudice/";
-			
-			Log.d("3", "Image intent filename: " + path + fileName);
-			Intent intent = new Intent(ReadActivity.this, ImageViewActivity.class);
-			intent.putExtra("imagePath", path+ fileName); // TODO remove literal
-			startActivity(intent);
-		}
 	}
 
 }

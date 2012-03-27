@@ -1,4 +1,4 @@
-package se.chalmers.threebook.ui;
+package se.chalmers.threebook.html;
 
 import java.util.LinkedList;
 
@@ -8,43 +8,30 @@ import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
 
-import se.chalmers.threebook.html.BreakElement;
-import se.chalmers.threebook.html.PrintElement;
-import se.chalmers.threebook.html.RenderElement;
-import se.chalmers.threebook.html.StyleFlag;
 import se.chalmers.threebook.util.Helper;
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Point;
 import android.graphics.Typeface;
-import android.util.AttributeSet;
 import android.util.Log;
 import android.view.Display;
-import android.view.View;
 import android.view.WindowManager;
 
-public class BookView extends View {
-	
-	public static class OnDrawCompleteListener{
-		
-		public void drawComplete(){
-			
-		}
-	}
+public class HtmlRenderer {
+	private static HtmlRenderer instance;
+	private static Object syncObject; // for thread safe singleton
 
 	private int screenWidth;
 	private int screenHeight;
 	private String htmlSource = "";
 	private int baseTextSize = 26;
 	private int minWordSpace = 2;
-	private int rowMargin = (int) (baseTextSize*0.2);
+	private int rowMargin = (int) (baseTextSize * 0.2);
 	private int heightMargin = 10;
 	private int widthMargin = 10;
-	private Bitmap canvasBitmap;
 
 	private float h1TextSize = (float) (baseTextSize * 2);
 	private float h2TextSize = (float) (baseTextSize * 1.5);
@@ -56,28 +43,35 @@ public class BookView extends View {
 	private LinkedList<RenderElement> printObjects;
 	private int wordsPrinted = 0;
 	private int drawFrom = 0;
-	private Canvas canvas;
 	private Paint paint;
-	
+
 	private OnDrawCompleteListener onDrawCompleteListener;
-	
 
-	public BookView(Context context, AttributeSet attrs, int defStyle) {
-		super(context, attrs, defStyle);
-		initView(context);
+	private HtmlRenderer() {
+
 	}
 
-	public BookView(Context context, AttributeSet attrs) {
-		super(context, attrs);
-		initView(context);
+	public static HtmlRenderer getInstance() {
+		if (instance == null) {
+			synchronized (syncObject) {
+				if (instance == null) {
+					instance = new HtmlRenderer();
+				}
+			}
+		}
+		return instance;
 	}
 
-	public BookView(Context context) {
-		super(context);
-		initView(context);
+
+
+	public static class OnDrawCompleteListener {
+
+		public void drawComplete() {
+
+		}
 	}
-	
-	public void setOnDrawCompleteListener(OnDrawCompleteListener l){
+
+	public void setOnDrawCompleteListener(OnDrawCompleteListener l) {
 		this.onDrawCompleteListener = l;
 	}
 
@@ -89,10 +83,6 @@ public class BookView extends View {
 		this.htmlSource = htmlSource;
 		wordsPrinted = 0;
 		praseHtml();
-		//Log.d(TAG, htmlSource);
-		if(canvas != null){
-			draw(canvas);
-		}
 	}
 
 	public int getBaseTextSize() {
@@ -135,7 +125,7 @@ public class BookView extends View {
 		this.widthMargin = widthMargin;
 	}
 
-	private void initView(Context context) {
+	private void init(Context context) {
 		Display display = ((WindowManager) context
 				.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay();
 
@@ -230,32 +220,20 @@ public class BookView extends View {
 		}
 	}
 
-	private String replaceCodes(String word) {
-		return word.replaceAll("&#8211", "-").replaceAll("&quot;", "\"")
-				.replaceAll("&nbsp;", " ");
-	}
-
 	public void nextPage() {
 		drawFrom += wordsPrinted;
-		//onDraw(canvas);
 	}
 
 	public void prevPage() {
 		drawFrom -= wordsPrinted;
-		//onDraw(canvas);
 	}
 
-	@Override
-	protected void onDraw(Canvas canvas) {
-		
-		
-		//canvasBitmap = Bitmap.createBitmap(screenWidth, screenHeight, Bitmap.Config.ARGB_4444);
-		
-		//canvas = new Canvas(canvasBitmap);
+	public Bitmap getRenderedBitmap() {
 
-		if (this.canvas == null) {
-			this.canvas = canvas;
-		}
+		Bitmap bitmap = Bitmap.createBitmap(screenWidth, screenHeight,
+				Bitmap.Config.ARGB_4444);
+
+		Canvas canvas = new Canvas(bitmap);
 
 		long milis = System.currentTimeMillis();
 
@@ -267,7 +245,7 @@ public class BookView extends View {
 		boolean shouldPrintRow = false;
 		boolean newParagraph = true;
 		int breakSize = 0;
-		
+
 		int curWordSpace = 0;
 
 		if (printObjects != null) {
@@ -286,7 +264,7 @@ public class BookView extends View {
 					PrintElement e = (PrintElement) printObjects.get(i);
 					setStyle(e.getStyle());
 					curWordSpace = (int) (paint.getTextSize() * 0.2);
-					if(curWordSpace < minWordSpace){
+					if (curWordSpace < minWordSpace) {
 						curWordSpace = minWordSpace;
 					}
 					wordCurWith = paint.measureText(e.getText());
@@ -317,15 +295,10 @@ public class BookView extends View {
 
 					int rowHeight = 0;
 					for (int ii = from; ii < to; ii++) {
-
 						PrintElement e = (PrintElement) printObjects.get(ii);
-
 						setStyle(e.getStyle());
-
-						float glue = (float) (newParagraph ? tGlue : curWordSpace);
-
-						//Log.d(TAG, e.getText());
-						
+						float glue = (float) (newParagraph ? tGlue
+								: curWordSpace);
 						rowHeight = (int) (paint.getTextSize() + rowMargin);
 						canvas.drawText(e.getText(), widthMargin + lastWidth,
 								totalRowHeight + rowHeight, paint);
@@ -345,7 +318,8 @@ public class BookView extends View {
 					firstWordInRow = true;
 					shouldPrintRow = false;
 
-					if (totalRowHeight + ((baseTextSize + rowMargin) * 3) //XXX 3an här är lite magisk faktiskt, kan va ute och cykla med den
+					//XXX 3an här är lite magisk, borde fixas
+					if (totalRowHeight + ((baseTextSize + rowMargin) * 3) 
 							+ heightMargin > screenHeight) {
 						break;
 					}
@@ -354,17 +328,15 @@ public class BookView extends View {
 			}
 		}
 
-		Log.d("BookView",
-				"Drawtime: "
+		Log.d("HtmlRenderer",
+				"Render time: "
 						+ String.valueOf(System.currentTimeMillis() - milis)
 						+ "ms");
 
-		//canvasBitmap = Bitmap.createBitmap(screenWidth, screenHeight, Bitmap.Config.ARGB_4444);
-		
-		super.onDraw(canvas);
-		if(onDrawCompleteListener != null)
+		if (onDrawCompleteListener != null)
 			onDrawCompleteListener.drawComplete();
-		
+
+		return bitmap;
 	}
 
 	private void setStyle(StyleFlag flag) {
@@ -379,6 +351,18 @@ public class BookView extends View {
 			break;
 		case H3:
 			paint.setTextSize(h3TextSize);
+			paint.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
+			break;
+		case H4:
+			paint.setTextSize(h4TextSize);
+			paint.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
+			break;
+		case H5:
+			paint.setTextSize(h5TextSize);
+			paint.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
+			break;
+		case H6:
+			paint.setTextSize(h6TextSize);
 			paint.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
 			break;
 		case EM:

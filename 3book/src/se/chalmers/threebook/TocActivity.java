@@ -2,12 +2,13 @@ package se.chalmers.threebook;
 
 import java.io.IOException;
 
+
 import se.chalmers.threebook.content.ContentStream;
 import se.chalmers.threebook.content.EpubContentStream;
 import se.chalmers.threebook.content.MyBook;
-import se.chalmers.threebook.core.Helper;
 import se.chalmers.threebook.model.TocReference;
 import se.chalmers.threebook.ui.actionbarcompat.ActionBarActivity;
+import se.chalmers.threebook.util.Helper;
 import android.app.ActionBar;
 import android.content.Intent;
 import android.os.Bundle;
