@@ -311,7 +311,7 @@ public class HtmlRenderer {
 					breakSize = 0;
 
 					if (newParagraph) {
-						i--;
+						i--; //hej!
 					}
 					rowCurWidth = 0;
 					rowWordCount = 0;
