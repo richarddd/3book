@@ -3,10 +3,7 @@ package se.chalmers.threebook.adapters;
 import se.chalmers.threebook.R;
 import se.chalmers.threebook.html.HtmlRenderer;
 import se.chalmers.threebook.html.RenderedPage;
-import se.chalmers.threebook.util.Helper;
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.Point;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,27 +11,27 @@ import android.widget.BaseAdapter;
 import android.widget.ImageView;
 
 public class BookPageAdapter extends BaseAdapter {
-	
-	private String tag = "BookPageAdapter";
-	
-	public static final int START_POSITION = (int) (Integer.MAX_VALUE*0.5);
-	
-	private int lastPosition = START_POSITION;
-	private LayoutInflater mInflater;
-	private RenderedPage next;
-	private RenderedPage previous;
-	private HtmlRenderer render;
-	
-	private RenderedPage[] pageCache = new RenderedPage[3];
-	private boolean cacheEmpty = true;
 
-	public BookPageAdapter(Context context, HtmlRenderer render) {
+	private String tag = "BookPageAdapter";
+
+	public static final int START_POSITION = (int) (Integer.MAX_VALUE * 0.5);
+
+	private int lastPosition = 0;
+	private LayoutInflater mInflater;
+	private HtmlRenderer render;
+	private RenderedPage[] pageCache;
+
+	private int objectsBuffered; //
+
+	public BookPageAdapter(Context context, HtmlRenderer render, int sideBuffer) {
 		mInflater = (LayoutInflater) context
 				.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 		this.render = render;
+		pageCache = new RenderedPage[(sideBuffer * 2) + 1];
+
 	}
-	
-	public HtmlRenderer getRenderer(){
+
+	public HtmlRenderer getRenderer() {
 		return render;
 	}
 
@@ -42,54 +39,44 @@ public class BookPageAdapter extends BaseAdapter {
 		return Integer.MAX_VALUE;
 	}
 
-	public int getCurrentItem() {
-		return lastPosition;
-	}
-
-	public void setCurrentItem(int currentItem) {
-		this.lastPosition = currentItem;
-	}
-
-	public RenderedPage getNext() {
-		return next;
-	}
-
-	public void setNext(RenderedPage next) {
-		this.next = next;
-	}
-
-	public RenderedPage getPrevious() {
-		return previous;
-	}
-
-	public void setPrevious(RenderedPage previous) {
-		this.previous = previous;
-	}
-
-	public RenderedPage getItem(int position) {
-		RenderedPage item;
-		if (position > lastPosition) {
-			item = next;
-		} else {
-			item = previous;
-		}
-		lastPosition = position;
-		return item;
-	}
-
 	public long getItemId(int position) {
 		return position;
 	}
 
 	public View getView(int position, View convertView, ViewGroup parent) {
-		
-		int offset = position-BookPageAdapter.START_POSITION;
-		
-		//RenderedPage page = 
-		
-		//Log.d(tag, "Inflating position: "+position);
-		//Log.d(tag, "Inflating offset: "+());
-		
+
+		int offset = position - BookPageAdapter.START_POSITION;
+		int direction = position - lastPosition; // on first run, this will be
+													// positive as lastPos=0
+
+		RenderedPage curPage = null;
+		if (objectsBuffered < pageCache.length) {
+			objectsBuffered++;
+			int insertAtIndex = ((int) (pageCache.length / 2)) + offset;
+			pageCache[insertAtIndex] = offset < 0 ? null : render
+					.getRenderedPage(offset);
+			curPage = pageCache[insertAtIndex];
+
+		} else {
+			if (direction > 0) {
+				for (int i = 0; i < pageCache.length - 1; i++) {
+					pageCache[i] = pageCache[i + 1];
+				}
+				pageCache[pageCache.length - 1] = render
+						.getRenderedPage(offset);
+				curPage = pageCache[pageCache.length - 1];
+			} else {
+				for (int i = pageCache.length - 1; i > 0; i--) {
+					pageCache[i] = pageCache[i - 1];
+				}
+
+				pageCache[0] = offset < 0 ? null : render
+						.getRenderedPage(offset); // TODO previous chapter if
+													// offset = 0;
+				curPage = pageCache[0];
+			}
+		}
+
 		ViewHolder holder;
 		if (convertView == null) {
 			convertView = mInflater.inflate(R.layout.fragment_book_image, null);
@@ -100,13 +87,12 @@ public class BookPageAdapter extends BaseAdapter {
 		} else {
 			holder = (ViewHolder) convertView.getTag();
 		}
-		Bitmap bitmap;
-		
-		bitmap = getItem(position).getBitmap();
-		
-		if(bitmap != null){
-			holder.img.setImageBitmap(bitmap);
+
+		if (curPage != null) {
+			holder.img.setImageBitmap(curPage.getBitmap());
 		}
+		lastPosition = position;
+
 		return convertView;
 	}
 
@@ -118,4 +104,8 @@ public class BookPageAdapter extends BaseAdapter {
 		}
 	}
 
+	public RenderedPage getItem(int direction) {
+
+		return pageCache[pageCache.length / 2];
+	}
 }

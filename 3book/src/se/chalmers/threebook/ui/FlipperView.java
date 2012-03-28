@@ -51,10 +51,9 @@ public class FlipperView extends AdapterView<Adapter> {
 	private final static int TOUCH_STATE_SCROLLING = 1;
 
 	private LinkedList<View> mLoadedViews;
-	private PreViewSwitchedListener mPreViewSwitchedListener;
 	private int mCurrentBufferIndex;
 	private int mCurrentAdapterIndex;
-	private int mSideBuffer = 2;
+	private int mSideBuffer;
 	private Scroller mScroller;
 	private VelocityTracker mVelocityTracker;
 	private int mTouchState = TOUCH_STATE_REST;
@@ -97,15 +96,10 @@ public class FlipperView extends AdapterView<Adapter> {
 
 	}
 
-	public static interface PreViewSwitchedListener {
-
-		void onPreViewSwitched(int targetIndex, int direction);
-
-	}
 
 	public FlipperView(Context context) {
 		super(context);
-		mSideBuffer = 1;
+		mSideBuffer = 2;
 		init();
 	}
 
@@ -117,7 +111,7 @@ public class FlipperView extends AdapterView<Adapter> {
 
 	public FlipperView(Context context, AttributeSet attrs) {
 		super(context, attrs);
-		mSideBuffer = 1;
+		mSideBuffer = 2;
 		init();
 	}
 
@@ -128,6 +122,10 @@ public class FlipperView extends AdapterView<Adapter> {
 				.get(getContext());
 		mTouchSlop = configuration.getScaledTouchSlop();
 		mMaximumVelocity = configuration.getScaledMaximumFlingVelocity();
+	}
+	
+	public int getSideBuffer(){
+		return mSideBuffer;
 	}
 
 	public void onConfigurationChanged(Configuration newConfig) {
@@ -435,10 +433,6 @@ public class FlipperView extends AdapterView<Adapter> {
 			mCurrentScreen = Math.max(0,
 					Math.min(mNextScreen, getChildCount() - 1));
 			mNextScreen = INVALID_SCREEN;
-			mPreViewSwitchedListener.onPreViewSwitched(
-					(mLastScrollDirection > 0) ? mCurrentAdapterIndex + 1
-							: mCurrentAdapterIndex - 1, mLastScrollDirection);
-			// XXX asfasf
 			postViewSwitched(mLastScrollDirection);
 		}
 	}
@@ -516,9 +510,6 @@ public class FlipperView extends AdapterView<Adapter> {
 
 	@Override
 	public void setSelection(int position) {
-		if(mPreViewSwitchedListener != null){
-			mPreViewSwitchedListener.onPreViewSwitched(position, mLastScrollDirection); //XX
-		}
 		mNextScreen = INVALID_SCREEN;
 		mScroller.forceFinished(true);
 		if (mAdapter == null)
@@ -687,10 +678,6 @@ public class FlipperView extends AdapterView<Adapter> {
 			// Not yet implemented!
 		}
 
-	}
-
-	public void setPreViewSwitchedListener(PreViewSwitchedListener pl) {
-		this.mPreViewSwitchedListener = pl;
 	}
 
 	private void logBuffer() {

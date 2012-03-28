@@ -39,12 +39,15 @@ public class HtmlRenderer {
 
 	private LinkedList<RenderElement> printObjects;
 	private int objectsIterated = 0;
-	private int drawFrom = 0;
+
 	private Paint paint;
 
 	private List<Integer> pagePosList = new ArrayList<Integer>(20);
+	private int drawFrom = 0; // the value of the
+	private int curPosIndex = 0; // index to the pagePosList that was last drawn
 
 	private OnDrawCompleteListener onDrawCompleteListener;
+	private String tag = "HtmlRenderer";
 
 	public static class OnDrawCompleteListener {
 		public void drawComplete() {
@@ -120,6 +123,8 @@ public class HtmlRenderer {
 		paint.setStyle(Paint.Style.FILL);
 		paint.setTextAlign(Paint.Align.LEFT);
 		paint.setTextSize(baseTextSize);
+
+		pagePosList.add(0); // draw first page from word zero
 	}
 
 	private void praseHtml() {
@@ -195,34 +200,61 @@ public class HtmlRenderer {
 		}
 	}
 
-	public void nextPage() {
-
-		offset++;
-
-		// drawFrom += objectsIterated;
-	}
-
-	public void prevPage() {
-		if (offset > 0) {
-			offset--;
+	private void setStyle(StyleFlag flag) {
+		switch (flag) {
+		case H1:
+			paint.setTextSize(h1TextSize);
+			paint.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
+			break;
+		case H2:
+			paint.setTextSize(h2TextSize);
+			paint.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
+			break;
+		case H3:
+			paint.setTextSize(h3TextSize);
+			paint.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
+			break;
+		case H4:
+			paint.setTextSize(h4TextSize);
+			paint.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
+			break;
+		case H5:
+			paint.setTextSize(h5TextSize);
+			paint.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
+			break;
+		case H6:
+			paint.setTextSize(h6TextSize);
+			paint.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
+			break;
+		case EM:
+			paint.setTextSize(baseTextSize);
+			paint.setTypeface(Typeface.defaultFromStyle(Typeface.ITALIC));
+			break;
+		case NORMAL:
+			paint.setTextSize(baseTextSize);
+			paint.setTypeface(Typeface.defaultFromStyle(Typeface.NORMAL));
+			break;
 		}
 
-		// drawFrom -= objectsIterated;
 	}
 
-	public RenderedPage getNextPage() {
-		nextPage();
-		return getRenderedPage();
+	public boolean lastPage() {
+		return objectsIterated == printObjects.size();
 	}
 
-	public RenderedPage getPrevPage() {
-		prevPage();
-		return getRenderedPage();
+	public boolean firstPage() {
+		return drawFrom == 0;
 	}
 
-	public RenderedPage getRenderedPage() {
-
+	public RenderedPage getRenderedPage(int pageNumber) {
+		if (pageNumber < 0) {
+			throw new IllegalArgumentException("pageNumber must be > 0");
+		}
+		
 		long milis = System.currentTimeMillis();
+
+		int drawFrom = pagePosList.get(pageNumber);
+		
 
 		List<CharPosition> charList = new ArrayList<CharPosition>();
 
@@ -317,7 +349,10 @@ public class HtmlRenderer {
 					breakSize = 0;
 
 					if (newParagraph) {
-						i--; // hej!
+						// we rewind the word counter if we couldn't fit the
+						// word on the just-finished line, so the word gets a
+						// fit-attempt on the next line.
+						i--;
 					}
 					rowCurWidth = 0;
 					rowWordCount = 0;
@@ -325,7 +360,7 @@ public class HtmlRenderer {
 					shouldPrintRow = false;
 
 					// XXX 3an här är lite magisk, borde fixas
-					if (totalRowHeight + ((baseTextSize + rowMargin) * 3)
+					if (totalRowHeight + ((baseTextSize + rowMargin) * 1)
 							+ heightMargin > viewHeight) {
 						break;
 					}
@@ -333,6 +368,9 @@ public class HtmlRenderer {
 				}
 			}
 		}
+		
+		pagePosList.set(pageNumber + 1, pagePosList.get(pageNumber)
+				+ objectsIterated);
 
 		Log.d("HtmlRenderer",
 				"Render time: "
@@ -342,52 +380,7 @@ public class HtmlRenderer {
 		if (onDrawCompleteListener != null)
 			onDrawCompleteListener.drawComplete();
 
+		
 		return new RenderedPage(bitmap, drawFrom, charList);
-	}
-
-	private void setStyle(StyleFlag flag) {
-		switch (flag) {
-		case H1:
-			paint.setTextSize(h1TextSize);
-			paint.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
-			break;
-		case H2:
-			paint.setTextSize(h2TextSize);
-			paint.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
-			break;
-		case H3:
-			paint.setTextSize(h3TextSize);
-			paint.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
-			break;
-		case H4:
-			paint.setTextSize(h4TextSize);
-			paint.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
-			break;
-		case H5:
-			paint.setTextSize(h5TextSize);
-			paint.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
-			break;
-		case H6:
-			paint.setTextSize(h6TextSize);
-			paint.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
-			break;
-		case EM:
-			paint.setTextSize(baseTextSize);
-			paint.setTypeface(Typeface.defaultFromStyle(Typeface.ITALIC));
-			break;
-		case NORMAL:
-			paint.setTextSize(baseTextSize);
-			paint.setTypeface(Typeface.defaultFromStyle(Typeface.NORMAL));
-			break;
-		}
-
-	}
-
-	public boolean lastPage() {
-		return objectsIterated == printObjects.size();
-	}
-
-	public boolean firstPage() {
-		return drawFrom == 0;
 	}
 }
