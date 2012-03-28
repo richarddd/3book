@@ -7,8 +7,8 @@ public class CharPosition {
 	public Rect area;
 	public char character;
 	
-	public CharPosition(int left, int top, int right, int bottom, char character) {
-		this.area = new Rect(left, top, right, bottom);
+	public CharPosition(float left, float top, float right, float bottom, char character) {
+		this.area = new Rect((int)left, (int)top, (int)right, (int)bottom);
 		this.character = character;
 	}
 }

@@ -1,6 +1,8 @@
 package se.chalmers.threebook.html;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.List;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -8,30 +10,25 @@ import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
 
-import se.chalmers.threebook.util.Helper;
-import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.graphics.Point;
 import android.graphics.Typeface;
 import android.util.Log;
-import android.view.Display;
-import android.view.WindowManager;
 
 public class HtmlRenderer {
-	private static HtmlRenderer instance;
-	private static Object syncObject; // for thread safe singleton
 
-	private int screenWidth;
-	private int screenHeight;
+	private int viewWidth;
+	private int viewHeight;
 	private String htmlSource = "";
 	private int baseTextSize = 26;
 	private int minWordSpace = 2;
 	private int rowMargin = (int) (baseTextSize * 0.2);
 	private int heightMargin = 10;
 	private int widthMargin = 10;
+
+	private int offset = 0;
 
 	private float h1TextSize = (float) (baseTextSize * 2);
 	private float h2TextSize = (float) (baseTextSize * 1.5);
@@ -41,34 +38,22 @@ public class HtmlRenderer {
 	private float h6TextSize = (float) (baseTextSize * 0.7);
 
 	private LinkedList<RenderElement> printObjects;
-	private int wordsPrinted = 0;
+	private int objectsIterated = 0;
 	private int drawFrom = 0;
 	private Paint paint;
 
+	private List<Integer> pagePosList = new ArrayList<Integer>(20);
+
 	private OnDrawCompleteListener onDrawCompleteListener;
 
-	private HtmlRenderer() {
-
-	}
-
-	public static HtmlRenderer getInstance() {
-		if (instance == null) {
-			synchronized (syncObject) {
-				if (instance == null) {
-					instance = new HtmlRenderer();
-				}
-			}
-		}
-		return instance;
-	}
-
-
-
 	public static class OnDrawCompleteListener {
-
 		public void drawComplete() {
 
 		}
+	}
+
+	public HtmlRenderer(int viewWidth, int viewHeight) {
+		init(viewWidth, viewHeight);
 	}
 
 	public void setOnDrawCompleteListener(OnDrawCompleteListener l) {
@@ -81,7 +66,7 @@ public class HtmlRenderer {
 
 	public void setHtmlSource(String htmlSource) {
 		this.htmlSource = htmlSource;
-		wordsPrinted = 0;
+		objectsIterated = 0;
 		praseHtml();
 	}
 
@@ -125,19 +110,9 @@ public class HtmlRenderer {
 		this.widthMargin = widthMargin;
 	}
 
-	private void init(Context context) {
-		Display display = ((WindowManager) context
-				.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay();
-
-		if (Helper.SupportsNewApi()) {
-			Point size = new Point();
-			display.getSize(size);
-			screenWidth = size.x;
-			screenHeight = size.y;
-		} else {
-			screenWidth = display.getWidth();
-			screenHeight = display.getHeight();
-		}
+	private void init(int viewWidth, int viewHeight) {
+		this.viewWidth = viewWidth;
+		this.viewHeight = viewHeight;
 
 		paint = new Paint();
 		paint.setColor(Color.BLACK);
@@ -181,7 +156,7 @@ public class HtmlRenderer {
 						}
 						String[] words = tNode.text().split(" ");
 						for (String word : words) {
-							printObjects.add(new PrintElement(word, flag));
+							printObjects.add(new TextElement(word, flag));
 						}
 						switch (flag) {
 						case H1:
@@ -221,23 +196,42 @@ public class HtmlRenderer {
 	}
 
 	public void nextPage() {
-		drawFrom += wordsPrinted;
+
+		offset++;
+
+		// drawFrom += objectsIterated;
 	}
 
 	public void prevPage() {
-		drawFrom -= wordsPrinted;
+		if (offset > 0) {
+			offset--;
+		}
+
+		// drawFrom -= objectsIterated;
 	}
 
-	public Bitmap getRenderedBitmap() {
+	public RenderedPage getNextPage() {
+		nextPage();
+		return getRenderedPage();
+	}
 
-		Bitmap bitmap = Bitmap.createBitmap(screenWidth, screenHeight,
+	public RenderedPage getPrevPage() {
+		prevPage();
+		return getRenderedPage();
+	}
+
+	public RenderedPage getRenderedPage() {
+
+		long milis = System.currentTimeMillis();
+
+		List<CharPosition> charList = new ArrayList<CharPosition>();
+
+		Bitmap bitmap = Bitmap.createBitmap(viewWidth, viewHeight,
 				Bitmap.Config.ARGB_4444);
 
 		Canvas canvas = new Canvas(bitmap);
 
-		long milis = System.currentTimeMillis();
-
-		wordsPrinted = 0;
+		objectsIterated = 0;
 		float rowCurWidth = 0;
 		int rowWordCount = 0;
 		int totalRowHeight = 0;
@@ -245,8 +239,9 @@ public class HtmlRenderer {
 		boolean shouldPrintRow = false;
 		boolean newParagraph = true;
 		int breakSize = 0;
-
 		int curWordSpace = 0;
+
+		pagePosList.add(drawFrom);
 
 		if (printObjects != null) {
 
@@ -259,9 +254,10 @@ public class HtmlRenderer {
 					shouldPrintRow = true;
 					newParagraph = false;
 					rowWordCount++;
+					objectsIterated++; // this is also an object in the array
 					breakSize = ((BreakElement) printObjects.get(i)).getSpan();
 				} else {
-					PrintElement e = (PrintElement) printObjects.get(i);
+					TextElement e = (TextElement) printObjects.get(i);
 					setStyle(e.getStyle());
 					curWordSpace = (int) (paint.getTextSize() * 0.2);
 					if (curWordSpace < minWordSpace) {
@@ -273,7 +269,7 @@ public class HtmlRenderer {
 						rowCurWidth += curWordSpace;
 					}
 					firstWordInRow = false;
-					if (rowCurWidth <= (screenWidth - (2 * widthMargin))) {
+					if (rowCurWidth <= (viewWidth - (2 * widthMargin))) {
 						rowWordCount++;
 					} else {
 						newParagraph = true;
@@ -281,7 +277,7 @@ public class HtmlRenderer {
 					}
 				}
 				if (shouldPrintRow) {
-					float tGlue = ((screenWidth - (2 * widthMargin)) - (rowCurWidth
+					float tGlue = ((viewWidth - (2 * widthMargin)) - (rowCurWidth
 							- wordCurWith - (curWordSpace * rowWordCount)))
 							/ (rowWordCount - 1);
 					rowWordCount--;
@@ -295,15 +291,25 @@ public class HtmlRenderer {
 
 					int rowHeight = 0;
 					for (int ii = from; ii < to; ii++) {
-						PrintElement e = (PrintElement) printObjects.get(ii);
+						TextElement e = (TextElement) printObjects.get(ii);
 						setStyle(e.getStyle());
 						float glue = (float) (newParagraph ? tGlue
 								: curWordSpace);
 						rowHeight = (int) (paint.getTextSize() + rowMargin);
-						canvas.drawText(e.getText(), widthMargin + lastWidth,
-								totalRowHeight + rowHeight, paint);
-						lastWidth += paint.measureText(e.getText()) + glue;
-						wordsPrinted++;
+						float xPos = widthMargin + lastWidth;
+						float yPos = totalRowHeight + rowHeight;
+						canvas.drawText(e.getText(), xPos, yPos, paint);
+						float wordWidth = paint.measureText(e.getText());
+						lastWidth += wordWidth + glue;
+						char[] charArray = e.getText().toCharArray();
+						int wordLength = charArray.length;
+						float charWidth = wordWidth / wordLength;
+						for (char c : charArray) {
+							charList.add(new CharPosition(xPos, yPos
+									- paint.getTextSize(), xPos + charWidth,
+									yPos, c));
+						}
+						objectsIterated++;
 					}
 
 					totalRowHeight += rowHeight + breakSize;
@@ -311,16 +317,16 @@ public class HtmlRenderer {
 					breakSize = 0;
 
 					if (newParagraph) {
-						i--; //hej!
+						i--; // hej!
 					}
 					rowCurWidth = 0;
 					rowWordCount = 0;
 					firstWordInRow = true;
 					shouldPrintRow = false;
 
-					//XXX 3an här är lite magisk, borde fixas
-					if (totalRowHeight + ((baseTextSize + rowMargin) * 3) 
-							+ heightMargin > screenHeight) {
+					// XXX 3an här är lite magisk, borde fixas
+					if (totalRowHeight + ((baseTextSize + rowMargin) * 3)
+							+ heightMargin > viewHeight) {
 						break;
 					}
 
@@ -336,7 +342,7 @@ public class HtmlRenderer {
 		if (onDrawCompleteListener != null)
 			onDrawCompleteListener.drawComplete();
 
-		return bitmap;
+		return new RenderedPage(bitmap, drawFrom, charList);
 	}
 
 	private void setStyle(StyleFlag flag) {
@@ -375,5 +381,13 @@ public class HtmlRenderer {
 			break;
 		}
 
+	}
+
+	public boolean lastPage() {
+		return objectsIterated == printObjects.size();
+	}
+
+	public boolean firstPage() {
+		return drawFrom == 0;
 	}
 }

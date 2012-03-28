@@ -499,7 +499,7 @@ public class FlipperView extends AdapterView<Adapter> {
 		}
 		if (mAdapter == null || mAdapter.getCount() == 0)
 			return;
-
+		Log.d("FlipperView", "Adapter setted");
 		setSelection(initialPosition);
 	}
 
@@ -516,7 +516,9 @@ public class FlipperView extends AdapterView<Adapter> {
 
 	@Override
 	public void setSelection(int position) {
-		// mPreViewSwitchedListener.onPreViewSwitched(position);
+		if(mPreViewSwitchedListener != null){
+			mPreViewSwitchedListener.onPreViewSwitched(position, mLastScrollDirection); //XX
+		}
 		mNextScreen = INVALID_SCREEN;
 		mScroller.forceFinished(true);
 		if (mAdapter == null)

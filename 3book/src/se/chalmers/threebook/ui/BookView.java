@@ -9,7 +9,7 @@ import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
 
 import se.chalmers.threebook.html.BreakElement;
-import se.chalmers.threebook.html.PrintElement;
+import se.chalmers.threebook.html.TextElement;
 import se.chalmers.threebook.html.RenderElement;
 import se.chalmers.threebook.html.StyleFlag;
 import se.chalmers.threebook.util.Helper;
@@ -191,7 +191,7 @@ public class BookView extends View {
 						}
 						String[] words = tNode.text().split(" ");
 						for (String word : words) {
-							printObjects.add(new PrintElement(word, flag));
+							printObjects.add(new TextElement(word, flag));
 						}
 						switch (flag) {
 						case H1:
@@ -283,7 +283,7 @@ public class BookView extends View {
 					rowWordCount++;
 					breakSize = ((BreakElement) printObjects.get(i)).getSpan();
 				} else {
-					PrintElement e = (PrintElement) printObjects.get(i);
+					TextElement e = (TextElement) printObjects.get(i);
 					setStyle(e.getStyle());
 					curWordSpace = (int) (paint.getTextSize() * 0.2);
 					if(curWordSpace < minWordSpace){
@@ -318,7 +318,7 @@ public class BookView extends View {
 					int rowHeight = 0;
 					for (int ii = from; ii < to; ii++) {
 
-						PrintElement e = (PrintElement) printObjects.get(ii);
+						TextElement e = (TextElement) printObjects.get(ii);
 
 						setStyle(e.getStyle());
 

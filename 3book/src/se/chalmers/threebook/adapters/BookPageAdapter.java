@@ -1,9 +1,12 @@
 package se.chalmers.threebook.adapters;
 
 import se.chalmers.threebook.R;
+import se.chalmers.threebook.html.HtmlRenderer;
+import se.chalmers.threebook.html.RenderedPage;
+import se.chalmers.threebook.util.Helper;
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.util.Log;
+import android.graphics.Point;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,22 +14,32 @@ import android.widget.BaseAdapter;
 import android.widget.ImageView;
 
 public class BookPageAdapter extends BaseAdapter {
-
-	private int lastPosition = 0;
+	
+	private String tag = "BookPageAdapter";
+	
+	public static final int START_POSITION = (int) (Integer.MAX_VALUE*0.5);
+	
+	private int lastPosition = START_POSITION;
 	private LayoutInflater mInflater;
-	private Bitmap current;
-	private Bitmap next;
-	private Bitmap previous;
+	private RenderedPage next;
+	private RenderedPage previous;
+	private HtmlRenderer render;
+	
+	private RenderedPage[] pageCache = new RenderedPage[3];
+	private boolean cacheEmpty = true;
 
-	public BookPageAdapter(Context context) {
+	public BookPageAdapter(Context context, HtmlRenderer render) {
 		mInflater = (LayoutInflater) context
 				.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+		this.render = render;
+	}
+	
+	public HtmlRenderer getRenderer(){
+		return render;
 	}
 
 	public int getCount() {
-
-		return current == null || next == null ? 0 : Integer.MAX_VALUE;
-
+		return Integer.MAX_VALUE;
 	}
 
 	public int getCurrentItem() {
@@ -37,44 +50,28 @@ public class BookPageAdapter extends BaseAdapter {
 		this.lastPosition = currentItem;
 	}
 
-	public Bitmap getCurrent() {
-		return current;
-	}
-
-	public void setCurrent(Bitmap current) {
-		this.current = current;
-	}
-
-	public Bitmap getNext() {
+	public RenderedPage getNext() {
 		return next;
 	}
 
-	public void setNext(Bitmap next) {
+	public void setNext(RenderedPage next) {
 		this.next = next;
 	}
 
-	public Bitmap getPrevious() {
+	public RenderedPage getPrevious() {
 		return previous;
 	}
 
-	public void setPrevious(Bitmap previous) {
+	public void setPrevious(RenderedPage previous) {
 		this.previous = previous;
 	}
 
-	public Bitmap getItem(int position) {
-		Bitmap item;
-		if (position == 0) {
-			item = current;
+	public RenderedPage getItem(int position) {
+		RenderedPage item;
+		if (position > lastPosition) {
+			item = next;
 		} else {
-			if (position > lastPosition) {
-				/*Log.d("BookpagerAdapter", "Next adapter 'inflate' at: "
-						+ String.valueOf(position));*/
-				item = next;
-			} else {
-				/*Log.d("BookpagerAdapter", "Prev adapter 'inflate' at: "
-						+ String.valueOf(position));*/
-				item = previous;
-			}
+			item = previous;
 		}
 		lastPosition = position;
 		return item;
@@ -85,6 +82,14 @@ public class BookPageAdapter extends BaseAdapter {
 	}
 
 	public View getView(int position, View convertView, ViewGroup parent) {
+		
+		int offset = position-BookPageAdapter.START_POSITION;
+		
+		//RenderedPage page = 
+		
+		//Log.d(tag, "Inflating position: "+position);
+		//Log.d(tag, "Inflating offset: "+());
+		
 		ViewHolder holder;
 		if (convertView == null) {
 			convertView = mInflater.inflate(R.layout.fragment_book_image, null);
@@ -95,9 +100,14 @@ public class BookPageAdapter extends BaseAdapter {
 		} else {
 			holder = (ViewHolder) convertView.getTag();
 		}
-		holder.img.setImageBitmap(getItem(position));
+		Bitmap bitmap;
+		
+		bitmap = getItem(position).getBitmap();
+		
+		if(bitmap != null){
+			holder.img.setImageBitmap(bitmap);
+		}
 		return convertView;
-
 	}
 
 	private static class ViewHolder {
