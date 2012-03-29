@@ -5,8 +5,7 @@ public class TextElement extends RenderElement {
 	private String text;
 	private StyleFlag style;
 	
-	public TextElement(String text, StyleFlag style) {
-		super();
+	public TextElement(String text, StyleFlag style){
 		this.text = text;
 		this.style = style;
 	}

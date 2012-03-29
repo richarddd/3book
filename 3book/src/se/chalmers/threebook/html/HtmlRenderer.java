@@ -1,9 +1,9 @@
 package se.chalmers.threebook.html;
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.LinkedList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -56,6 +56,8 @@ public class HtmlRenderer {
 	
 	private boolean endOfSource = false;
 	private boolean startOfSource = true;
+	
+	private Map<String, Integer> idMap = new HashMap<String, Integer>(); // id, objectCount of ID 
 
 	public static class OnDrawCompleteListener {
 		public void drawComplete() {
@@ -150,6 +152,7 @@ public class HtmlRenderer {
 
 	private void parseHtml() {
 
+		long t1 = System.currentTimeMillis();
 		Document doc = Jsoup.parse(htmlSource);
 
 		printObjects = new ArrayList<RenderElement>(RENDER_LIST_INITIAL_CAPACITY);
@@ -161,6 +164,23 @@ public class HtmlRenderer {
 			if (node instanceof Element) {
 				if (((Element) node).tagName().equals("p")) {
 					printObjects.add(new BreakElement(baseTextSize));
+				}
+				/* ACTUALLY - why don't we just store all IDs? shouldn't be too expensive. 
+				// XXX performance might be bad for large ID-sets
+				// Check if this element has an ID. if it has an ID, see if 
+				// the ID is one we're interested in. If so, inject a
+				String id = ((Element) node).id();
+				if (id != null && id != ""){
+					Log.d(tag, "We found a non-null id! it is: " + id);
+					if (idList.remove(id)){
+						Log.d(tag, "The id was in the list and is now removed. We're storing it and referencing the printobjsize " + printObjects.size()+1 + ".");
+						idMap.put(id, printObjects.size()+1); // XXX +1 could mean crazy EOF bugs if nothing is rendered on last-anchor ?
+					}
+				} */
+				String id = ((Element) node).id();
+				if (id != null && id != ""){
+					Log.d(tag, "Found ID tag! Adding it!" + id + ", printobjsize " + printObjects.size()+1 + ".");
+					idMap.put(id, printObjects.size()+1); // XXX +1 could mean crazy EOF bugs if nothing is rendered on last-anchor ?
 				}
 			}
 
@@ -210,6 +230,7 @@ public class HtmlRenderer {
 					if (eNode.tagName().equals("br")) {
 						printObjects.add(new BreakElement(0));
 					}
+					
 				}
 
 				while (node.nextSibling() == null && node != rootNode) {
@@ -219,6 +240,8 @@ public class HtmlRenderer {
 			}
 
 		}
+		long t2 = System.currentTimeMillis();
+		Log.d(tag, "Parsing HTML took " + (t2-t1) + "ms");
 	}
 
 	private void setStyle(StyleFlag flag) {
@@ -266,7 +289,31 @@ public class HtmlRenderer {
 	public boolean firstPage() {
 		return drawFrom == 0;
 	}
+	
 
+	public RenderedPage getRenderedPage(String id){
+		int anchorWord = idMap.get(id);
+		int pageIndex = -1;
+		
+		for (int i = 0, size = pagePosList.size(); i < size; i++){
+			// The anchor is on the page before the page which begins with a 
+			// larger word count than what had been parsed when the anchor was found.  
+			if (pagePosList.get(i) > anchorWord){
+				pageIndex = (i < 0) ? 0 : i;
+			}
+		}
+		
+		if (pageIndex > 0){ // page already rendered
+			Log.d(tag, "PageIndex found! returning a page. index: " + pageIndex);
+			return getRenderedPage(pagePosList.get(pageIndex));
+		} else { // page is not rendered yet
+			Log.d(tag, "The page we're trying to reach is not rendered yet, alas...");
+		}
+		 
+		
+		return getRenderedPage(0);
+	}
+	
 	public RenderedPage getRenderedPage(int pageNumber) {
 		if (pageNumber < 0) {
 			throw new IllegalArgumentException("pageNumber must be > 0");

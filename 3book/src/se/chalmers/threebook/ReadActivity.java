@@ -116,16 +116,20 @@ public class ReadActivity extends ActionBarActivity {
 
 				}
 			});
-			bookFlipper
-					.setAdapter(pagerAdapter, BookPageAdapter.START_POSITION);
+
+			bookFlipper.setAdapter(pagerAdapter, BookPageAdapter.START_POSITION);
 			
 			renderedPage = pagerAdapter.getItem(0);
 			imgPageRender.setImageBitmap(renderedPage.getBitmap());
+			
 		} catch (FileNotFoundException e) {
 			Log.d("3", "FNFE in display: " + e.getMessage());
 		} catch (IOException e) {
 			Log.d("3", "IOE in display: " + e.getMessage());
 		}
+		
+		// XXX remember to remove this shit
+		dialog.dismiss();
 	}
 
 	/** Called when the activity is first created. */
@@ -187,8 +191,7 @@ public class ReadActivity extends ActionBarActivity {
 		dialog = ProgressDialog.show(this, "",
 				this.getString(R.string.loading_please_wait), true);
 
-		// XXX remember to remove this shit
-		dialog.dismiss();
+		
 
 		if (currentPosition != 0) {
 			pagerAdapter.notifyDataSetInvalidated();
