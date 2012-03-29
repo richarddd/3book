@@ -287,7 +287,7 @@ public class HtmlRenderer {
 					newParagraph = false;
 					rowWordCount++;
 					objectsIterated++; // this is also an object in the array
-					breakSize = ((BreakElement) printObjects.get(i)).getSpan();
+					breakSize = ((BreakElement) printObjects.get(i)).getSpan()+rowMargin;
 				} else {
 					TextElement e = (TextElement) printObjects.get(i);
 					setStyle(e.getStyle());

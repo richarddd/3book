@@ -95,6 +95,11 @@ public class BookPageAdapter extends BaseAdapter {
 
 		return convertView;
 	}
+	
+	public void clear(){
+		lastPosition = 0;
+		objectsBuffered = 0;
+	}
 
 	private static class ViewHolder {
 		ImageView img;
