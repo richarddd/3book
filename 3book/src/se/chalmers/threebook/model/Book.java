@@ -8,14 +8,14 @@ import se.chalmers.threebook.content.ContentStream;
 public class Book {
 	private Long id;
 	private String title;
-	private String author;
-	private Date published;
-	private Date lastRead;
-	private Format format;
-	private File source;
-	private int rating;
-	private File cover;
-	private ContentStream contentStream;
+//	private String author;
+//	private Date published;
+//	private Date lastRead;
+//	private Format format;
+//	private File source;
+//	private int rating;
+//	private File cover;
+//	private ContentStream contentStream;
 	
 	public enum Format {
 		TXT, EPUB, PDF
@@ -43,75 +43,75 @@ public class Book {
 		return this;
 	}
 
-	public String getAuthor() {
-		return author;
-	}
-
-	public Book setAuthor(String author) {
-		this.author = author;
-		return this;
-	}
-
-	public Date getPublished() {
-		return published;
-	}
-
-	public Book setPublished(Date published) {
-		this.published = published;
-		return this;
-	}
-
-	public Date getLastRead() {
-		return lastRead;
-	}
-
-	public Book setLastRead(Date lastRead) {
-		this.lastRead = lastRead;
-		return this;
-	}
-
-	public Format getFormat() {
-		return format;
-	}
-
-	public Book setFormat(Format format) {
-		this.format = format;
-		return this;
-	}
-
-	public File getSource() {
-		return source;
-	}
-
-	public Book setSource(File source) {
-		this.source = source;
-		return this;
-	}
-
-	public int getRating() {
-		return rating;
-	}
-
-	public Book setRating(int rating) {
-		this.rating = rating;
-		return this;
-	}
-
-	public File getCover() {
-		return cover;
-	}
-
-	public Book setCover(File cover) {
-		this.cover = cover;
-		return this;
-	}
-
-	public ContentStream getContentStream() {
-		return contentStream;
-	}
-
-	public Book setContentStream(ContentStream contentStream) {
-		this.contentStream = contentStream;
-		return this;
-	}
+//	public String getAuthor() {
+//		return author;
+//	}
+//
+//	public Book setAuthor(String author) {
+//		this.author = author;
+//		return this;
+//	}
+//
+//	public Date getPublished() {
+//		return published;
+//	}
+//
+//	public Book setPublished(Date published) {
+//		this.published = published;
+//		return this;
+//	}
+//
+//	public Date getLastRead() {
+//		return lastRead;
+//	}
+//
+//	public Book setLastRead(Date lastRead) {
+//		this.lastRead = lastRead;
+//		return this;
+//	}
+//
+//	public Format getFormat() {
+//		return format;
+//	}
+//
+//	public Book setFormat(Format format) {
+//		this.format = format;
+//		return this;
+//	}
+//
+//	public File getSource() {
+//		return source;
+//	}
+//
+//	public Book setSource(File source) {
+//		this.source = source;
+//		return this;
+//	}
+//
+//	public int getRating() {
+//		return rating;
+//	}
+//
+//	public Book setRating(int rating) {
+//		this.rating = rating;
+//		return this;
+//	}
+//
+//	public File getCover() {
+//		return cover;
+//	}
+//
+//	public Book setCover(File cover) {
+//		this.cover = cover;
+//		return this;
+//	}
+//
+//	public ContentStream getContentStream() {
+//		return contentStream;
+//	}
+//
+//	public Book setContentStream(ContentStream contentStream) {
+//		this.contentStream = contentStream;
+//		return this;
+//	}
 }

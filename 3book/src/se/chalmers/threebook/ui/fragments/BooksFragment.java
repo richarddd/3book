@@ -35,7 +35,7 @@ public class BooksFragment extends Fragment {
 		
 		adapter = new CollectionBookAdapter(view.getContext());
 		for(int i = 0; i < 1000; i++){
-			adapter.getItems().add(new Book().setTitle("Book Title "+i).setAuthor("Book Author " + i));
+//			adapter.getItems().add(new Book().setTitle("Book Title "+i).setAuthor("Book Author " + i));
 		}
 		
 		list.setAdapter(adapter);

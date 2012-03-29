@@ -1,17 +1,24 @@
 package se.chalmers.threebook;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 import se.chalmers.threebook.adapters.FileBrowserAdapter;
+import se.chalmers.threebook.db.BookDataStream;
+import se.chalmers.threebook.db.EpubImporter;
+import se.chalmers.threebook.db.Importer;
+import se.chalmers.threebook.model.Book;
 import se.chalmers.threebook.ui.actionbarcompat.ActionBarActivity;
 import se.chalmers.threebook.util.Helper;
 import android.app.ActionBar;
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -72,7 +79,8 @@ public class FileBrowserActivity extends ActionBarActivity {
 					}
 
 				} else {
-					openFile(adapter.getItem(position));
+//					openFile(adapter.getItem(position));
+					importFileTest(adapter.getItem(position));
 				}
 			}
 		});
@@ -126,6 +134,33 @@ public class FileBrowserActivity extends ActionBarActivity {
 			displayBook.putExtra(ReadActivity.IntentKey.FILE_PATH.toString(), file.getAbsolutePath());
 			displayBook.putExtra(ReadActivity.IntentKey.INTENT_TYPE.toString(), ReadActivity.IntentType.READ_BOOK_FROM_LIBRARY);
 			startActivity(displayBook);
+		}
+	}
+	
+	private void importFileTest(File file) {
+		if(file.getName().endsWith(".epub")) {
+			Importer importer = new EpubImporter();
+			try {
+				importer.focusOn(file);
+				Book book = importer.createBook();
+				BookDataStream bds = new BookDataStream(this);
+				bds.open();
+				bds.persistBook(book);
+				List<Book> books = bds.getAllBooks();
+				bds.close();
+				
+				for(Book b : books) {
+					Toast.makeText(this, "Id: " + b.getId() + ", Title: " + b.getTitle(), Toast.LENGTH_SHORT).show();
+				}
+			} catch (FileNotFoundException e) {
+				Toast.makeText(this, "File not found", Toast.LENGTH_LONG).show();
+				Log.e("FileBrowserActivity", e.getMessage());
+				e.printStackTrace();
+			} catch (IOException e) {
+				//TODO: do something more constructive with this exception.
+				Toast.makeText(this, "IO Exception", Toast.LENGTH_LONG).show();
+				Log.e("FileBrowserActivity", (e.getMessage() != null) ? e.getMessage() : "IOException: No message");
+			}
 		}
 	}
 

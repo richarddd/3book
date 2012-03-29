@@ -11,33 +11,39 @@ public class DBHelper extends SQLiteOpenHelper {
 	private static Context context;
 	private static DBHelper self;
 
-	private static final String DATABASE_NAME = "3book";
-	private static final int DATABASE_VERSION = 0;
+	private static final String DATABASE_NAME = "3book.db";
+	private static final int DATABASE_VERSION = 1;
 
-	private static final String TABLE_BOOKS = "books";
-	private static final String COLUMN_TITLE = "title";
+	public static final String TABLE_BOOKS = "books";
+	public static final String TABLE_BOOKS_ID = "_id";
+	public static final String TABLE_BOOKS_TITLE = "title";
+	public static final String TABLE_BOOKS_FORMAT = "format";
+	public static final String TABLE_BOOKS_POSITION = "_position";
+	public static final String TABLE_BOOKS_AUTHOR = "author";
+	public static final String TABLE_BOOKS_SOURCE = "_source";
+	public static final String TABLE_BOOKS_LASTREAD = "lastRead";
+	public static final String TABLE_BOOKS_RATING = "rating";
+	public static final String TABLE_BOOKS_COVER = "cover";
+	
 
 	private static final String DATABASE_CREATE = "CREATE TABLE " + TABLE_BOOKS
-			+ "( " + COLUMN_TITLE + "text primary key);"; // TODO: This needs to
-															// be updated when
-															// we know more
-															// about the
-															// database
-															// structure.
+			+ "( "
+			+ TABLE_BOOKS_ID + " integer primary key autoincrement, "
+			+ TABLE_BOOKS_TITLE + "text not null);";
 
-	private DBHelper() {
+	public DBHelper(Context context) {
 		super(context, DATABASE_NAME, null, DATABASE_VERSION);
 	}
 
-	public void init(Context context) {
-		DBHelper.context = context;
-		DBHelper.self = new DBHelper();
-	}
-
-	public static DBHelper getInstance() {
-		// TODO: Possibly, we should throw an exception here if self == null
-		return self;
-	}
+//	public void init(Context context) {
+//		DBHelper.context = context;
+//		DBHelper.self = new DBHelper();
+//	}
+//
+//	public static DBHelper getInstance() {
+//		// TODO: Possibly, we should throw an exception here if self == null
+//		return self;
+//	}
 
 	@Override
 	public void onCreate(SQLiteDatabase db) {

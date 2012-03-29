@@ -57,8 +57,8 @@ public class CollectionBookAdapter extends BaseAdapter {
 		Book b = items.get(position);
 
 		holder.title.setText(b.getTitle());
-		holder.author.setText(b.getAuthor());
-		holder.ratingBar.setRating(b.getRating());
+//		holder.author.setText(b.getAuthor());
+//		holder.ratingBar.setRating(b.getRating());
 		// holder.imgView.setImageBitmap(bm);
 		return convertView;
 	}
