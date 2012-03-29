@@ -33,6 +33,7 @@ public class EpubContentStream implements ContentStream {
 		nav = new Navigator(book);
 		cache = new EpubCache(book.getTitle(), cacheDir);
 		toc = new EpubTableOfContents(book.getTableOfContents());
+		
 	}
 	
 	/**
@@ -63,7 +64,7 @@ public class EpubContentStream implements ContentStream {
 		// PERFORM STRING PROCESSING
 		String data = getStringFromResource(nav.getCurrentResource());
 		HtmlParser p = new HtmlParser(data);
-		p.injectCss(HtmlParser.BASIC_STYLE);
+		//p.injectCss(HtmlParser.BASIC_STYLE); // CSS no longer used
 		List<String> imageNames = p.getImg();
 		Map <String, String> headers = p.getHeadings();
 		data = p.getModifiedHtml(); // rewritten HTML
@@ -97,7 +98,6 @@ public class EpubContentStream implements ContentStream {
 		return getTopLevelToc(nav.getBook().getTableOfContents().getTocReferences());
 	}
 	
-// <p> <strong> <text>tetx text</text> <em><text< dtuff <text> </em> <text>aslk </text></strong> </p>
 	public List<Bookmark> getBookmarks() {
 		throw new UnsupportedOperationException("getBookmarks() not implemented yet");
 	}

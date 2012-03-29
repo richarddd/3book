@@ -1,6 +1,7 @@
 package se.chalmers.threebook.html;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -19,6 +20,7 @@ import android.util.Log;
 
 public class HtmlRenderer {
 
+	private static final int RENDER_LIST_INITIAL_CAPACITY = 2048;
 	private int viewWidth;
 	private int viewHeight;
 	private String htmlSource = "";
@@ -37,7 +39,10 @@ public class HtmlRenderer {
 	private float h5TextSize = (float) (baseTextSize * 0.85);
 	private float h6TextSize = (float) (baseTextSize * 0.7);
 
-	private LinkedList<RenderElement> printObjects;
+	
+	//private LinkedList<RenderElement> printObjects; // TODO evaluate whether a LL is the best choice
+	private ArrayList<RenderElement> printObjects;
+	
 	private int objectsIterated = 0;
 
 	private Paint paint;
@@ -48,6 +53,9 @@ public class HtmlRenderer {
 
 	private OnDrawCompleteListener onDrawCompleteListener;
 	private String tag = "HtmlRenderer";
+	
+	private boolean endOfSource = false;
+	private boolean startOfSource = true;
 
 	public static class OnDrawCompleteListener {
 		public void drawComplete() {
@@ -58,7 +66,18 @@ public class HtmlRenderer {
 	public HtmlRenderer(int viewWidth, int viewHeight) {
 		init(viewWidth, viewHeight);
 	}
-
+	
+	/**
+	 * Returns whether the last render was the end of source 
+	 * @return whether the last render was the end of source
+	 */
+	public boolean atEndOfSource(){
+		return endOfSource;
+	}
+	public boolean atStartOfSource(){
+		return startOfSource;
+	}
+	
 	public void setOnDrawCompleteListener(OnDrawCompleteListener l) {
 		this.onDrawCompleteListener = l;
 	}
@@ -70,7 +89,9 @@ public class HtmlRenderer {
 	public void setHtmlSource(String htmlSource) {
 		this.htmlSource = htmlSource;
 		objectsIterated = 0;
-		praseHtml();
+		endOfSource = false;
+		startOfSource = true;
+		parseHtml();
 	}
 
 	public int getBaseTextSize() {
@@ -127,11 +148,11 @@ public class HtmlRenderer {
 		pagePosList.add(0); // draw first page from word zero
 	}
 
-	private void praseHtml() {
+	private void parseHtml() {
 
 		Document doc = Jsoup.parse(htmlSource);
 
-		printObjects = new LinkedList<RenderElement>();
+		printObjects = new ArrayList<RenderElement>(RENDER_LIST_INITIAL_CAPACITY);
 
 		Node rootNode = doc.body();
 		Node node = rootNode;
@@ -277,7 +298,7 @@ public class HtmlRenderer {
 
 		if (printObjects != null) {
 
-			int size = printObjects.size();
+			int size = printObjects.size(); // XXX this is a very expensive operation if done w/ linkedlist
 
 			for (int i = drawFrom; i < size; i++) {
 
@@ -369,9 +390,11 @@ public class HtmlRenderer {
 			}
 		}
 		
-		pagePosList.set(pageNumber + 1, pagePosList.get(pageNumber)
-				+ objectsIterated);
-
+		int wordPosition = pagePosList.get(pageNumber)+ objectsIterated;
+		pagePosList.set(pageNumber + 1, wordPosition);
+		endOfSource = (printObjects.size() == wordPosition); // check if we're at end of source
+		startOfSource = (pageNumber == 0);
+		
 		Log.d("HtmlRenderer",
 				"Render time: "
 						+ String.valueOf(System.currentTimeMillis() - milis)
@@ -380,6 +403,10 @@ public class HtmlRenderer {
 		if (onDrawCompleteListener != null)
 			onDrawCompleteListener.drawComplete();
 
+		
+		
+			 
+		
 		
 		return new RenderedPage(bitmap, drawFrom, charList);
 	}
