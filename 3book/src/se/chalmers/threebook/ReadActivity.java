@@ -99,13 +99,24 @@ public class ReadActivity extends ActionBarActivity {
 	public void display(int index, String anchor) {
 
 		try {
-
+			Log.d(tag, "Display called, index and anchor: " + index +","+anchor);
 			Point p = Helper.getDisplaySize(this);
-			render = new HtmlRenderer(p.x, p.y);
+			if (render == null){
+				long t1 = System.currentTimeMillis();
+				Log.d(tag, "Initializing renderer.");
+				render = new HtmlRenderer(p.x, p.y);
 			render.setHtmlSource(Helper.streamToString(new FileInputStream(
 					stream.jumpTo(index))));
-			pagerAdapter = new BookPageAdapter(this, render,
-					bookFlipper.getSideBuffer());
+				long t2 = System.currentTimeMillis();
+				Log.d(tag, "Fetching data and rendering the HTML took " + (t2-t1) + "ms.");
+			}
+			if (anchor != null && anchor != ""){
+				Log.d(tag, "Trying to go to anchor. Anchor: " + anchor);
+				render.getRenderedPage(anchor);
+			}
+			
+			pagerAdapter = new BookPageAdapter(this, render, bookFlipper.getSideBuffer());
+			
 			bookFlipper.setOnViewSwitchListener(new ViewSwitchListener() {
 				public void onSwitched(View view, int position) {
 					renderedPage = pagerAdapter.getItem(0);
@@ -170,7 +181,8 @@ public class ReadActivity extends ActionBarActivity {
 			public void onItemClick(AdapterView<?> parent, View view,
 					int position, long id) {
 				dialog.show();
-				display((int) id);
+				Log.d(tag, "Clicking in chapscroller, id is: " + stream.getToc().getTocReferences().get((int)id).getId());
+				display((int) id, stream.getToc().getTocReferences().get((int)id).getId());
 				showOverlay(false);
 
 			}

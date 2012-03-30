@@ -101,13 +101,9 @@ public class BookNavAdapter extends BaseAdapter implements OnScrollListener {
 		if (items.get(position).getBitmap() != null) {
 			holder.imgView.setImageBitmap(items.get(position).getBitmap());
 		}
-		/* XXX Axel hacking! */
-		//holder.textView.setText(String.valueOf(position));
-		holder.textView.setText(items.get(position).getTitle());
-		Log.d("3", "Trying to figure out view size for smallys. W/H: ");
-		Log.d("3", ((TextView) convertView.findViewById(R.id.txt_book_nav_item)).getWidth()+"/"+((TextView) convertView.findViewById(R.id.txt_book_nav_item)).getHeight());
 		
-		/* XXX End axel hacking */ 
+		holder.textView.setText(items.get(position).getTitle());
+		 
 		return convertView;
 	}
 

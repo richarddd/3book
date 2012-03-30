@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -17,6 +18,12 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Typeface;
 import android.util.Log;
+
+/**
+ * 
+ * TODO: Fix so that the renderer doesn't populate the pagePos list if the page already has been rendered.
+ *
+ */
 
 public class HtmlRenderer {
 
@@ -41,7 +48,7 @@ public class HtmlRenderer {
 
 	
 	//private LinkedList<RenderElement> printObjects; // TODO evaluate whether a LL is the best choice
-	private ArrayList<RenderElement> printObjects;
+	private ArrayList<RenderElement> printObjects; // AL has amortized O(n) insertion and O(1) retrieval
 	
 	private int objectsIterated = 0;
 
@@ -58,6 +65,8 @@ public class HtmlRenderer {
 	private boolean startOfSource = true;
 	
 	private Map<String, Integer> idMap = new HashMap<String, Integer>(); // id, objectCount of ID 
+	private int myRender = -1; // XXX remove after testing this is nothing
+	private int wordCount;
 
 	public static class OnDrawCompleteListener {
 		public void drawComplete() {
@@ -90,6 +99,7 @@ public class HtmlRenderer {
 
 	public void setHtmlSource(String htmlSource) {
 		this.htmlSource = htmlSource;
+		wordCount = 0;
 		objectsIterated = 0;
 		endOfSource = false;
 		startOfSource = true;
@@ -181,6 +191,7 @@ public class HtmlRenderer {
 				if (id != null && id != ""){
 					Log.d(tag, "Found ID tag! Adding it!" + id + ", printobjsize " + printObjects.size()+1 + ".");
 					idMap.put(id, printObjects.size()+1); // XXX +1 could mean crazy EOF bugs if nothing is rendered on last-anchor ?
+					//idMap.put(id, wordCount+1); // XXX +1 could mean crazy EOF bugs if nothing is rendered on last-anchor ?
 				}
 			}
 
@@ -203,6 +214,7 @@ public class HtmlRenderer {
 						String[] words = tNode.text().split(" ");
 						for (String word : words) {
 							printObjects.add(new TextElement(word, flag));
+							wordCount++; // XXX experimental 
 						}
 						switch (flag) {
 						case H1:
@@ -292,29 +304,38 @@ public class HtmlRenderer {
 	
 
 	public RenderedPage getRenderedPage(String id){
+		
 		int anchorWord = idMap.get(id);
-		int pageIndex = -1;
+		int pageNumber = -1;
+		
+		Log.d(tag, "anchorWord is: " + anchorWord);
+		
+		for (Entry<String, Integer> me : idMap.entrySet())
+			Log.d(tag, "id/val: " + me.getKey() + "/" + me.getValue());
 		
 		for (int i = 0, size = pagePosList.size(); i < size; i++){
 			// The anchor is on the page before the page which begins with a 
 			// larger word count than what had been parsed when the anchor was found.  
-			if (pagePosList.get(i) > anchorWord){
-				pageIndex = (i < 0) ? 0 : i;
+			if (pagePosList.get(i) >= anchorWord){
+			//if (anchorWord >= pagePosList.get(i)){ // hey the word should be higher right.
+				pageNumber = pagePosList.get(i) == anchorWord ? i : (i-1);
+				break;
 			}
 		}
 		
-		if (pageIndex > 0){ // page already rendered
-			Log.d(tag, "PageIndex found! returning a page. index: " + pageIndex);
-			return getRenderedPage(pagePosList.get(pageIndex));
+		if (pageNumber > 0){ // page already rendered
+			Log.d(tag, "PageIndex found! returning a page. index: " + pageNumber);
+			myRender = 1; // XXX remove after testing
+			return getRenderedPage(pageNumber);
 		} else { // page is not rendered yet
 			Log.d(tag, "The page we're trying to reach is not rendered yet, alas...");
 		}
 		 
-		
 		return getRenderedPage(0);
 	}
 	
 	public RenderedPage getRenderedPage(int pageNumber) {
+		Log.d(tag, "Rendering page number: " + pageNumber);
 		if (pageNumber < 0) {
 			throw new IllegalArgumentException("pageNumber must be > 0");
 		}
@@ -341,7 +362,7 @@ public class HtmlRenderer {
 		int breakSize = 0;
 		int curWordSpace = 0;
 
-		pagePosList.add(drawFrom);
+		pagePosList.add(drawFrom); // XXX this should only be done if its the first time we render this page.
 
 		if (printObjects != null) {
 
@@ -401,7 +422,12 @@ public class HtmlRenderer {
 						canvas.drawText(e.getText(), xPos, yPos, paint);
 						float wordWidth = paint.measureText(e.getText());
 						lastWidth += wordWidth + glue;
+						
 						char[] charArray = e.getText().toCharArray();
+						if (myRender > 0 && myRender < 15){ // XXX DEBUG REMOVE
+							Log.d(tag, "word : " + e.getText());
+							myRender++;
+						}
 						int wordLength = charArray.length;
 						float charWidth = wordWidth / wordLength;
 						for (char c : charArray) {
@@ -454,7 +480,7 @@ public class HtmlRenderer {
 		
 			 
 		
-		
+		myRender = -1;
 		return new RenderedPage(bitmap, drawFrom, charList);
 	}
 }
