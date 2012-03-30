@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -37,7 +36,7 @@ public class HtmlRenderer {
 	private int heightMargin = 10;
 	private int widthMargin = 10;
 
-	private int offset = 0;
+	
 
 	private float h1TextSize = (float) (baseTextSize * 2);
 	private float h2TextSize = (float) (baseTextSize * 1.5);
@@ -55,18 +54,17 @@ public class HtmlRenderer {
 	private Paint paint;
 
 	private List<Integer> objsByPage = new ArrayList<Integer>(20);
-	private int drawFrom = 0; // the value of the
-	private int curPosIndex = 0; // index to the pagePosList that was last drawn
+	private int drawFrom = 0; // TODO see about removing this
 
 	private OnDrawCompleteListener onDrawCompleteListener;
 	private String tag = "HtmlRenderer";
 	
+	// TODO: implement these in a more reasonable manner. Likely they will not be a part of 
+	// the HTML-renderer class but rather reside in the middle layer.
 	private boolean endOfSource = false;
 	private boolean startOfSource = true;
 	
-	private Map<String, Integer> idMap = new HashMap<String, Integer>(); // id, objectCount of ID 
-	private int myRender = -1; // XXX remove after testing this is nothing
-	private int wordCount;
+	private Map<String, Integer> idMap = new HashMap<String, Integer>(); // anchor, objectCount of anchor 
 
 	public static class OnDrawCompleteListener {
 		public void drawComplete() {
@@ -99,7 +97,6 @@ public class HtmlRenderer {
 
 	public void setHtmlSource(String htmlSource) {
 		this.htmlSource = htmlSource;
-		wordCount = 0;
 		objectsIterated = 0;
 		endOfSource = false;
 		startOfSource = true;
@@ -176,6 +173,7 @@ public class HtmlRenderer {
 					printObjects.add(new BreakElement(baseTextSize));
 				}
 				
+				// Detect elements with IDs and squirrel them away
 				String id = ((Element) node).id();
 				if (id != null && id != ""){
 					idMap.put(id, printObjects.size()+1); // XXX +1 could mean crazy EOF bugs if nothing is rendered on last-anchor ?
@@ -201,7 +199,6 @@ public class HtmlRenderer {
 						String[] words = tNode.text().split(" ");
 						for (String word : words) {
 							printObjects.add(new TextElement(word, flag));
-							wordCount++; // XXX experimental 
 						}
 						switch (flag) {
 						case H1:
@@ -311,14 +308,10 @@ public class HtmlRenderer {
 			getRenderedPage(pageNumber);
 			return pageNumber; // XXX expensive - need to fix cache. 
 		} else { // page is not rendered yet
-			RenderedPage target = null;
-			// Render one page until the last rendered word is greater than the word
-			// we're searching for. 
+			//Render one page at a time until the last rendered word 
+			// is greater than the word we're searching for.
 			while (anchorWord > objsByPage.get(objsByPage.size()-1)){
-				target = getRenderedPage(objsByPage.size()-1);
-			}
-			if (target == null){
-				throw new NullPointerException("Unexpected NPE: could not render-step to target page");
+				getRenderedPage(objsByPage.size()-1);
 			}
 
 			// TODO once caching is implemented this should return -1 
@@ -336,7 +329,6 @@ public class HtmlRenderer {
 		long milis = System.currentTimeMillis();
 
 		int drawFrom = objsByPage.get(pageNumber);
-		
 
 		List<CharPosition> charList = new ArrayList<CharPosition>();
 
@@ -345,6 +337,7 @@ public class HtmlRenderer {
 
 		Canvas canvas = new Canvas(bitmap);
 
+		// TODO document the purpose of these variables
 		objectsIterated = 0;
 		float rowCurWidth = 0;
 		int rowWordCount = 0;
@@ -355,96 +348,96 @@ public class HtmlRenderer {
 		int breakSize = 0;
 		int curWordSpace = 0;
 
-		if (printObjects != null) {
+		if (printObjects == null){
+			throw new NullPointerException("HtmlRenderer: printObjects was null when asked to render, most likely HTML is not parsed yet!");
+		}
+		
+		for (int i = drawFrom, size = printObjects.size(); i < size; i++) {
 
-			int size = printObjects.size(); 
-
-			for (int i = drawFrom; i < size; i++) {
-
-				float wordCurWith = 0;
-				if (printObjects.get(i) instanceof BreakElement) {
-					shouldPrintRow = true;
-					newParagraph = false;
+			float wordCurWith = 0;
+			if (printObjects.get(i) instanceof BreakElement) {
+				shouldPrintRow = true;
+				newParagraph = false;
+				rowWordCount++;
+				objectsIterated++; // this is also an object in the array
+				breakSize = ((BreakElement) printObjects.get(i)).getSpan()+rowMargin;
+			} else { // TODO make this less fragile by not presupposing ONLY break or text elements 
+				TextElement e = (TextElement) printObjects.get(i);
+				setStyle(e.getStyle());
+				curWordSpace = (int) (paint.getTextSize() * 0.2);
+				if (curWordSpace < minWordSpace) {
+					curWordSpace = minWordSpace;
+				}
+				wordCurWith = paint.measureText(e.getText());
+				rowCurWidth += wordCurWith;
+				if (!firstWordInRow) {
+					rowCurWidth += curWordSpace;
+				}
+				firstWordInRow = false;
+				if (rowCurWidth <= (viewWidth - (2 * widthMargin))) {
 					rowWordCount++;
-					objectsIterated++; // this is also an object in the array
-					breakSize = ((BreakElement) printObjects.get(i)).getSpan()+rowMargin;
 				} else {
-					TextElement e = (TextElement) printObjects.get(i);
+					newParagraph = true;
+					shouldPrintRow = true;
+				}
+			}
+			
+			if (shouldPrintRow) {
+				float tGlue = ((viewWidth - (2 * widthMargin)) - (rowCurWidth
+						- wordCurWith - (curWordSpace * rowWordCount)))
+						/ (rowWordCount - 1);
+				rowWordCount--;
+				float lastWidth = 0;
+				int from = i - rowWordCount - (newParagraph ? 1 : 0);
+				int to = i;
+
+				if (from < 0) {
+					from = 0;
+				}
+
+				int rowHeight = 0;
+				for (int j = from; j < to; j++) {
+					TextElement e = (TextElement) printObjects.get(j);
 					setStyle(e.getStyle());
-					curWordSpace = (int) (paint.getTextSize() * 0.2);
-					if (curWordSpace < minWordSpace) {
-						curWordSpace = minWordSpace;
+					float glue = (float) (newParagraph ? tGlue
+							: curWordSpace);
+					rowHeight = (int) (paint.getTextSize() + rowMargin);
+					float xPos = widthMargin + lastWidth;
+					float yPos = totalRowHeight + rowHeight;
+					canvas.drawText(e.getText(), xPos, yPos, paint);
+					float wordWidth = paint.measureText(e.getText());
+					lastWidth += wordWidth + glue;
+					char[] charArray = e.getText().toCharArray();
+					int wordLength = charArray.length;
+					float charWidth = wordWidth / wordLength;
+					for (char c : charArray) {
+						charList.add(new CharPosition(xPos, yPos
+								- paint.getTextSize(), xPos + charWidth,
+								yPos, c));
 					}
-					wordCurWith = paint.measureText(e.getText());
-					rowCurWidth += wordCurWith;
-					if (!firstWordInRow) {
-						rowCurWidth += curWordSpace;
-					}
-					firstWordInRow = false;
-					if (rowCurWidth <= (viewWidth - (2 * widthMargin))) {
-						rowWordCount++;
-					} else {
-						newParagraph = true;
-						shouldPrintRow = true;
-					}
+					objectsIterated++;
 				}
-				if (shouldPrintRow) {
-					float tGlue = ((viewWidth - (2 * widthMargin)) - (rowCurWidth
-							- wordCurWith - (curWordSpace * rowWordCount)))
-							/ (rowWordCount - 1);
-					rowWordCount--;
-					float lastWidth = 0;
-					int from = i - rowWordCount - (newParagraph ? 1 : 0);
-					int to = i;
 
-					if (from < 0) {
-						from = 0;
-					}
+				totalRowHeight += rowHeight + breakSize;
 
-					int rowHeight = 0;
-					for (int ii = from; ii < to; ii++) {
-						TextElement e = (TextElement) printObjects.get(ii);
-						setStyle(e.getStyle());
-						float glue = (float) (newParagraph ? tGlue
-								: curWordSpace);
-						rowHeight = (int) (paint.getTextSize() + rowMargin);
-						float xPos = widthMargin + lastWidth;
-						float yPos = totalRowHeight + rowHeight;
-						canvas.drawText(e.getText(), xPos, yPos, paint);
-						float wordWidth = paint.measureText(e.getText());
-						lastWidth += wordWidth + glue;
-						char[] charArray = e.getText().toCharArray();
-						int wordLength = charArray.length;
-						float charWidth = wordWidth / wordLength;
-						for (char c : charArray) {
-							charList.add(new CharPosition(xPos, yPos
-									- paint.getTextSize(), xPos + charWidth,
-									yPos, c));
-						}
-						objectsIterated++;
-					}
+				breakSize = 0;
 
-					totalRowHeight += rowHeight + breakSize;
-
-					breakSize = 0;
-
-					if (newParagraph) {
-						// we rewind the word counter if we couldn't fit the
-						// word on the just-finished line, so the word gets a
-						// fit-attempt on the next line.
-						i--;
-					}
-					rowCurWidth = 0;
-					rowWordCount = 0;
-					firstWordInRow = true;
-					shouldPrintRow = false;
-
-					if (totalRowHeight + ((baseTextSize + rowMargin))
-							+ heightMargin > viewHeight) {
-						break;
-					}
-
+				if (newParagraph) {
+					// we rewind the word counter if we couldn't fit the
+					// word on the just-finished line, so the word gets a
+					// fit-attempt on the next line.
+					i--;
 				}
+				rowCurWidth = 0;
+				rowWordCount = 0;
+				firstWordInRow = true;
+				shouldPrintRow = false;
+
+				if (totalRowHeight + ((baseTextSize + rowMargin))
+						+ heightMargin > viewHeight) {
+					break;
+				}
+
 			}
 		}
 		
