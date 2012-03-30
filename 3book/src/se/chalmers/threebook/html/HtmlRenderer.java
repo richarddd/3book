@@ -54,7 +54,7 @@ public class HtmlRenderer {
 
 	private Paint paint;
 
-	private List<Integer> pagePosList = new ArrayList<Integer>(20);
+	private List<Integer> objsByPage = new ArrayList<Integer>(20);
 	private int drawFrom = 0; // the value of the
 	private int curPosIndex = 0; // index to the pagePosList that was last drawn
 
@@ -157,7 +157,7 @@ public class HtmlRenderer {
 		paint.setTextAlign(Paint.Align.LEFT);
 		paint.setTextSize(baseTextSize);
 
-		pagePosList.add(0); // draw first page from word zero
+		objsByPage.add(0); // draw first page from word zero
 	}
 
 	private void parseHtml() {
@@ -175,23 +175,10 @@ public class HtmlRenderer {
 				if (((Element) node).tagName().equals("p")) {
 					printObjects.add(new BreakElement(baseTextSize));
 				}
-				/* ACTUALLY - why don't we just store all IDs? shouldn't be too expensive. 
-				// XXX performance might be bad for large ID-sets
-				// Check if this element has an ID. if it has an ID, see if 
-				// the ID is one we're interested in. If so, inject a
+				
 				String id = ((Element) node).id();
 				if (id != null && id != ""){
-					Log.d(tag, "We found a non-null id! it is: " + id);
-					if (idList.remove(id)){
-						Log.d(tag, "The id was in the list and is now removed. We're storing it and referencing the printobjsize " + printObjects.size()+1 + ".");
-						idMap.put(id, printObjects.size()+1); // XXX +1 could mean crazy EOF bugs if nothing is rendered on last-anchor ?
-					}
-				} */
-				String id = ((Element) node).id();
-				if (id != null && id != ""){
-					Log.d(tag, "Found ID tag! Adding it!" + id + ", printobjsize " + printObjects.size()+1 + ".");
 					idMap.put(id, printObjects.size()+1); // XXX +1 could mean crazy EOF bugs if nothing is rendered on last-anchor ?
-					//idMap.put(id, wordCount+1); // XXX +1 could mean crazy EOF bugs if nothing is rendered on last-anchor ?
 				}
 			}
 
@@ -301,48 +288,54 @@ public class HtmlRenderer {
 	public boolean firstPage() {
 		return drawFrom == 0;
 	}
-	
 
-	public RenderedPage getRenderedPage(String id){
+	public int getPageNumber(String id){
 		
 		int anchorWord = idMap.get(id);
-		int pageNumber = -1;
+		int pageNumber = 0;
 		
-		Log.d(tag, "anchorWord is: " + anchorWord);
+		Log.d(tag, "Going to anchor! AnchorWord for anchor " + id + " is: " + anchorWord);
 		
-		for (Entry<String, Integer> me : idMap.entrySet())
-			Log.d(tag, "id/val: " + me.getKey() + "/" + me.getValue());
-		
-		for (int i = 0, size = pagePosList.size(); i < size; i++){
+		for (int i = 0, size = objsByPage.size(); i < size; i++){
 			// The anchor is on the page before the page which begins with a 
-			// larger word count than what had been parsed when the anchor was found.  
-			if (pagePosList.get(i) >= anchorWord){
-			//if (anchorWord >= pagePosList.get(i)){ // hey the word should be higher right.
-				pageNumber = pagePosList.get(i) == anchorWord ? i : (i-1);
-				break;
+			// larger word count than what had been parsed when the anchor was found.
+			if (objsByPage.get(i) >= anchorWord){
+				// If the page begins on exactly the desired word, we've found the page
+				// otherwise, we want the preceding page.
+				pageNumber = objsByPage.get(i) == anchorWord ? i : (i-1);
+				break; // the page number is found, we're done. 
 			}
 		}
 		
 		if (pageNumber > 0){ // page already rendered
-			Log.d(tag, "PageIndex found! returning a page. index: " + pageNumber);
-			myRender = 1; // XXX remove after testing
-			return getRenderedPage(pageNumber);
+			getRenderedPage(pageNumber);
+			return pageNumber; // XXX expensive - need to fix cache. 
 		} else { // page is not rendered yet
-			Log.d(tag, "The page we're trying to reach is not rendered yet, alas...");
-		}
+			RenderedPage target = null;
+			// Render one page until the last rendered word is greater than the word
+			// we're searching for. 
+			while (anchorWord > objsByPage.get(objsByPage.size()-1)){
+				target = getRenderedPage(objsByPage.size()-1);
+			}
+			if (target == null){
+				throw new NullPointerException("Unexpected NPE: could not render-step to target page");
+			}
+
+			// TODO once caching is implemented this should return -1 
+			return objsByPage.size()-2; // XXX
+		} 
 		 
-		return getRenderedPage(0);
+		
 	}
 	
 	public RenderedPage getRenderedPage(int pageNumber) {
-		Log.d(tag, "Rendering page number: " + pageNumber);
 		if (pageNumber < 0) {
-			throw new IllegalArgumentException("pageNumber must be > 0");
+			throw new IllegalArgumentException("pageNumber must be > 0. Number was: " + pageNumber);
 		}
 		
 		long milis = System.currentTimeMillis();
 
-		int drawFrom = pagePosList.get(pageNumber);
+		int drawFrom = objsByPage.get(pageNumber);
 		
 
 		List<CharPosition> charList = new ArrayList<CharPosition>();
@@ -362,11 +355,9 @@ public class HtmlRenderer {
 		int breakSize = 0;
 		int curWordSpace = 0;
 
-		pagePosList.add(drawFrom); // XXX this should only be done if its the first time we render this page.
-
 		if (printObjects != null) {
 
-			int size = printObjects.size(); // XXX this is a very expensive operation if done w/ linkedlist
+			int size = printObjects.size(); 
 
 			for (int i = drawFrom; i < size; i++) {
 
@@ -422,12 +413,7 @@ public class HtmlRenderer {
 						canvas.drawText(e.getText(), xPos, yPos, paint);
 						float wordWidth = paint.measureText(e.getText());
 						lastWidth += wordWidth + glue;
-						
 						char[] charArray = e.getText().toCharArray();
-						if (myRender > 0 && myRender < 15){ // XXX DEBUG REMOVE
-							Log.d(tag, "word : " + e.getText());
-							myRender++;
-						}
 						int wordLength = charArray.length;
 						float charWidth = wordWidth / wordLength;
 						for (char c : charArray) {
@@ -453,8 +439,7 @@ public class HtmlRenderer {
 					firstWordInRow = true;
 					shouldPrintRow = false;
 
-					// XXX 3an här är lite magisk, borde fixas
-					if (totalRowHeight + ((baseTextSize + rowMargin) * 1)
+					if (totalRowHeight + ((baseTextSize + rowMargin))
 							+ heightMargin > viewHeight) {
 						break;
 					}
@@ -463,9 +448,19 @@ public class HtmlRenderer {
 			}
 		}
 		
-		int wordPosition = pagePosList.get(pageNumber)+ objectsIterated;
-		pagePosList.set(pageNumber + 1, wordPosition);
-		endOfSource = (printObjects.size() == wordPosition); // check if we're at end of source
+		// We've rendered this many objects when we're done with this page
+		int objCount = objsByPage.get(pageNumber)+ objectsIterated; 
+		
+		if (pageNumber+1 >= objsByPage.size()){ // if this is the first time we render this page
+			objsByPage.add(objCount);
+		} else { // we've rendered this page before, so we update 
+			// TODO not sure this is needed - might be useful for size changes later..
+			objsByPage.set(pageNumber+1, objCount);
+		}
+		
+		objsByPage.set(pageNumber + 1, objCount);
+		
+		endOfSource = (printObjects.size() == objCount); // check if we're at end of source
 		startOfSource = (pageNumber == 0);
 		
 		Log.d("HtmlRenderer",
@@ -473,14 +468,9 @@ public class HtmlRenderer {
 						+ String.valueOf(System.currentTimeMillis() - milis)
 						+ "ms");
 
-		if (onDrawCompleteListener != null)
+		if (onDrawCompleteListener != null){
 			onDrawCompleteListener.drawComplete();
-
-		
-		
-			 
-		
-		myRender = -1;
+		}
 		return new RenderedPage(bitmap, drawFrom, charList);
 	}
 }

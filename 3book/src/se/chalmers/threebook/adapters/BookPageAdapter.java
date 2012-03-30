@@ -21,8 +21,18 @@ public class BookPageAdapter extends BaseAdapter {
 	private HtmlRenderer render;
 	private RenderedPage[] pageCache;
 
-	private int objectsBuffered; //
+	private int objectsBuffered; // provides special case code for initial buffering 
+	private int lateOffset; // used for non-zero jump buffering re-initialization  
+	
 
+	/**
+	 * 
+	 * @param context the context
+	 * @param render the renderer providing images
+	 * @param sideBuffer amount of pages to cache back and ahead
+	 * 
+	 * Total number of cached files will be (sideBuffer*2+1)
+	 */
 	public BookPageAdapter(Context context, HtmlRenderer render, int sideBuffer) {
 		mInflater = (LayoutInflater) context
 				.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
@@ -43,6 +53,7 @@ public class BookPageAdapter extends BaseAdapter {
 		return position;
 	}
 
+	
 	public View getView(int position, View convertView, ViewGroup parent) {
 
 		int offset = position - BookPageAdapter.START_POSITION;
@@ -51,10 +62,10 @@ public class BookPageAdapter extends BaseAdapter {
 
 		RenderedPage curPage = null;
 		if (objectsBuffered < pageCache.length) {
+			if (objectsBuffered == 0){ lateOffset = -offset;}
 			objectsBuffered++;
-			int insertAtIndex = ((int) (pageCache.length / 2)) + offset;
-			pageCache[insertAtIndex] = offset < 0 ? null : render
-					.getRenderedPage(offset);
+			int insertAtIndex = ((int) (pageCache.length / 2)) + (offset+lateOffset);
+			pageCache[insertAtIndex] = offset < 0 ? null : render.getRenderedPage(offset); // TODO: check side buffer
 			curPage = pageCache[insertAtIndex];
 
 		} else {

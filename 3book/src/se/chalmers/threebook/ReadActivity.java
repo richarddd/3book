@@ -110,10 +110,6 @@ public class ReadActivity extends ActionBarActivity {
 				long t2 = System.currentTimeMillis();
 				Log.d(tag, "Fetching data and rendering the HTML took " + (t2-t1) + "ms.");
 			}
-			if (anchor != null && anchor != ""){
-				Log.d(tag, "Trying to go to anchor. Anchor: " + anchor);
-				render.getRenderedPage(anchor);
-			}
 			
 			pagerAdapter = new BookPageAdapter(this, render, bookFlipper.getSideBuffer());
 			
@@ -127,11 +123,17 @@ public class ReadActivity extends ActionBarActivity {
 
 				}
 			});
-
-			bookFlipper.setAdapter(pagerAdapter, BookPageAdapter.START_POSITION);
 			
+			if (anchor != null && anchor != ""){
+				Log.d(tag, "Trying to go to anchor. Anchor: " + anchor);
+				bookFlipper.setAdapter(pagerAdapter, BookPageAdapter.START_POSITION+render.getPageNumber(anchor));
+				//bookFlipper.setSelection(); // TODO set up some caching for this
+			}else{
+				bookFlipper.setAdapter(pagerAdapter, BookPageAdapter.START_POSITION);
+			}
 			renderedPage = pagerAdapter.getItem(0);
 			imgPageRender.setImageBitmap(renderedPage.getBitmap());
+			
 			
 		} catch (FileNotFoundException e) {
 			Log.d("3", "FNFE in display: " + e.getMessage());
