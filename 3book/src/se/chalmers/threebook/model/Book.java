@@ -1,14 +1,13 @@
 package se.chalmers.threebook.model;
 
-import java.io.File;
-import java.util.Date;
-
-import se.chalmers.threebook.content.ContentStream;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
 
 public class Book {
 	private Long id;
 	private String title;
-//	private String author;
+	private List<Author> authors;
 //	private Date published;
 //	private Date lastRead;
 //	private Format format;
@@ -22,7 +21,8 @@ public class Book {
 	}
 	
 	public Book() {
-		
+		title = "";
+		authors = new LinkedList<Author>();
 	}
 
 	public Long getId() {
@@ -43,15 +43,10 @@ public class Book {
 		return this;
 	}
 
-//	public String getAuthor() {
-//		return author;
-//	}
-//
-//	public Book setAuthor(String author) {
-//		this.author = author;
-//		return this;
-//	}
-//
+	public List<Author> getAuthors() {
+		return authors;
+	}
+
 //	public Date getPublished() {
 //		return published;
 //	}

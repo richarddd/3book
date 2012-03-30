@@ -8,7 +8,8 @@ import java.util.Collections;
 import java.util.List;
 
 import se.chalmers.threebook.adapters.FileBrowserAdapter;
-import se.chalmers.threebook.db.BookDataStream;
+import se.chalmers.threebook.contentprovider.ThreeBookContentProvider;
+import se.chalmers.threebook.db.BookTable;
 import se.chalmers.threebook.db.EpubImporter;
 import se.chalmers.threebook.db.Importer;
 import se.chalmers.threebook.model.Book;
@@ -16,7 +17,10 @@ import se.chalmers.threebook.ui.actionbarcompat.ActionBarActivity;
 import se.chalmers.threebook.util.Helper;
 import android.app.ActionBar;
 import android.app.AlertDialog;
+import android.content.ContentValues;
 import android.content.Intent;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -138,20 +142,33 @@ public class FileBrowserActivity extends ActionBarActivity {
 	}
 	
 	private void importFileTest(File file) {
+
 		if(file.getName().endsWith(".epub")) {
+		
 			Importer importer = new EpubImporter();
 			try {
 				importer.focusOn(file);
 				Book book = importer.createBook();
-				BookDataStream bds = new BookDataStream(this);
-				bds.open();
-				bds.persistBook(book);
-				List<Book> books = bds.getAllBooks();
-				bds.close();
 				
-				for(Book b : books) {
-					Toast.makeText(this, "Id: " + b.getId() + ", Title: " + b.getTitle(), Toast.LENGTH_SHORT).show();
+				ContentValues values = new ContentValues();
+				values.put(BookTable.COLUMN_TITLE, book.getTitle());
+
+				Uri insertUid = getContentResolver().insert(ThreeBookContentProvider.CONTENT_URI, values);
+				
+				
+				Cursor cursor = getContentResolver().query(ThreeBookContentProvider.CONTENT_URI, null, null, null, null);
+				
+				if(cursor != null) {
+					for(cursor.moveToFirst(); !cursor.isAfterLast(); cursor.moveToNext()) {
+						long id = cursor.getLong(cursor.getColumnIndexOrThrow(BookTable.COLUMN_ID));
+						String title = cursor.getString(cursor.getColumnIndexOrThrow(BookTable.COLUMN_TITLE));
+						
+						Toast.makeText(this, "Id: " + id + ", Title: " + title, Toast.LENGTH_SHORT).show();
+					}
 				}
+				
+				cursor.close();
+//				Toast.makeText(this, "Title: " + b.getTitle() + ", Author: " + b.getAuthors().get(0), Toast.LENGTH_SHORT).show();
 			} catch (FileNotFoundException e) {
 				Toast.makeText(this, "File not found", Toast.LENGTH_LONG).show();
 				Log.e("FileBrowserActivity", e.getMessage());
@@ -160,6 +177,7 @@ public class FileBrowserActivity extends ActionBarActivity {
 				//TODO: do something more constructive with this exception.
 				Toast.makeText(this, "IO Exception", Toast.LENGTH_LONG).show();
 				Log.e("FileBrowserActivity", (e.getMessage() != null) ? e.getMessage() : "IOException: No message");
+				e.printStackTrace();
 			}
 		}
 	}

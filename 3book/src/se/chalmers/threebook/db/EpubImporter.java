@@ -4,9 +4,11 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
+import java.util.LinkedList;
+import java.util.List;
 
 import nl.siegmann.epublib.epub.EpubReader;
+import se.chalmers.threebook.model.Author;
 import se.chalmers.threebook.model.Book;
 
 public class EpubImporter implements Importer {
@@ -34,10 +36,31 @@ public class EpubImporter implements Importer {
 	public String readTitle() {
 		return epubBook.getMetadata().getFirstTitle();
 	}
+	
+	public List<Author> readAuthors() {
+		List<nl.siegmann.epublib.domain.Author> epubAuthors = epubBook.getMetadata().getAuthors();
+		
+		List<Author> authors = new LinkedList<Author>();
+		
+		for(nl.siegmann.epublib.domain.Author a : epubAuthors) {
+			authors.add(new Author()
+				.setFirstName(a.getLastname())
+				.setLastName(a.getFirstname())
+			);
+		}
+		
+		
+		return authors;
+	}
 
 	public Book createBook() {
-		Book book = new Book();
-		book.setTitle(readTitle());
+		Book book = new Book()
+			.setTitle(readTitle());
+		
+		List<Author> authors = book.getAuthors();
+		for(Author a : readAuthors()) {
+			authors.add(a);
+		}
 		
 		return book;
 	}
