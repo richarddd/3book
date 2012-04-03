@@ -18,11 +18,6 @@ import android.graphics.Paint;
 import android.graphics.Typeface;
 import android.util.Log;
 
-/**
- * 
- * TODO: Fix so that the renderer doesn't populate the pagePos list if the page already has been rendered.
- *
- */
 
 public class HtmlRenderer {
 
@@ -49,21 +44,25 @@ public class HtmlRenderer {
 	//private LinkedList<RenderElement> printObjects; // TODO evaluate whether a LL is the best choice
 	private ArrayList<RenderElement> printObjects; // AL has amortized O(n) insertion and O(1) retrieval
 	
-	private int objectsIterated = 0;
+	
 
 	private Paint paint;
 
-	private List<Integer> objsByPage = new ArrayList<Integer>(20);
-	private int drawFrom = 0; // TODO see about removing this
+	
 
 	private OnDrawCompleteListener onDrawCompleteListener;
 	private String tag = "HtmlRenderer";
 	
-	// TODO: implement these in a more reasonable manner. Likely they will not be a part of 
-	// the HTML-renderer class but rather reside in the middle layer.
-	private boolean endOfSource = false;
-	private boolean startOfSource = true;
+	// tracker stuff!
+	private List<Integer> objsByPage; // provided and kept by the tracker
+	private int objectsIterated = 0;
 	
+	// Experimental tracker stuff!
+	private PageTracker tracker = new PageTracker(); // tracks source word counts 
+	private int sourceIdent; // integer that uniquely identifies the current source
+	
+	// TODO figure out whether this should be moved to the tracker
+	// probably not as long as we re-parse on each source shift 
 	private Map<String, Integer> idMap = new HashMap<String, Integer>(); // anchor, objectCount of anchor 
 
 	public static class OnDrawCompleteListener {
@@ -76,16 +75,6 @@ public class HtmlRenderer {
 		init(viewWidth, viewHeight);
 	}
 	
-	/**
-	 * Returns whether the last render was the end of source 
-	 * @return whether the last render was the end of source
-	 */
-	public boolean atEndOfSource(){
-		return endOfSource;
-	}
-	public boolean atStartOfSource(){
-		return startOfSource;
-	}
 	
 	public void setOnDrawCompleteListener(OnDrawCompleteListener l) {
 		this.onDrawCompleteListener = l;
@@ -95,11 +84,12 @@ public class HtmlRenderer {
 		return htmlSource;
 	}
 
-	public void setHtmlSource(String htmlSource) {
+	
+	public void setHtmlSource(String htmlSource, int sourceIdentifier) {
 		this.htmlSource = htmlSource;
-		objectsIterated = 0;
-		endOfSource = false;
-		startOfSource = true;
+		this.sourceIdent = sourceIdentifier;
+		this.objectsIterated = 0;
+		objsByPage = tracker.getPageStartList(sourceIdent);
 		parseHtml();
 	}
 
@@ -108,6 +98,7 @@ public class HtmlRenderer {
 	}
 
 	public void setBaseTextSize(int baseTextSize) {
+		if (this.baseTextSize != baseTextSize) invalidate();
 		this.baseTextSize = baseTextSize;
 	}
 
@@ -116,6 +107,7 @@ public class HtmlRenderer {
 	}
 
 	public void setMinWordSpace(int minWordSpace) {
+		if (this.minWordSpace != minWordSpace) invalidate();
 		this.minWordSpace = minWordSpace;
 	}
 
@@ -124,6 +116,7 @@ public class HtmlRenderer {
 	}
 
 	public void setRowMargin(int rowMargin) {
+		if (this.rowMargin != rowMargin) invalidate();
 		this.rowMargin = rowMargin;
 	}
 
@@ -132,6 +125,7 @@ public class HtmlRenderer {
 	}
 
 	public void setHeightMargin(int heightMargin) {
+		if (this.heightMargin != heightMargin) invalidate();
 		this.heightMargin = heightMargin;
 	}
 
@@ -140,7 +134,13 @@ public class HtmlRenderer {
 	}
 
 	public void setWidthMargin(int widthMargin) {
+		if (this.widthMargin != widthMargin) invalidate();
 		this.widthMargin = widthMargin;
+	}
+	
+	private void invalidate(){
+		tracker.invalidate();
+		objsByPage = tracker.getPageStartList(sourceIdent); // get new object to work with
 	}
 
 	private void init(int viewWidth, int viewHeight) {
@@ -153,8 +153,6 @@ public class HtmlRenderer {
 		paint.setStyle(Paint.Style.FILL);
 		paint.setTextAlign(Paint.Align.LEFT);
 		paint.setTextSize(baseTextSize);
-
-		objsByPage.add(0); // draw first page from word zero
 	}
 
 	private void parseHtml() {
@@ -278,14 +276,14 @@ public class HtmlRenderer {
 
 	}
 
-	public boolean lastPage() {
-		return objectsIterated == printObjects.size();
-	}
-
-	public boolean firstPage() {
-		return drawFrom == 0;
-	}
-
+	/**
+	 * Returns the page number at which a certain ID resides
+	 * 
+	 * The behaviour of this function is undefined if the ID is not part of the
+	 * underlying HTML source
+	 * @param id the id to search for
+	 * @return the page at which it resides
+	 */
 	public int getPageNumber(String id){
 		
 		int anchorWord = idMap.get(id);
@@ -453,8 +451,10 @@ public class HtmlRenderer {
 		
 		objsByPage.set(pageNumber + 1, objCount);
 		
-		endOfSource = (printObjects.size() == objCount); // check if we're at end of source
-		startOfSource = (pageNumber == 0);
+		if (printObjects.size() == objCount){ // 
+			tracker.setEosPageNum(sourceIdent, pageNumber);
+		}
+		
 		
 		Log.d("HtmlRenderer",
 				"Render time: "
