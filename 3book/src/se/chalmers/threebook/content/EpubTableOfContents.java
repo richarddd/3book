@@ -8,12 +8,10 @@ import se.chalmers.threebook.model.TocReference;
 
 public class EpubTableOfContents implements TableOfContents{
 	private List<TocReference> tocReferences;
-	//private nl.siegmann.epublib.domain.TableOfContents libToc;
 	private int size;
 	private List<TocReference> linearToc = null;
 	
 	public EpubTableOfContents(nl.siegmann.epublib.domain.TableOfContents toc){
-		//libToc = toc;
 		size = toc.size();
 		tocReferences = new ArrayList<TocReference>(toc.getTocReferences().size());
 		for (nl.siegmann.epublib.domain.TOCReference ref : toc.getTocReferences()){

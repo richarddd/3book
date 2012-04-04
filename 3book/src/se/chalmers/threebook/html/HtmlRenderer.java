@@ -62,7 +62,9 @@ public class HtmlRenderer {
 	private int sourceIdent; // integer that uniquely identifies the current source
 	
 	// TODO figure out whether this should be moved to the tracker
-	// probably not as long as we re-parse on each source shift 
+	// probably not as long as we re-parse on each source shift
+	// TODO ensure that it only contains TOC-valid IDs 
+	// TODO enable notification of listeners upon rendering a TOC-valid ID
 	private Map<String, Integer> idMap = new HashMap<String, Integer>(); // anchor, objectCount of anchor 
 
 	public static class OnDrawCompleteListener {
@@ -84,6 +86,15 @@ public class HtmlRenderer {
 		return htmlSource;
 	}
 
+	public boolean isEndOfSource(int pageNumber) {
+		// refactor this once we're sure of the functionality
+		if (tracker.getEosPageNum(sourceIdent) <= pageNumber){
+			Log.d(tag, "At end of source " + sourceIdent + ", page " + pageNumber);
+			if (tracker.getEosPageNum(sourceIdent) < pageNumber){ Log.d(tag, "MONKEY-WARNING: eos *less* than page number, this is probably bad. pn/eos: " + pageNumber + "/" + tracker.getEosPageNum(sourceIdent)); }
+			return true;
+		}
+		return false;
+	}
 	
 	public void setHtmlSource(String htmlSource, int sourceIdentifier) {
 		this.htmlSource = htmlSource;
@@ -466,4 +477,7 @@ public class HtmlRenderer {
 		}
 		return new RenderedPage(bitmap, drawFrom, charList);
 	}
+
+
+	
 }

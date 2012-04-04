@@ -1,69 +1,77 @@
 package se.chalmers.threebook.content;
 
+import java.io.File;
+import java.io.IOException;
+
 import se.chalmers.threebook.html.HtmlRenderer;
 import se.chalmers.threebook.html.RenderedPage;
+import se.chalmers.threebook.model.TocReference;
 
-public class EpubNavigator { /*implements BookNavigator {
+/**
+ * Epub implementation of book-navigation facade
+ * @author monkeycid
+ *
+ */
+public class EpubNavigator implements BookNavigator{
 	
-	private List<NavigationListener> listeners;
-	private ContentStream stream;
+	private PegpubContentStream content;
 	private HtmlRenderer renderer;
-	private ChapterIdentifier curChap;
+	private TocReference curSection;
 	private int curPage;
-		
-	public RenderedPage nextPage(){
-		if (renderer.atEndOfSource()){
-			renderer.setHtmlSource(stream.nextSource());
-			curPage = -1; // will be set to 0 in return call 
+	private RenderedPage curRender;
+	
+	public EpubNavigator(String bookFileName, File cacheDir, HtmlRenderer renderer) throws IOException{
+		content = new PegpubContentStream(bookFileName, cacheDir);
+		this.renderer = renderer;
+	}
+	
+	// TODO for all methods returning renderedPage - figure out whether they need to return 
+	// a rendered page and how they should interact with the adapter. 
+	
+	public RenderedPage nextPage() throws IOException{
+		if (renderer.isEndOfSource((curPage+1))){ 
+			return nextSource();
 		}
-		return renderer.getRenderedPage(++curPage);
+		curRender = renderer.getRenderedPage(++curPage);
+		return curRender;
 	}
 	
-	public RenderedPage previousPage(){
-		if (renderer.atStartOfSource()){
-			renderer.setHtmlSource(stream.prevSource());
-			curPage = 1; // // will be set to 0 in return call 
+	public RenderedPage prevPage() throws IOException{
+		if (curPage <= 0){ 
+			return prevSource(); 
 		}
-		return renderer.getRenderedPage(--curPage);
+		curRender = renderer.getRenderedPage(--curPage); 
+		return curRender;
 	}
 	
-	
-	private void notifyChapterChange(ChapterIdentifier ident){
-		for (NavigationListener l : navListeners){
-			l.atNewChapter(ident.chapMetadata());
+	public RenderedPage nextSource() throws IOException{
+		if (!content.hasNextSource(curSection)){ // at end of book! 
+			return curRender;
 		}
+		curPage = 0;
+		curSection = content.getNextSource(curSection);
+		renderer.setHtmlSource(curSection.getHtml(), curSection.getUniqueIdentifier());
+		curRender = renderer.getRenderedPage(0);
+		return curRender;
 	}
 	
-	public RenderedPage nextChapter(){
-		
-		
-	}
-	
-	public RenderedPage prevChapter(){
-		
-	}
-	
-	public RenderedPage toChapter(ChapterIdentifier){
-		
-	}
-	
-	public RenderedPage toSection(SectionIdentifier){
-		
-	}
-	
-	// not sure this method makes sense!
-	/* public RenderedPage toPage(int page){
-		if (page < 0){
-			throw new IllegalArgumentException("Target page must be > 0. page: " + page);
+	public RenderedPage prevSource() throws IOException{
+		if (!content.hasPrevSource(curSection)){ // at start of book!
+			return curRender; 
 		}
-		
-		if (page == curPage){
-			return;
-		} else if 
-		
-		while(curPage != page )
-	} */
+		curPage = 0;
+		curSection = content.getPreviousSource(curSection);
+		renderer.setHtmlSource(curSection.getHtml(), curSection.getUniqueIdentifier());
+		curRender = renderer.getRenderedPage(0);
+		return curRender;
+	}
 	
-	
+	public RenderedPage toSection(TocReference section) throws IOException{
+		curSection = section;
+		renderer.setHtmlSource(curSection.getHtml(), curSection.getUniqueIdentifier());
+		curPage = renderer.getPageNumber(curSection.getHtmlId());
+		return nextPage(); // XXX due to renderer currently returning previous page!
+		// TODO figure out a good way to distribute renders and page numbers - maybe send out renderEvents? 
+	}
 	
 }

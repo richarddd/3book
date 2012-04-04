@@ -277,7 +277,7 @@ public class ReadActivity extends ActionBarActivity {
 				 * InputStream epubInputStream = assetManager.open("books/" +
 				 * fileName);
 				 */
-				MyBook.setBook(new EpubReader().readEpub(epubInputStream));
+				MyBook.setBook(new EpubReader().readEpub(new FileInputStream(fileName)));
 				// stream = new EpubContentStream(MyBook.get().book(), this);
 				stream = new EpubContentStream(MyBook.get().book(),
 						getCacheDir());
