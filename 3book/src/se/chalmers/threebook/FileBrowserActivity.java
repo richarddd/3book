@@ -81,7 +81,9 @@ public class FileBrowserActivity extends ActionBarActivity {
 
 		lstFiles.setAdapter(adapter);
 
-		browseTo(new File("/"));
+		//XXX debuging only
+		//browseTo(new File("/"));
+		openFile(new File("/sdcard/austen-pride-and-prejudice-illustrations.epub"));
 	}
 
 	@Override

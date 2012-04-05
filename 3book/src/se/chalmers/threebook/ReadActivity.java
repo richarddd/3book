@@ -4,6 +4,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.List;
 
 import nl.siegmann.epublib.epub.EpubReader;
@@ -16,30 +17,37 @@ import se.chalmers.threebook.html.HtmlRenderer;
 import se.chalmers.threebook.html.RenderedPage;
 import se.chalmers.threebook.ui.FlipperView;
 import se.chalmers.threebook.ui.FlipperView.ViewSwitchListener;
-import se.chalmers.threebook.ui.HorizontalListView;
+import se.chalmers.threebook.ui.GalleryFix;
 import se.chalmers.threebook.ui.actionbarcompat.ActionBarActivity;
 import se.chalmers.threebook.ui.util.BookNavItem;
+import se.chalmers.threebook.ui.util.BookNavigationRow;
+import se.chalmers.threebook.util.AnimationHelper;
 import se.chalmers.threebook.util.Helper;
 import android.app.ActionBar;
+import android.app.Activity;
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.content.res.AssetManager;
 import android.graphics.Point;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.KeyEvent;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnLongClickListener;
+import android.view.View.OnTouchListener;
+import android.view.Window;
 import android.view.WindowManager;
-import android.widget.AdapterView;
-import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ImageView;
+import android.widget.ImageView.ScaleType;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
+import android.widget.RelativeLayout.LayoutParams;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -55,20 +63,34 @@ public class ReadActivity extends ActionBarActivity {
 
 	private boolean menuShown = false;
 	private RelativeLayout layoutOverlay;
-	private HorizontalListView chapterListView;
-	private BookNavAdapter chapterAdapter;
+	// private HorizontalListView chapterListView;
+
+	// private Gallery galleryChapters;
+
 	private BookPageAdapter pagerAdapter;
 	private FlipperView bookFlipper;
 	private int currentPosition = 0;
 	private boolean endOfFile = false;
 	private float lastDownX;
-	private boolean webviewOnTouch = false;
+	private boolean touchingBook = false;
+	// private TextView txtBookNavChapterNo;
+	// private TextView txtBookNavChapterTitle;
+
+	private int navRowHeight;
+	private List<BookNavigationRow> navigationList;
 
 	private ContentStream stream = null;
 
 	private ImageView imgPageRender;
 	private HtmlRenderer render;
 	private RenderedPage renderedPage;
+	private int chapterSize;
+	
+	RelativeLayout.LayoutParams handleParams;
+
+	//private Object navigationSelectListener;
+
+	private int handleHeight;
 
 	public enum IntentType {
 		READ_BOOK_NOT_IN_LIBRARY, READ_BOOK_FROM_LIBRARY, GO_TO_TOC_INDEX;
@@ -109,7 +131,7 @@ public class ReadActivity extends ActionBarActivity {
 			bookFlipper.setOnViewSwitchListener(new ViewSwitchListener() {
 				public void onSwitched(View view, int position) {
 					renderedPage = pagerAdapter.getItem(0);
-					if(renderedPage != null){
+					if (renderedPage != null) {
 						imgPageRender.setImageBitmap(renderedPage.getBitmap());
 					}
 					imgPageRender.setVisibility(View.VISIBLE);
@@ -118,9 +140,12 @@ public class ReadActivity extends ActionBarActivity {
 			});
 			bookFlipper
 					.setAdapter(pagerAdapter, BookPageAdapter.START_POSITION);
-			
+
 			renderedPage = pagerAdapter.getItem(0);
 			imgPageRender.setImageBitmap(renderedPage.getBitmap());
+
+			dialog.dismiss();
+
 		} catch (FileNotFoundException e) {
 			Log.d("3", "FNFE in display: " + e.getMessage());
 		} catch (IOException e) {
@@ -134,11 +159,16 @@ public class ReadActivity extends ActionBarActivity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_read);
 
-		Log.d("ReadActivity", "View is created");
+		layoutOverlay = (RelativeLayout) findViewById(R.id.lay_book_overlay);
+		imgPageRender = (ImageView) findViewById(R.id.img_page_render);
+		bookFlipper = (FlipperView) findViewById(R.id.pgr_book);
 
+		navigationList = new ArrayList<BookNavigationRow>(3);
+		navRowHeight = (int) getResources().getDimension(R.dimen.book_nav_height);
 		Point size = Helper.getDisplaySize(this);
 		screenWidth = size.x;
 		screenHeight = size.y;
+		
 		setFullScreen(true);
 
 		if (Helper.SupportsNewApi()) {
@@ -146,33 +176,7 @@ public class ReadActivity extends ActionBarActivity {
 			actionBar.setDisplayHomeAsUpEnabled(true);
 		}
 
-		layoutOverlay = (RelativeLayout) findViewById(R.id.lay_book_overlay);
-
-		imgPageRender = (ImageView) findViewById(R.id.img_page_render);
-
-		// bookView = (BookView) findViewById(R.id.view_book_view);
-
-		chapterListView = (HorizontalListView) findViewById(R.id.lst_chapters);
-		bookFlipper = (FlipperView) findViewById(R.id.pgr_book);
-
-		chapterAdapter = new BookNavAdapter(this, chapterListView);
-		chapterAdapter
-				.setChapterNameTextView((TextView) findViewById(R.id.txt_book_nav_chapter_title));
-		chapterAdapter
-				.setChapterNoTextView((TextView) findViewById(R.id.txt_book_nav_chapter_no));
-
-		/* This is the adapter for each individual chapter in the list */
-		chapterAdapter.setOnItemClickListener(new OnItemClickListener() {
-			public void onItemClick(AdapterView<?> parent, View view,
-					int position, long id) {
-				dialog.show();
-				display((int) id);
-				showOverlay(false);
-
-			}
-
-		});
-
+	
 		// TODO longclick fastflipp
 		imgPageRender.setOnLongClickListener(new OnLongClickListener() {
 			public boolean onLongClick(View v) {
@@ -181,14 +185,8 @@ public class ReadActivity extends ActionBarActivity {
 			}
 		});
 
-		chapterListView.setAdapter(chapterAdapter);
-		chapterListView.setOnScrollListener(chapterAdapter);
-
 		dialog = ProgressDialog.show(this, "",
 				this.getString(R.string.loading_please_wait), true);
-
-		// XXX remember to remove this shit
-		dialog.dismiss();
 
 		if (currentPosition != 0) {
 			pagerAdapter.notifyDataSetInvalidated();
@@ -214,10 +212,10 @@ public class ReadActivity extends ActionBarActivity {
 					return true;
 				case MotionEvent.ACTION_DOWN:
 					lastDownX = event.getX();
-					webviewOnTouch = true;
+					touchingBook = true;
 					break;
 				case MotionEvent.ACTION_UP:
-					webviewOnTouch = false;
+					touchingBook = false;
 					float diff = event.getX() / screenWidth;
 					float diffOld = lastDownX / screenWidth;
 					if (diff <= 0.33 && diffOld <= 0.33 && !menuShown) { // left
@@ -273,15 +271,163 @@ public class ReadActivity extends ActionBarActivity {
 				Log.e("3", "ReadActivity IOE: " + e.getMessage());
 			}
 
-			// Set up listeners and data for the overlay chapter-scroller
+			LayoutInflater layoutInflater = (LayoutInflater) this
+					.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
-			List<BookNavItem> chapters = chapterAdapter.getItems();
-			for (String title : stream.getTocNames()) {
-				chapters.add(new BookNavItem(title, null));
+			int itemSize = (int) getResources().getDimension(
+					R.dimen.book_nav_list_height);
+
+			View view = null;
+			
+
+			final ImageView handle = new ImageView(this);
+			handle.setBackgroundResource(R.drawable.action_bar_top_background);
+			handle.setImageResource(R.drawable.handle_bar_fg);
+			handle.setScaleType(ScaleType.CENTER);
+			
+			View lastView = null;
+			BookNavigationRow lastRow = null;
+			
+			final int loopSize = 3; //XXX levels down
+
+			for (int i = loopSize-1; i > -1; i--) {
+
+				view = layoutInflater.inflate(R.layout.view_navigation_row,
+						null);
+
+				GalleryFix gallery = (GalleryFix) view
+						.findViewById(R.id.gal_navigation);
+				TextView txtTitle = (TextView) view
+						.findViewById(R.id.txt_book_nav_title);
+				TextView txtNumbering = (TextView) view
+						.findViewById(R.id.txt_book_nav_no);
+				BookNavAdapter adapter = new BookNavAdapter(this, itemSize,
+						itemSize);
+
+				List<BookNavItem> chapters = adapter.getItems();
+				for (String title : stream.getTocNames()) {
+					chapters.add(new BookNavItem(title, null));
+				}
+
+				gallery.setAdapter(adapter);
+				gallery.setOnTouchListener(new OnTouchListener() {
+					public boolean onTouch(View v, MotionEvent event) {
+						layoutOverlay.onTouchEvent(event);
+						return false;
+					}
+				});
+				
+				BookNavigationRow navRow = new BookNavigationRow(view, gallery,
+						txtTitle, txtNumbering, adapter);
+				
+				navigationList.add(navRow);
+				RelativeLayout.LayoutParams rowParams = new LayoutParams(
+						LayoutParams.FILL_PARENT, navRowHeight);
+				rowParams.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
+				
+				lastView = view;
+				lastRow = navRow;
+
+				layoutOverlay.addView(view, rowParams);
 			}
+			
+			navigationList.get(loopSize-1).getView().setVisibility(View.VISIBLE);//make first row visible
+			
+			handleParams = new LayoutParams(LayoutParams.FILL_PARENT,
+					(int) getResources().getDimension(
+							R.dimen.book_nav_handle_height));
+			handleParams.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
+			handleHeight = (int)getResources().getDimension(R.dimen.book_nav_handle_height);
+			handleParams.bottomMargin = navRowHeight;
+			layoutOverlay.addView(handle, handleParams);
 
-			((TextView) findViewById(R.id.txt_book_nav_chapter_no))
-					.setText(lastIndex + "/" + stream.getToc().size());
+			handle.setOnTouchListener(new OnTouchListener() {
+				int offset;
+				int oldInstanceNo = -1;
+				BookNavigationRow currentRow;
+				View currentView;
+				RelativeLayout.LayoutParams viewParams;
+				boolean isInBottom = true;
+				public boolean onTouch(View v, MotionEvent event) {
+					switch (event.getAction()) {	
+					case MotionEvent.ACTION_DOWN:
+						offset = handleHeight-(int)event.getY();
+						break;
+					case MotionEvent.ACTION_MOVE:
+						int value = (int) ((screenHeight-event.getRawY())-offset);
+						
+						if(value <= navRowHeight){ //dont drag less then 1st row
+							value = navRowHeight;
+							isInBottom = true;
+							if(currentView != null){ //make 1st invisible
+								currentView.setVisibility(View.INVISIBLE);
+							}
+						}else if(value >= navRowHeight*loopSize){ //and no longer then 3
+							value = navRowHeight*loopSize;
+						}else{
+							isInBottom = false;
+						}
+						
+						//if 1st is invisible
+						if(!isInBottom && currentView != null && currentView.getVisibility() == View.INVISIBLE){
+							currentView.setVisibility(View.VISIBLE);
+						}
+						
+						handleParams.bottomMargin = value;
+						handle.setLayoutParams(handleParams);
+						int instanceNo = loopSize-(int) Math.floor(value/navRowHeight)-1;
+						
+						if(instanceNo < 0){
+							instanceNo = 0;
+						}
+						
+						if(instanceNo != oldInstanceNo){
+							
+							//snap last view
+							if(currentView != null){
+								viewParams.bottomMargin = oldInstanceNo*navRowHeight;
+								currentView.setLayoutParams(viewParams);
+								if(instanceNo > oldInstanceNo){
+									currentView.setVisibility(View.INVISIBLE);
+								}
+							}
+							BookNavigationRow r = navigationList.get(instanceNo);
+							currentRow = r==null?currentRow:r;
+							currentView = currentRow.getView();
+							currentView.setVisibility(View.VISIBLE);
+							viewParams = (LayoutParams) currentView.getLayoutParams();
+						}
+					
+						viewParams.bottomMargin = value-navRowHeight;
+						currentView.setLayoutParams(viewParams);
+						
+						oldInstanceNo = instanceNo;
+						
+						break;
+					case MotionEvent.ACTION_UP:
+						int upValue = (int) ((screenHeight-event.getRawY())-offset);
+						int row = (int) Math.floor(upValue/navRowHeight)-1;
+						if(upValue <= navRowHeight*loopSize && upValue >= navRowHeight){ //if we are not in the end
+							if((upValue-navRowHeight) >= (navRowHeight*0.5)+(navRowHeight*row)){ //snap to top
+								snapTo(navRowHeight*(row+2), navRowHeight*(row+1));
+							}else{ //snap to bottom
+								snapTo(navRowHeight*(row+1), navRowHeight*row);
+								currentView.setVisibility(View.INVISIBLE);
+							}
+						}
+						
+						break;
+					}
+					return true;
+				}
+				
+				private void snapTo(int handleTarget, final int viewTarget){
+					AnimationHelper.TargetMargin[] ta = {AnimationHelper.TargetMargin.BOTTOM};
+					currentView.startAnimation(AnimationHelper.animateMargin(currentView, viewParams.bottomMargin, viewTarget, 250, ta));
+					handle.startAnimation(AnimationHelper.animateMargin(handle, handleParams.bottomMargin, handleTarget, 250, ta));
+				}
+				
+			});
 
 			display(lastIndex);
 			break;
@@ -300,7 +446,7 @@ public class ReadActivity extends ActionBarActivity {
 		new Runnable() {
 			public void run() {
 				int loopCount = 0;
-				while (webviewOnTouch) {
+				while (touchingBook) {
 					try {
 						int sleepVal = 500 - (25 * loopCount);
 						Log.d("Should sleep in fastflip as", "Sleep value = "
@@ -411,13 +557,18 @@ public class ReadActivity extends ActionBarActivity {
 			startActivityForResult(tocIntent, GET_SECTION_REFERENCE);
 			break;
 		case R.id.menu_overflow:
-			openOptionsMenu();
+			Toast.makeText(this, "Tapped overflow", Toast.LENGTH_SHORT).show();
+			
+			//closeOptionsMenu();
+			//openOptionsMenu();
+			//getWindow().openPanel(Window.FEATURE_OPTIONS_PANEL, null);
 			break;
 		}
 		return super.onOptionsItemSelected(item);
 	}
 
-	@Override
+	
+	@Override //disable volume buttons
 	public boolean onKeyDown(int keyCode, KeyEvent event) {
 		if (!menuShown && (keyCode == 25 || keyCode == 24)) {
 			return true;
@@ -427,14 +578,15 @@ public class ReadActivity extends ActionBarActivity {
 
 	@Override
 	public boolean onKeyUp(int keyCode, KeyEvent event) {
+		Log.d(tag, "Keycode is = "+keyCode);
 		if (keyCode == 82) {
 			if (!menuShown) {
-				openOptionsMenu();
+				//openOptionsMenu();
 				showOverlay(true);
 			} else {
 				showOverlay(false);
 			}
-
+			//getWindow().openPanel(Window.FEATURE_OPTIONS_PANEL, null);
 			return true;
 		} else if (keyCode == 4 && menuShown) {
 			showOverlay(false);

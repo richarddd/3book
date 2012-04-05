@@ -16,6 +16,9 @@ import android.os.Build;
 import android.view.Display;
 import android.view.View;
 import android.view.WindowManager;
+import android.view.animation.Animation;
+import android.view.animation.TranslateAnimation;
+import android.widget.RelativeLayout.LayoutParams;
 
 public class Helper {
 
@@ -60,6 +63,8 @@ public class Helper {
 		}
 		return p;
 	}
+	
+	
 
 	public static String streamToString(InputStream is) throws IOException {
 		if (is != null) {

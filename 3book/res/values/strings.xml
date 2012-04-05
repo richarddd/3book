@@ -33,7 +33,23 @@
     <!-- ERRORS -->
     <string name="err_general">Error</string>
     <string name="err_file_browser_general">Unable to access file/folder</string>
-     <string name="err_image">Unable to open image</string>
+    <string name="err_image">Unable to open image</string>
+     
+     
+    <!-- SETTINGS -->
+    <string name="reader_settings">Reader settings</string>
+    <string name="adjust_margins">Adjust margins</string>
+    <string name="adjust_margins_summary">Change left &amp; right page margin</string>
+    <string name="font_size">Font size</string>
+    <string name="font_size_summary">Adjust font size</string>
+    <string name="background_color">Background color</string>
+    <string name="background_color_summary">Change background color</string>
+    <string name="dialog_margin_title">Edit margins</string>
+    <string name="dialog_font_size_title">Edit font size</string>
+    <string name="margin_top_bottom">Top &amp; Bottom margin</string>
+    <string name="margin_leftr_right">Left &amp; Right margin</string>
+    <string name="page_animation_speed">Animation speed</string>
+    <string name="page_animation_speed_summary">Adjust the speed of page turn animations</string>
     
     <!-- MENU -->
 	<string name="menu_refresh">Refresh</string>
@@ -42,11 +58,6 @@
     <string name="control_next_chapter">Next</string>
     <string name="control_prev_chapter">Prev</string>
     <string name="control_display_toc">TOC</string>
-    <string name="reader_settings">Reader settings</string>
-    <string name="adjust_margins">Adjust margins</string>
-    <string name="adjust_margins_summary">Change left &amp; right page margin</string>
-    <string name="background_color">Background color</string>
-    <string name="background_color_summary">Change background color</string>
     <string name="application">Application</string>
     <string name="open_at_startup">Open at startup</string>
     <string name="open_at_startup_on">Opens the last read book when application starts</string>

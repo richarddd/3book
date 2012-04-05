@@ -5,36 +5,27 @@
     android:layout_height="fill_parent"
     android:background="@color/default_background"
     android:orientation="vertical" >
-    
+
     <se.chalmers.threebook.ui.FlipperView
+        android:id="@+id/pgr_book"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
-        android:id="@+id/pgr_book"
         android:visibility="visible" />
-    
-    
-    <!-- 
+
+    <!--
     <WebView
         android:id="@+id/web_book"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         android:background="@color/default_background"
-        android:visibility="invisible" />  -->
-        
-        
-    <ImageView android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
-        android:background="@color/default_background"
-        android:id="@+id/img_page_render" />
-     
-    <!-- 
-    <se.chalmers.threebook.ui.BookView
-        android:id="@+id/view_book_view"
-          android:layout_width="fill_parent"
+        android:visibility="invisible" />
+    -->
+
+    <ImageView
+        android:id="@+id/img_page_render"
+        android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         android:background="@color/default_background" />
-         -->
-
 
     <RelativeLayout
         android:id="@+id/lay_book_overlay"
@@ -43,56 +34,10 @@
         android:background="#cc000000"
         android:visibility="invisible" >
 
-        <RelativeLayout
-            android:layout_width="fill_parent"
-            android:layout_height="@dimen/book_nav_height"
-            android:layout_alignParentBottom="true" >
-
-            <se.chalmers.threebook.ui.HorizontalListView
-                android:id="@+id/lst_chapters"
-                android:layout_width="fill_parent"
-                android:layout_height="@dimen/book_nav_list_height" />
-
-            <View
-                android:layout_width="fill_parent"
-                android:layout_height="@dimen/book_nav_list_height"
-                android:background="@drawable/recent_frame_shadow" />
-
-            <ImageView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_above="@+id/lay_book_nav_chapter"
-                android:layout_centerHorizontal="true"
-                android:src="@drawable/book_naw_arrow" />
-
-            <RelativeLayout
-                android:id="@+id/lay_book_nav_chapter"
-                android:layout_width="fill_parent"
-                android:layout_height="@dimen/book_nav_title_height"
-                android:layout_alignParentBottom="true"
-                android:background="@drawable/action_bar_top_background" >
-
-                <TextView
-                    android:id="@+id/txt_book_nav_chapter_title"
-                    android:layout_width="fill_parent"
-                    android:layout_height="fill_parent"
-                    android:layout_toLeftOf="@+id/txt_book_nav_chapter_no"
-                    android:gravity="center_vertical"
-                    android:paddingLeft="@dimen/padding_l"
-                    android:singleLine="true"
-                    android:textColor="@color/default_background" />
-
-                <TextView
-                    android:id="@+id/txt_book_nav_chapter_no"
-                    android:layout_width="wrap_content"
-                    android:layout_height="fill_parent"
-                    android:layout_alignParentRight="true"
-                    android:gravity="center_vertical"
-                    android:paddingRight="@dimen/padding_l"
-                    android:text="*/*"
-                    android:textColor="@color/default_background" />
-            </RelativeLayout>
-        </RelativeLayout>
+        <!--
+        
+         -->
+        
     </RelativeLayout>
 
 </FrameLayout>

@@ -66,7 +66,7 @@ public class MainActivity extends ActionBarActivity {
 		laySettings.setOnClickListener(new StartOnClick(PreferencesActivity.class));
 		//laySettings.setOnClickListener(new StartOnClick(DisplayActivity.class));
 		layCollection.setOnClickListener(new StartOnClick(CollectionActivity.class));
-		layFavourites.setOnClickListener(new StartOnClick(CanvasActivity.class));
+		layFavourites.setOnClickListener(new StartOnClick(TestActivity.class));
 		
 		List<RecentBook> bookList = adapter.getItems();
 		
