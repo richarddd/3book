@@ -5,6 +5,8 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 
+import se.chalmers.threebook.db.AuthorTable;
+import se.chalmers.threebook.db.BookAuthorsTable;
 import se.chalmers.threebook.db.BookTable;
 import se.chalmers.threebook.db.DBHelper;
 import android.content.ContentProvider;
@@ -19,7 +21,7 @@ import android.net.Uri;
 import android.text.TextUtils;
 
 public class ThreeBookContentProvider extends ContentProvider {
-	
+
 	private static final String DATABASE_NAME = "3book.db";
 	private static final int DATABASE_VERSION = 1;
 
@@ -27,6 +29,9 @@ public class ThreeBookContentProvider extends ContentProvider {
 
 	private static final int BOOKS = 10;
 	private static final int BOOK_ID = 20;
+	private static final int AUTHORS = 30;
+	private static final int AUTHORS_ID = 40;
+	private static final int BOOK_AUTHORS = 50;
 
 	private static final String AUTHORITY = "se.chalmers.threebook.contentprovider";
 
@@ -46,12 +51,16 @@ public class ThreeBookContentProvider extends ContentProvider {
 	static {
 		sURIMatcher.addURI(AUTHORITY, BOOK_PATH, BOOKS);
 		sURIMatcher.addURI(AUTHORITY, BOOK_PATH + "/#", BOOK_ID);
+		sURIMatcher.addURI(AUTHORITY, BOOK_PATH, AUTHORS);
+		sURIMatcher.addURI(AUTHORITY, BOOK_PATH + "/#", AUTHORS_ID);
+		sURIMatcher.addURI(AUTHORITY, BOOK_PATH, BOOK_AUTHORS);
 	}
 
 	@Override
 	public synchronized boolean onCreate() {
-		database = new DBHelper(getContext(), DATABASE_NAME, null, DATABASE_VERSION);
-		return database != null; //true if successfull
+		database = new DBHelper(getContext(), DATABASE_NAME, null,
+				DATABASE_VERSION);
+		return database != null; // true if successful
 	}
 
 	@Override
@@ -71,6 +80,12 @@ public class ThreeBookContentProvider extends ContentProvider {
 			break;
 		case BOOK_ID:
 			queryBuilder.appendWhere(BookTable.COLUMN_ID + " = "
+					+ uri.getLastPathSegment());
+			break;
+		case AUTHORS:
+			break;
+		case AUTHORS_ID:
+			queryBuilder.appendWhere(AuthorTable.COLUMN_ID + " = "
 					+ uri.getLastPathSegment());
 			break;
 		default:
@@ -95,6 +110,43 @@ public class ThreeBookContentProvider extends ContentProvider {
 		switch (uriType) {
 		case BOOKS:
 			id = db.insert(BookTable.TABLE_BOOKS, null, values);
+			break;
+		case AUTHORS:
+			db.beginTransaction();
+
+			// Check that author is not in database already.
+			Cursor c = db.query(
+					AuthorTable.TABLE_AUTHORS,
+					new String[] { AuthorTable.COLUMN_ID },
+					AuthorTable.COLUMN_FIRSTNAME + " = ? AND "
+							+ AuthorTable.COLUMN_LASTNAME + " = ?",
+					new String[] {
+							values.getAsString(AuthorTable.COLUMN_FIRSTNAME),
+							values.getAsString(AuthorTable.COLUMN_LASTNAME) },
+					null, null, null);
+
+			if (c.getCount() > 0) {
+				c.moveToFirst();
+				id = c.getLong(c.getColumnIndexOrThrow(AuthorTable.COLUMN_ID)); // found
+																				// author
+			} else {
+				id = db.insert(AuthorTable.TABLE_AUTHORS, null, values); // Add
+																			// new
+																			// author
+			}
+
+			c.close();
+
+			Long bookId = values.getAsLong(BookAuthorsTable.COLUMN_BOOK);
+
+			// Link author to book
+			ContentValues joinValues = new ContentValues();
+			joinValues.put(BookAuthorsTable.COLUMN_BOOK, bookId);
+			joinValues.put(BookAuthorsTable.COLUMN_AUTHOR, id);
+			db.insert(BookAuthorsTable.TABLE_BOOK_AUTHORS, null, joinValues);
+
+			db.endTransaction();
+
 			break;
 		default:
 			throw new IllegalArgumentException("Unknown URI: " + uri);
@@ -149,11 +201,11 @@ public class ThreeBookContentProvider extends ContentProvider {
 		int uriType = sURIMatcher.match(uri);
 		SQLiteDatabase db = database.getWritableDatabase();
 		int rowsUpdated = 0;
-		
+
 		switch (uriType) {
 		case BOOKS:
-			rowsUpdated = db.update(BookTable.TABLE_BOOKS, values,
-					selection, selectionArgs);
+			rowsUpdated = db.update(BookTable.TABLE_BOOKS, values, selection,
+					selectionArgs);
 			break;
 		case BOOK_ID:
 			String id = uri.getLastPathSegment();
@@ -175,7 +227,7 @@ public class ThreeBookContentProvider extends ContentProvider {
 		default:
 			throw new IllegalArgumentException("Unknown URI: " + uri);
 		}
-		
+
 		getContext().getContentResolver().notifyChange(uri, null);
 		return rowsUpdated;
 	}

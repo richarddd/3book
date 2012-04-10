@@ -10,7 +10,7 @@ public class BookAuthorsTable {
 	public static final String TABLE_BOOK_AUTHORS = "book_authors";
 	public static final String COLUMN_BOOK = "book";
 	public static final String COLUMN_AUTHOR = "author";
-	public static final String COLUMN_ORDER = "_order";
+	//public static final String COLUMN_ORDER = "_order";
 	
 	
 //	"CREATE TABLE book_authors(
@@ -25,7 +25,7 @@ public class BookAuthorsTable {
 			+ "( "
 			+ COLUMN_BOOK + " integer, "
 			+ COLUMN_AUTHOR + " integer, "
-			+ COLUMN_ORDER + " integer, "
+			//+ COLUMN_ORDER + " integer, "
 			+ "PRIMARY KEY (" + COLUMN_BOOK + ", " + COLUMN_AUTHOR + "), "
 			+ "FOREIGN KEY (" + COLUMN_BOOK + ") REFERENCES " + BookTable.TABLE_BOOKS + "(" + BookTable.COLUMN_ID + "), "
 			+ "FOREIGN KEY (" + COLUMN_AUTHOR + ") REFERENCES " + AuthorTable.TABLE_AUTHORS + "(" + AuthorTable.COLUMN_ID + ")"
