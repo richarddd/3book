@@ -9,6 +9,8 @@ import java.io.OutputStreamWriter;
 import java.util.HashMap;
 import java.util.Map;
 
+import nl.siegmann.epublib.domain.Book;
+
 /**
  * Cache for epub files unzipped and parsed during the reader lifecycle
  */
@@ -19,18 +21,20 @@ public class EpubCache implements BookCache {
 	
 	private String bookName;
 	private File bookDir;
+	private Book book; // XXX keeping this for the images, not liking it a lot.
 	
 	/**
 	 * Creates a new cache for the book indicated by the unique identifier bookIdentifier 
 	 * @param bookIdentifier a string identifier for a book that must be unique 
 	 * @param cacheDir		the application's cache directory
+	 * @param book			the book we're working with (for images)
 	 * @throws IOException	when directories cannot be created in the cache dir
 	 */
-	public EpubCache(String bookIdentifier, File cacheDir) throws IOException{
+	public EpubCache(String bookIdentifier, File cacheDir, Book book) throws IOException{
 		bookName = bookIdentifier;
 		//this.cacheDir = cacheDir;
 		bookDir = new File(cacheDir, bookIdentifier);
-		boolean dirs = bookDir.mkdirs();
+		bookDir.mkdirs();
 		if (!bookDir.exists()){
 			throw new IOException("Could not ensure presence of book cache dir: " + bookDir.getAbsolutePath());
 		}

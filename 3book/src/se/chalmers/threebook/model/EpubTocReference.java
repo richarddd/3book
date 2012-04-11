@@ -3,9 +3,14 @@ package se.chalmers.threebook.model;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+
+import se.chalmers.threebook.content.BookCache;
+import se.chalmers.threebook.util.HtmlParser;
 
 import android.util.Log;
 
+import nl.siegmann.epublib.domain.Resource;
 import nl.siegmann.epublib.domain.TOCReference;
 
 public final class EpubTocReference implements TocReference {
@@ -17,24 +22,26 @@ public final class EpubTocReference implements TocReference {
 	private final int psuedoHash; // XXX might not be a good hash! 
 	private final TOCReference ref;
 	private final List<TocReference> children;
+	private final BookCache cache;
 	
-	public EpubTocReference(TOCReference ref){
-		this(ref, 0);
+	public EpubTocReference(TOCReference ref, BookCache cache){
+		this(ref, 0, cache);
 	}
 	
-	public EpubTocReference(TOCReference ref, int depth){
-		this(ref, depth, null);
+	public EpubTocReference(TOCReference ref, int depth, BookCache cache){
+		this(ref, depth, null, cache);
 	}
 	
-	private EpubTocReference(TOCReference ref, int depth, TocReference parent){
+	private EpubTocReference(TOCReference ref, int depth, TocReference parent, BookCache cache){
 		this.parent = parent;
 		this.depth = depth;
 		this.ref = ref;
+		this.cache = cache;
 		psuedoHash = (ref.getCompleteHref()+ref.getFragmentId()).hashCode(); 
 		if (ref.getChildren().size() > 0){
 			children = new ArrayList<TocReference>(ref.getChildren().size());
 			for (TOCReference cr : ref.getChildren()){
-				children.add(new EpubTocReference(cr, (depth+1), parent));
+				children.add(new EpubTocReference(cr, (depth+1), parent, cache));
 			}
 		} else {
 			children = new ArrayList<TocReference>(0);
@@ -62,7 +69,7 @@ public final class EpubTocReference implements TocReference {
 	
 
 	public String getHtml() throws IOException {
-		return getResourceContents(ref);
+		return getResourceContents();
 	}
 	
 	public int getUniqueIdentifier() {
@@ -90,12 +97,39 @@ public final class EpubTocReference implements TocReference {
 	}
 	
 	// XXX consider moving this out of the class - should it really be able to unpack itself?
-	private static String getResourceContents(TOCReference ref) throws IOException{
-		char[] cb = new char[(int) ref.getResource().getSize()]; // XXX size is long, this could go bad-bad?
+	private String getResourceContents() throws IOException{
+		String id = String.valueOf(getUniqueIdentifier()); // hashcode as string
+		if (cache.exists(id)){
+			return cache.retrieve(id);
+		}
+		
+		String data; // 
+		{
+			char[] cb = new char[(int) ref.getResource().getSize()]; // XXX size is long, this could go bad-bad?
+	    
+	    	int charsRead = ref.getResource().getReader().read(cb);
+	    	Log.d(tag, "getResourceContents for " + ref.getTitle() + " read " + charsRead + "bytes into buffer of size" + cb.length + ".");
+	    	data = String.copyValueOf(cb);
+		}
     	
-    	int charsRead = ref.getResource().getReader().read(cb);
-    	Log.d(tag, "getResourceContents read " + charsRead + "bytes into buffer of size" + cb.length + ".");
-    	return String.copyValueOf(cb);
+		// PERFORM STRING PROCESSING
+		HtmlParser p = new HtmlParser(data);
+		p.injectCss(HtmlParser.BASIC_STYLE);
+		List<String> imageNames = p.getImg();
+		Map <String, String> headers = p.getHeadings();
+		data = p.getModifiedHtml(); // rewritten HTML
+		cache.cache(data, id); // Place the data in the cache
+		
+		// UNZIP AND PLACE IMAGES AS NEEDED
+		for (String imgName : imageNames){
+			if (!cache.hasImage(imgName)){ // check for pre-cache 
+				if (!cache.cacheImage(imgName)){ // this performs the caching
+					Log.d(tag, "3book-ERROR: could not cache image of name: + imgName");
+				}
+			} 
+		}
+		
+    	return data;
 	}
 	
 	// XXX look into equals and hashCode with the help of Bloch when less tired!

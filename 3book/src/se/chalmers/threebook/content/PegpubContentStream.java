@@ -46,6 +46,7 @@ public class PegpubContentStream {
 		
 		book = new EpubReader().readEpub(new FileInputStream(bookFile)); 
 		cache = new EpubCache(book.getTitle(), cacheDir);
+		toc = new EpubTableOfContents(book.getTableOfContents(), cache);
 		
 		{ 	int i = 0;
 			// Do note that we're iterating over the TOC, which is not guaranteed to be the right order
@@ -77,7 +78,6 @@ public class PegpubContentStream {
 		return hrefOrder.get(section.getBaseFileName()) >= 0;
 	}
 	
-	
 	public TocReference getPreviousSource(TocReference relativeTo){
 		return sourceOrder.get(hrefOrder.get(relativeTo.getBaseFileName())-1);
 	}
@@ -85,31 +85,6 @@ public class PegpubContentStream {
 	public TocReference getNextSource(TocReference relativeTo){
 		return sourceOrder.get(hrefOrder.get(relativeTo.getBaseFileName())+1);
 	}	
-	
-	 
-/*
-	private static List<TocReference> flattenToc(List<TocReference> treeToc){
-		LinkedList<TocReference> flat = new LinkedList<TocReference>();
-		for (TocReference ref : treeToc){
-			appendChildren(ref, flat);
-		}
-		return new ArrayList<TocReference>(flat); // cast to AL for O(1) lookups
-	}
-
-	private static void appendChildren(TocReference root, LinkedList<TocReference> accumulator){
-		accumulator.add(root);
-		for (TocReference child : root.getChildren()){
-			appendChildren(child, accumulator);
-		}
-	}
-*/
-	
-	
-	
-	
-	
-	
-	// ALTEN STUFFEN BELOWEN
 	
 	private String jumpToToc(TOCReference ref) throws IOException, FileNotFoundException {
 		Resource chapter = ref.getResource();
@@ -122,7 +97,6 @@ public class PegpubContentStream {
 		}
 		
 		// PERFORM STRING PROCESSING
-		//String data = getStringFromResource(nav.getCurrentResource());
 		String data = getStringFromResource(chapter);
 		HtmlParser p = new HtmlParser(data);
 		p.injectCss(HtmlParser.BASIC_STYLE);
