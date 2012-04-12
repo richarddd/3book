@@ -122,10 +122,8 @@ public final class EpubTocReference implements TocReference {
 		
 		// UNZIP AND PLACE IMAGES AS NEEDED
 		for (String imgName : imageNames){
-			if (!cache.hasImage(imgName)){ // check for pre-cache 
-				if (!cache.cacheImage(imgName)){ // this performs the caching
-					Log.d(tag, "3book-ERROR: could not cache image of name: + imgName");
-				}
+			if (!cache.exists(imgName)){  
+				cache.cacheImage(imgName);
 			} 
 		}
 		

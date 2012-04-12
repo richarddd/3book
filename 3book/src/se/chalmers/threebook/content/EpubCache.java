@@ -1,23 +1,35 @@
 package se.chalmers.threebook.content;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
 import nl.siegmann.epublib.domain.Book;
+import nl.siegmann.epublib.domain.Resource;
 
 /**
  * Cache for epub files unzipped and parsed during the reader lifecycle
+ * 
+ * TODO: add check for files already on disk, retrieve from disk if so 
+ * (e.g. utilze cache cross-session persistence)
+ * 
+ *  TODO: decouple this from Book and Resource by being more clever upstream.
  */
 public class EpubCache implements BookCache {
 
 	
 	private static Map<String, File> cache = new HashMap<String, File>();
+	private static Map<String, Integer> fullSize = new HashMap<String, Integer>();
 	
 	private String bookName;
 	private File bookDir;
@@ -38,6 +50,11 @@ public class EpubCache implements BookCache {
 		if (!bookDir.exists()){
 			throw new IOException("Could not ensure presence of book cache dir: " + bookDir.getAbsolutePath());
 		}
+	}
+	
+	public void cacheImage(String imageHref) throws IOException {
+		Resource r = book.getResources().getByHref(imageHref);
+		cache(r.getData(), imageHref);
 	}
 	
 	//@Override
@@ -96,13 +113,44 @@ public class EpubCache implements BookCache {
 	}
 
 	//@Override
-	public File retrieve(String identifier) {
+	public String retrieve(String identifier) throws IOException{
+		return retrieve(identifier, -1);
+	}
+	
+	public String retrieve(String identifier, int bytes) throws IOException {
 		if (!exists(identifier)){
 			throw new IllegalArgumentException("File with identifier " + identifier + " does not exist in cache for " + bookName + ".");
 		}
-		return cache.get(identifier);
+		
+		//return cache.get(identifier);
+		String text;
+		BufferedReader buf = null;
+		try {
+			buf = new BufferedReader(new FileReader(cache.get(identifier)));
+			
+			if (!fullSize.containsKey(identifier) && bytes < 1){
+				StringBuilder sb = new StringBuilder();
+				String line;
+				while ((line = buf.readLine()) != null){
+					sb.append(line);
+				}
+				text = sb.toString();
+				fullSize.put(identifier, sb.length()); // store length for faster retrieval later
+			} else {
+				char[] cb = new char[bytes > 0 ? bytes : fullSize.get(identifier)];
+				buf.read(cb);
+				text = String.copyValueOf(cb);
+			}
+		
+		} finally {
+			if (buf != null){buf.close();}
+		}
+		
+		return text;
+		
 	}
 
+	
 	public boolean exists(String itemIdentifier) {
 		return cache.containsKey(itemIdentifier);
 	}

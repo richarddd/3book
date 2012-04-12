@@ -6,6 +6,7 @@ import java.io.IOException;
 
 public interface BookCache {
 	
+	public void cacheImage(String imageName) throws IOException;
 	
 	/**
 	 * Stores a stream of bytes on disk accessible by itemIdentifier
@@ -34,11 +35,12 @@ public interface BookCache {
 	public File cache (String words,String itemIdentifier) throws FileNotFoundException, IOException;
 	
 	/**
-	 * Returns a File pointing to the desired item
+	 * Returns the String contents of the desired item
+	 * @throws IOException 
 	 * 
 	 * @throws IllegalArgumentException if file is not in cache
 	 */
-	public File retrieve(String itemIdentifier);
+	public String retrieve(String itemIdentifier) throws IOException;
 	
 	public boolean exists(String itemIdentifier);
 }

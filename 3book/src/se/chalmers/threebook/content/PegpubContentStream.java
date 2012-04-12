@@ -45,7 +45,7 @@ public class PegpubContentStream {
 	public PegpubContentStream(String bookFile, File cacheDir) throws IOException{
 		
 		book = new EpubReader().readEpub(new FileInputStream(bookFile)); 
-		cache = new EpubCache(book.getTitle(), cacheDir);
+		cache = new EpubCache(book.getTitle(), cacheDir, book);
 		toc = new EpubTableOfContents(book.getTableOfContents(), cache);
 		
 		{ 	int i = 0;
