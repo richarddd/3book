@@ -44,8 +44,8 @@ public class EpubImporter implements Importer {
 		
 		for(nl.siegmann.epublib.domain.Author a : epubAuthors) {
 			authors.add(new Author()
-				.setFirstName(a.getLastname())
-				.setLastName(a.getFirstname())
+				.setFirstName(a.getLastname().replaceAll(",", ""))
+				.setLastName(a.getFirstname().replaceAll(",", ""))
 			);
 		}
 		
