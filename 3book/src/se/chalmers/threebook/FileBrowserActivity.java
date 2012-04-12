@@ -9,9 +9,12 @@ import java.util.List;
 
 import se.chalmers.threebook.adapters.FileBrowserAdapter;
 import se.chalmers.threebook.contentprovider.ThreeBookContentProvider;
+import se.chalmers.threebook.db.AuthorTable;
+import se.chalmers.threebook.db.BookAuthorsTable;
 import se.chalmers.threebook.db.BookTable;
 import se.chalmers.threebook.db.EpubImporter;
 import se.chalmers.threebook.db.Importer;
+import se.chalmers.threebook.model.Author;
 import se.chalmers.threebook.model.Book;
 import se.chalmers.threebook.ui.actionbarcompat.ActionBarActivity;
 import se.chalmers.threebook.util.Helper;
@@ -36,112 +39,114 @@ import android.widget.Toast;
 
 public class FileBrowserActivity extends ActionBarActivity {
 
-	private TextView txtCurrDir;
-	private ListView lstFiles;
-	private FileBrowserAdapter adapter;
-	private String currentPath;
+    private TextView txtCurrDir;
+    private ListView lstFiles;
+    private FileBrowserAdapter adapter;
+    private String currentPath;
 
-	private List<File> folders = new ArrayList<File>();
-	private List<File> files = new ArrayList<File>();
+    private List<File> folders = new ArrayList<File>();
+    private List<File> files = new ArrayList<File>();
 
-	@Override
-	public void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-		setContentView(R.layout.activity_file_browser);
-		
-		/*getActionBarHelper().set*/
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+	super.onCreate(savedInstanceState);
+	setContentView(R.layout.activity_file_browser);
 
-		if (Helper.SupportsNewApi()) {
-			ActionBar actionBar = getActionBar();
-			actionBar.setDisplayHomeAsUpEnabled(true);
-		}
+	/* getActionBarHelper().set */
 
-		txtCurrDir = (TextView) findViewById(R.id.txt_file_path);
-		lstFiles = (ListView) findViewById(R.id.lst_book_browser);
-
-		// lstFiles.setDrawingCacheBackgroundColor(getResources().getColor(R.color.default_background));
-		lstFiles.setCacheColorHint(getResources().getColor(
-				R.color.default_background));
-
-		lstFiles.setOnItemClickListener(new OnItemClickListener() {
-
-			public void onItemClick(AdapterView<?> parent, View view,
-					int position, long id) {
-				if (adapter.getItem(position).isDirectory()) {
-					try {
-						browseTo(adapter.getItem(position));
-					} catch (Exception e) {
-
-						e.printStackTrace();
-
-						new AlertDialog.Builder(FileBrowserActivity.this)
-								.setMessage(R.string.err_image)
-								.setIcon(android.R.drawable.ic_dialog_alert)
-								.setTitle(getString(R.string.err_general))
-								.setPositiveButton(getString(R.string.ok), null)
-								.create().show();
-					}
-
-				} else {
-//					openFile(adapter.getItem(position));
-					importFileTest(adapter.getItem(position));
-				}
-			}
-		});
-
-		adapter = new FileBrowserAdapter(this);
-
-		lstFiles.setAdapter(adapter);
-
-		browseTo(new File("/"));
+	if (Helper.SupportsNewApi()) {
+	    ActionBar actionBar = getActionBar();
+	    actionBar.setDisplayHomeAsUpEnabled(true);
 	}
 
-	@Override
-	public boolean onKeyDown(int keyCode, KeyEvent event) {
-		if (keyCode == 4 && !currentPath.equals("/")) {
-			browseTo(new File(currentPath).getParentFile());
-			return true;
+	txtCurrDir = (TextView) findViewById(R.id.txt_file_path);
+	lstFiles = (ListView) findViewById(R.id.lst_book_browser);
+
+	// lstFiles.setDrawingCacheBackgroundColor(getResources().getColor(R.color.default_background));
+	lstFiles.setCacheColorHint(getResources().getColor(
+		R.color.default_background));
+
+	lstFiles.setOnItemClickListener(new OnItemClickListener() {
+
+	    public void onItemClick(AdapterView<?> parent, View view,
+		    int position, long id) {
+		if (adapter.getItem(position).isDirectory()) {
+		    try {
+			browseTo(adapter.getItem(position));
+		    } catch (Exception e) {
+
+			e.printStackTrace();
+
+			new AlertDialog.Builder(FileBrowserActivity.this)
+				.setMessage(R.string.err_image)
+				.setIcon(android.R.drawable.ic_dialog_alert)
+				.setTitle(getString(R.string.err_general))
+				.setPositiveButton(getString(R.string.ok), null)
+				.create().show();
+		    }
+
 		} else {
-			return super.onKeyDown(keyCode, event);
+		    // openFile(adapter.getItem(position));
+		    importFileTest(adapter.getItem(position));
 		}
-	};
+	    }
+	});
 
-	private void browseTo(final File directory) {
+	adapter = new FileBrowserAdapter(this);
 
-		folders.clear();
-		files.clear();
+	lstFiles.setAdapter(adapter);
 
-		for (File file : directory.listFiles()) {
-			if (file.isDirectory()) {
-				folders.add(file);
-			} else {
-				files.add(file);
-			}
-		}
+	browseTo(new File("/"));
+    }
 
-		txtCurrDir.setText(directory.getAbsolutePath());
-		currentPath = directory.getAbsolutePath();
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+	if (keyCode == 4 && !currentPath.equals("/")) {
+	    browseTo(new File(currentPath).getParentFile());
+	    return true;
+	} else {
+	    return super.onKeyDown(keyCode, event);
+	}
+    };
 
-		Collections.sort(folders);
-		Collections.sort(files);
+    private void browseTo(final File directory) {
 
-		adapter.getItems().clear();
-		adapter.getItems().addAll(folders);
-		adapter.getItems().addAll(files);
-		adapter.notifyDataSetChanged();
+	folders.clear();
+	files.clear();
 
+	for (File file : directory.listFiles()) {
+	    if (file.isDirectory()) {
+		folders.add(file);
+	    } else {
+		files.add(file);
+	    }
 	}
 
-	private void openFile(File file) {	
-		if(file.getName().endsWith(".epub")){		
-			Intent displayBook= new Intent(this, ReadActivity.class);
-			displayBook.putExtra(ReadActivity.IntentKey.FILE_PATH.toString(), file.getAbsolutePath());
-			displayBook.putExtra(ReadActivity.IntentKey.INTENT_TYPE.toString(), ReadActivity.IntentType.READ_BOOK_FROM_LIBRARY);
-			startActivity(displayBook);
-		}
+	txtCurrDir.setText(directory.getAbsolutePath());
+	currentPath = directory.getAbsolutePath();
+
+	Collections.sort(folders);
+	Collections.sort(files);
+
+	adapter.getItems().clear();
+	adapter.getItems().addAll(folders);
+	adapter.getItems().addAll(files);
+	adapter.notifyDataSetChanged();
+
+    }
+
+    private void openFile(File file) {
+	if (file.getName().endsWith(".epub")) {
+	    Intent displayBook = new Intent(this, ReadActivity.class);
+	    displayBook.putExtra(ReadActivity.IntentKey.FILE_PATH.toString(),
+		    file.getAbsolutePath());
+	    displayBook.putExtra(ReadActivity.IntentKey.INTENT_TYPE.toString(),
+		    ReadActivity.IntentType.READ_BOOK_FROM_LIBRARY);
+	    startActivity(displayBook);
 	}
-	
-	private void importFileTest(File file) {
+    }
+
+    private void importFileTest(File file) {
 
 		if(file.getName().endsWith(".epub")) {
 		
@@ -150,20 +155,45 @@ public class FileBrowserActivity extends ActionBarActivity {
 				importer.focusOn(file);
 				Book book = importer.createBook();
 				
+				//Insert book with title
 				ContentValues values = new ContentValues();
 				values.put(BookTable.COLUMN_TITLE, book.getTitle());
-
-				Uri insertUid = getContentResolver().insert(ThreeBookContentProvider.CONTENT_URI, values);
+				Uri bookUid = getContentResolver().insert(ThreeBookContentProvider.BOOK_URI, values);
+				Long bookId = Long.parseLong(bookUid.getLastPathSegment());
 				
+				//Store book authors
+				for(Author a : book.getAuthors()) {
+        				ContentValues authorValues = new ContentValues();
+        				authorValues.put(BookAuthorsTable.COLUMN_BOOK, bookId);
+        				authorValues.put(AuthorTable.COLUMN_FIRSTNAME, a.getFirstName());
+        				authorValues.put(AuthorTable.COLUMN_LASTNAME, a.getLastName());
+        				getContentResolver().insert(ThreeBookContentProvider.AUTHOR_URI, authorValues);
+				}
 				
-				Cursor cursor = getContentResolver().query(ThreeBookContentProvider.CONTENT_URI, null, null, null, null);
+				//Display all books and authors
+				Cursor cursor = getContentResolver().query(ThreeBookContentProvider.BOOK_URI, null, null, null, null);
 				
 				if(cursor != null) {
 					for(cursor.moveToFirst(); !cursor.isAfterLast(); cursor.moveToNext()) {
 						long id = cursor.getLong(cursor.getColumnIndexOrThrow(BookTable.COLUMN_ID));
 						String title = cursor.getString(cursor.getColumnIndexOrThrow(BookTable.COLUMN_TITLE));
 						
-						Toast.makeText(this, "Id: " + id + ", Title: " + title, Toast.LENGTH_SHORT).show();
+						Cursor authorsCursor = getContentResolver().query(Uri.withAppendedPath(ThreeBookContentProvider.BOOK_AUTHORS_URI, String.valueOf(id)), null, null, null, null);
+						
+						StringBuilder toast = new StringBuilder();
+						toast.append("Id: ")
+							.append(id)
+							.append(" Title: ")
+							.append(title);
+						
+						for(authorsCursor.moveToFirst(); !authorsCursor.isAfterLast(); authorsCursor.moveToNext()) {
+						    toast.append(", ")
+						    	.append(authorsCursor.getString(authorsCursor.getColumnIndex(AuthorTable.COLUMN_FIRSTNAME)))
+						    	.append(" ")
+						    	.append(authorsCursor.getString(authorsCursor.getColumnIndex(AuthorTable.COLUMN_LASTNAME)));
+						}
+						
+						Toast.makeText(this, toast, Toast.LENGTH_SHORT).show();
 					}
 				}
 				
@@ -182,29 +212,29 @@ public class FileBrowserActivity extends ActionBarActivity {
 		}
 	}
 
-	@Override
-	public boolean onCreateOptionsMenu(Menu menu) {
-		MenuInflater menuInflater = getMenuInflater();
-		menuInflater.inflate(R.menu.file_browser, menu);
-		return super.onCreateOptionsMenu(menu);
-	}
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+	MenuInflater menuInflater = getMenuInflater();
+	menuInflater.inflate(R.menu.file_browser, menu);
+	return super.onCreateOptionsMenu(menu);
+    }
 
-	@Override
-	public boolean onOptionsItemSelected(MenuItem item) {
-		switch (item.getItemId()) {
-		case android.R.id.home:
-			finish();
-			break;
-		case R.id.menu_parent_directory:
-			if (!currentPath.equals("/")) {
-				browseTo(new File(currentPath).getParentFile());
-			}
-			break;
-		case R.id.menu_scan:
-			Toast.makeText(this, "Tapped share", Toast.LENGTH_SHORT).show();
-			break;
-		}
-		return super.onOptionsItemSelected(item);
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+	switch (item.getItemId()) {
+	case android.R.id.home:
+	    finish();
+	    break;
+	case R.id.menu_parent_directory:
+	    if (!currentPath.equals("/")) {
+		browseTo(new File(currentPath).getParentFile());
+	    }
+	    break;
+	case R.id.menu_scan:
+	    Toast.makeText(this, "Tapped share", Toast.LENGTH_SHORT).show();
+	    break;
 	}
+	return super.onOptionsItemSelected(item);
+    }
 
 }
