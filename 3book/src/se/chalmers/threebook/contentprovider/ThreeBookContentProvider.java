@@ -86,7 +86,7 @@ public class ThreeBookContentProvider extends ContentProvider {
 	    checkBookColumns(projection);
 	    queryBuilder.setTables(BookTable.TABLE_BOOKS);
 
-	    queryBuilder.appendWhereEscapeString(BookTable.COLUMN_ID + " = "
+	    queryBuilder.appendWhere(BookTable.COLUMN_ID + " = "
 		    + uri.getLastPathSegment());
 	    break;
 	case AUTHORS:
