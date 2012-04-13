@@ -8,7 +8,7 @@ import nl.siegmann.epublib.domain.Book;
  * probably never a good idea. 
  */
 public class MyBook {
-	private static final MyBook myBook = new MyBook();
+	private static final MyBook myBook = new MyBook(); //XXX tänk på att denna lever genom hela appen axel även fast dess skapar dödas
 	private Book book = null;
 	
 	private MyBook(){}

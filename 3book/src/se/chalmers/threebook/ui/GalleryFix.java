@@ -1,12 +1,9 @@
 package se.chalmers.threebook.ui;
 
-import se.chalmers.threebook.R;
 import android.content.Context;
 import android.os.SystemClock;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
-import android.view.View;
-import android.view.animation.Transformation;
 import android.widget.Gallery;
 
 public class GalleryFix extends Gallery {

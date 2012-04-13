@@ -24,7 +24,6 @@ import se.chalmers.threebook.ui.util.BookNavigationRow;
 import se.chalmers.threebook.util.AnimationHelper;
 import se.chalmers.threebook.util.Helper;
 import android.app.ActionBar;
-import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
@@ -41,7 +40,6 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnLongClickListener;
 import android.view.View.OnTouchListener;
-import android.view.Window;
 import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.ImageView.ScaleType;
@@ -81,7 +79,6 @@ public class ReadActivity extends ActionBarActivity {
 
 	private ContentStream stream = null;
 
-	private ImageView imgPageRender;
 	private HtmlRenderer render;
 	private RenderedPage renderedPage;
 	private int chapterSize;
@@ -123,26 +120,19 @@ public class ReadActivity extends ActionBarActivity {
 		try {
 
 			Point p = Helper.getDisplaySize(this);
-			render = new HtmlRenderer(p.x, p.y);
+			render = new HtmlRenderer(this, p.x, p.y);
 			render.setHtmlSource(Helper.streamToString(new FileInputStream(
 					stream.jumpTo(index))));
 			pagerAdapter = new BookPageAdapter(this, render,
 					bookFlipper.getSideBuffer());
 			bookFlipper.setOnViewSwitchListener(new ViewSwitchListener() {
 				public void onSwitched(View view, int position) {
-					renderedPage = pagerAdapter.getItem(0);
-					if (renderedPage != null) {
-						imgPageRender.setImageBitmap(renderedPage.getBitmap());
-					}
-					imgPageRender.setVisibility(View.VISIBLE);
 
 				}
 			});
 			bookFlipper
 					.setAdapter(pagerAdapter, BookPageAdapter.START_POSITION);
 
-			renderedPage = pagerAdapter.getItem(0);
-			imgPageRender.setImageBitmap(renderedPage.getBitmap());
 
 			dialog.dismiss();
 
@@ -160,7 +150,6 @@ public class ReadActivity extends ActionBarActivity {
 		setContentView(R.layout.activity_read);
 
 		layoutOverlay = (RelativeLayout) findViewById(R.id.lay_book_overlay);
-		imgPageRender = (ImageView) findViewById(R.id.img_page_render);
 		bookFlipper = (FlipperView) findViewById(R.id.pgr_book);
 
 		navigationList = new ArrayList<BookNavigationRow>(3);
@@ -178,7 +167,7 @@ public class ReadActivity extends ActionBarActivity {
 
 	
 		// TODO longclick fastflipp
-		imgPageRender.setOnLongClickListener(new OnLongClickListener() {
+		bookFlipper.setOnLongClickListener(new OnLongClickListener() {
 			public boolean onLongClick(View v) {
 				Log.d("bookView", "long press invoked");
 				return true;
@@ -193,7 +182,7 @@ public class ReadActivity extends ActionBarActivity {
 			bookFlipper.setSelection(0);
 		}
 
-		imgPageRender.setOnTouchListener(new View.OnTouchListener() {
+		bookFlipper.setOnTouchListener(new View.OnTouchListener() {
 
 			public boolean onTouch(View v, MotionEvent event) {
 
@@ -204,11 +193,6 @@ public class ReadActivity extends ActionBarActivity {
 				switch (event.getAction()) {
 
 				case MotionEvent.ACTION_MOVE:
-					if (!menuShown) {
-						if (imgPageRender.getVisibility() != View.INVISIBLE) {
-							imgPageRender.setVisibility(View.INVISIBLE);
-						}
-					}
 					return true;
 				case MotionEvent.ACTION_DOWN:
 					lastDownX = event.getX();
@@ -249,7 +233,7 @@ public class ReadActivity extends ActionBarActivity {
 					IntentKey.FILE_PATH.toString());
 			// int lastIndex = getFromDatabase.lastChapterForUserDude(); // TODO
 			// implement this plz
-			int lastIndex = 2;
+			int lastIndex = 7;
 
 			try { // Open and store ye olde book
 				long t1 = System.currentTimeMillis();
@@ -285,8 +269,6 @@ public class ReadActivity extends ActionBarActivity {
 			handle.setImageResource(R.drawable.handle_bar_fg);
 			handle.setScaleType(ScaleType.CENTER);
 			
-			View lastView = null;
-			BookNavigationRow lastRow = null;
 			
 			final int loopSize = 3; //XXX levels down
 
@@ -322,18 +304,15 @@ public class ReadActivity extends ActionBarActivity {
 				
 				navigationList.add(navRow);
 				RelativeLayout.LayoutParams rowParams = new LayoutParams(
-						LayoutParams.FILL_PARENT, navRowHeight);
+						android.view.ViewGroup.LayoutParams.FILL_PARENT, navRowHeight);
 				rowParams.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
-				
-				lastView = view;
-				lastRow = navRow;
 
 				layoutOverlay.addView(view, rowParams);
 			}
 			
 			navigationList.get(loopSize-1).getView().setVisibility(View.VISIBLE);//make first row visible
 			
-			handleParams = new LayoutParams(LayoutParams.FILL_PARENT,
+			handleParams = new LayoutParams(android.view.ViewGroup.LayoutParams.FILL_PARENT,
 					(int) getResources().getDimension(
 							R.dimen.book_nav_handle_height));
 			handleParams.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
@@ -432,7 +411,7 @@ public class ReadActivity extends ActionBarActivity {
 			display(lastIndex);
 			break;
 		case GO_TO_TOC_INDEX:
-			int id = (int) (Integer) getIntent().getSerializableExtra(
+			int id = (Integer) getIntent().getSerializableExtra(
 					IntentKey.TOC_INDEX.toString());
 			String anchor = (String) getIntent().getSerializableExtra(
 					IntentKey.TOC_ANCHOR.toString());
@@ -489,7 +468,6 @@ public class ReadActivity extends ActionBarActivity {
 
 	private void nextPage() {
 		if (!endOfFile) {
-			imgPageRender.setVisibility(View.INVISIBLE);
 			bookFlipper.nextScreen();
 		} else {
 			// /TODO nextChapter
@@ -497,7 +475,6 @@ public class ReadActivity extends ActionBarActivity {
 	}
 
 	private void prevPage() {
-		imgPageRender.setVisibility(View.INVISIBLE);
 		bookFlipper.prevousScreen();
 	}
 

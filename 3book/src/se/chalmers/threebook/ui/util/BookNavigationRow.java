@@ -1,17 +1,11 @@
 package se.chalmers.threebook.ui.util;
 
-import se.chalmers.threebook.R;
 import se.chalmers.threebook.adapters.BookNavAdapter;
 import se.chalmers.threebook.ui.GalleryFix;
 import android.util.Log;
-import android.view.MotionEvent;
 import android.view.View;
-import android.view.View.OnTouchListener;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemSelectedListener;
-import android.widget.RelativeLayout;
-import android.widget.RelativeLayout.LayoutParams;
-import android.widget.Scroller;
 import android.widget.TextView;
 
 public class BookNavigationRow {

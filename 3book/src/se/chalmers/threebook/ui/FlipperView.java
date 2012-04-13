@@ -128,6 +128,7 @@ public class FlipperView extends AdapterView<Adapter> {
 		return mSideBuffer;
 	}
 
+	@Override
 	public void onConfigurationChanged(Configuration newConfig) {
 		if (newConfig.orientation != mLastOrientation) {
 			mLastOrientation = newConfig.orientation;
@@ -634,7 +635,7 @@ public class FlipperView extends AdapterView<Adapter> {
 	}
 
 	private View setupChild(View child, boolean addToEnd, boolean recycle) {
-		ViewGroup.LayoutParams p = (ViewGroup.LayoutParams) child
+		ViewGroup.LayoutParams p = child
 				.getLayoutParams();
 		if (p == null) {
 			p = new AbsListView.LayoutParams(

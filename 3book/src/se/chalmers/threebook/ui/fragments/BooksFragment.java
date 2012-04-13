@@ -16,6 +16,7 @@ public class BooksFragment extends Fragment {
 	private CollectionBookAdapter adapter;
 	private ListView list;
 	
+	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState) {
 		if (container == null) {
@@ -29,7 +30,7 @@ public class BooksFragment extends Fragment {
             return null;
         }
 		
-		View view = (LinearLayout)inflater.inflate(R.layout.fragment_books, container, false);
+		View view = inflater.inflate(R.layout.fragment_books, container, false);
 		
 		list = (ListView) view.findViewById(R.id.lst_collection_books);
 		

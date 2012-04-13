@@ -3,14 +3,16 @@
     android:id="@+id/lay_read"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
-    android:background="@color/default_background"
-    android:orientation="vertical" >
+    android:background="@color/default_background" >
 
     <se.chalmers.threebook.ui.FlipperView
         android:id="@+id/pgr_book"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
-        android:visibility="visible" />
+         />
+    
+    
+    
 
     <!--
     <WebView
@@ -21,12 +23,8 @@
         android:visibility="invisible" />
     -->
 
-    <ImageView
-        android:id="@+id/img_page_render"
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
-        android:background="@color/default_background" />
-
+    
+    <!--<include layout="@layout/view_book_image" android:layout_width="fill_parent" android:id="@+id/lay_book_image_wrapper"  />-->
     <RelativeLayout
         android:id="@+id/lay_book_overlay"
         android:layout_width="fill_parent"

@@ -18,7 +18,6 @@ import android.view.MenuInflater;
 import android.view.View;
 import android.widget.TabHost;
 import android.widget.TabHost.TabContentFactory;
-import android.widget.TabWidget;
 import android.widget.TextView;
 
 public class ActionBarTabActivity extends FragmentActivity implements

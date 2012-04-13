@@ -18,24 +18,24 @@
     <string name="bookmark">Bookmark</string>
     <string name="more">More</string>
     <string name="day_night_mode">Day/Night mode</string>
-    <string name="loading_please_wait">Loading. Please wait&#8230;</string>
+    <string name="loading_please_wait">Loading. Please wait…</string>
     <string name="table_of_contents">Table of contents</string>
     <string name="zoom_in">Zoom in</string>
     <string name="zoom_out">Zoom out</string>
     <string name="select_text">Select text</string>
+    <string name="image">Image</string>
     <string name="select_text_description">Start draging from where you would like to select your text</string>
-    
-    
-     <!-- COMMON -->
-     <string name="ok">Ok</string>
-     <string name="cancle">Cancel</string>
-    
+
+    <!-- COMMON -->
+    <string name="ok">Ok</string>
+    <string name="cancle">Cancel</string>
+    <string name="view">View</string>
+
     <!-- ERRORS -->
     <string name="err_general">Error</string>
     <string name="err_file_browser_general">Unable to access file/folder</string>
     <string name="err_image">Unable to open image</string>
-     
-     
+
     <!-- SETTINGS -->
     <string name="reader_settings">Reader settings</string>
     <string name="adjust_margins">Adjust margins</string>
@@ -50,9 +50,9 @@
     <string name="margin_leftr_right">Left &amp; Right margin</string>
     <string name="page_animation_speed">Animation speed</string>
     <string name="page_animation_speed_summary">Adjust the speed of page turn animations</string>
-    
+
     <!-- MENU -->
-	<string name="menu_refresh">Refresh</string>
+    <string name="menu_refresh">Refresh</string>
     <string name="menu_search">Search</string>
     <string name="menu_share">Share</string>
     <string name="control_next_chapter">Next</string>
@@ -62,4 +62,5 @@
     <string name="open_at_startup">Open at startup</string>
     <string name="open_at_startup_on">Opens the last read book when application starts</string>
     <string name="open_at_startup_off">Opens the main screen when application starts</string>
+
 </resources>

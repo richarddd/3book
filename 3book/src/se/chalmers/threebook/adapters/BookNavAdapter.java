@@ -2,24 +2,13 @@ package se.chalmers.threebook.adapters;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
-
 import se.chalmers.threebook.R;
-import se.chalmers.threebook.ui.HorizontalListView;
 import se.chalmers.threebook.ui.util.BookNavItem;
-import se.chalmers.threebook.util.Helper;
 import android.content.Context;
-import android.graphics.Color;
-import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AbsListView;
-import android.widget.AbsListView.OnScrollListener;
-import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.Gallery;
-import android.widget.ImageView;
 import android.widget.TextView;
 
 public class BookNavAdapter extends BaseAdapter {

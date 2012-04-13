@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.util.List;
 
 import se.chalmers.threebook.model.Bookmark;
-import se.chalmers.threebook.model.TocReference;
 
 public interface ContentStream {
 	public String next() throws IOException;

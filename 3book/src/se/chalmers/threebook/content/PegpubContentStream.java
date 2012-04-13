@@ -12,8 +12,6 @@ import nl.siegmann.epublib.domain.Book;
 import nl.siegmann.epublib.domain.Resource;
 import nl.siegmann.epublib.domain.TOCReference;
 import se.chalmers.threebook.model.Bookmark;
-import se.chalmers.threebook.model.EpubTocReference;
-import se.chalmers.threebook.model.TocReference;
 import se.chalmers.threebook.util.HtmlParser;
 import android.util.Log;
 

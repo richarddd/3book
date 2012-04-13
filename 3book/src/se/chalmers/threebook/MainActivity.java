@@ -1,8 +1,6 @@
 package se.chalmers.threebook;
 
 import java.util.List;
-import java.util.ListResourceBundle;
-
 import se.chalmers.threebook.R;
 import se.chalmers.threebook.adapters.RecentBookAdapter;
 import se.chalmers.threebook.ui.HorizontalListView;
@@ -66,7 +64,7 @@ public class MainActivity extends ActionBarActivity {
 		laySettings.setOnClickListener(new StartOnClick(PreferencesActivity.class));
 		//laySettings.setOnClickListener(new StartOnClick(DisplayActivity.class));
 		layCollection.setOnClickListener(new StartOnClick(CollectionActivity.class));
-		layFavourites.setOnClickListener(new StartOnClick(TestActivity.class));
+		layFavourites.setOnClickListener(new StartOnClick(FavouritesActivity.class));
 		
 		List<RecentBook> bookList = adapter.getItems();
 		

@@ -11,6 +11,7 @@ import android.widget.LinearLayout;
 public class TagsFragment extends Fragment {
 	
 	
+	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState) {
 		if (container == null) {
@@ -23,7 +24,7 @@ public class TagsFragment extends Fragment {
             // the view hierarchy; it would just never be used.
             return null;
         }
-		return (LinearLayout)inflater.inflate(R.layout.fragment_tags, container, false);
+		return inflater.inflate(R.layout.fragment_tags, container, false);
 	}
 
 	public static String getName() {
