@@ -145,9 +145,8 @@ public class ThreeBookContentProvider extends ContentProvider {
 	case BOOKS:
 	    id = db.insert(BookTable.TABLE_BOOKS, null, values);
 	    break;
-	case AUTHORS:
-	    Long bookId = values.getAsLong(BookAuthorsTable.COLUMN_BOOK);
-	    values.remove(BookAuthorsTable.COLUMN_BOOK);
+	case BOOK_AUTHORS:
+	    String bookId = uri.getLastPathSegment();
 
 	    db.beginTransaction();
 	    try {
@@ -417,5 +416,9 @@ public class ThreeBookContentProvider extends ContentProvider {
 			"Unknown columns in projection");
 	    }
 	}
+    }
+
+    public DBHelper getOpenHelperForTest() {
+	return database;
     }
 }
