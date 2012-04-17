@@ -1,5 +1,6 @@
 package se.chalmers.threebook.model;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -11,7 +12,7 @@ public class Book {
 //	private Date published;
 //	private Date lastRead;
 //	private Format format;
-//	private File source;
+	private String source;
 //	private int rating;
 //	private File cover;
 //	private ContentStream contentStream;
@@ -74,14 +75,14 @@ public class Book {
 //		return this;
 //	}
 //
-//	public File getSource() {
-//		return source;
-//	}
-//
-//	public Book setSource(File source) {
-//		this.source = source;
-//		return this;
-//	}
+	public String getSource() {
+		return source;
+	}
+
+	public Book setSource(String source) {
+		this.source = source;
+		return this;
+	}
 //
 //	public int getRating() {
 //		return rating;

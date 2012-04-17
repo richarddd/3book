@@ -158,16 +158,16 @@ public class FileBrowserActivity extends ActionBarActivity {
 				//Insert book with title
 				ContentValues values = new ContentValues();
 				values.put(BookTable.COLUMN_TITLE, book.getTitle());
+				values.put(BookTable.COLUMN_SOURCE, book.getSource());
 				Uri bookUid = getContentResolver().insert(ThreeBookContentProvider.BOOK_URI, values);
 				Long bookId = Long.parseLong(bookUid.getLastPathSegment());
 				
 				//Store book authors
 				for(Author a : book.getAuthors()) {
         				ContentValues authorValues = new ContentValues();
-        				authorValues.put(BookAuthorsTable.COLUMN_BOOK, bookId);
         				authorValues.put(AuthorTable.COLUMN_FIRSTNAME, a.getFirstName());
         				authorValues.put(AuthorTable.COLUMN_LASTNAME, a.getLastName());
-        				getContentResolver().insert(ThreeBookContentProvider.AUTHOR_URI, authorValues);
+        				getContentResolver().insert(Uri.withAppendedPath(ThreeBookContentProvider.BOOK_AUTHORS_URI, String.valueOf(bookId)), authorValues);
 				}
 				
 				//Display all books and authors
@@ -177,6 +177,7 @@ public class FileBrowserActivity extends ActionBarActivity {
 					for(cursor.moveToFirst(); !cursor.isAfterLast(); cursor.moveToNext()) {
 						long id = cursor.getLong(cursor.getColumnIndexOrThrow(BookTable.COLUMN_ID));
 						String title = cursor.getString(cursor.getColumnIndexOrThrow(BookTable.COLUMN_TITLE));
+						String path = cursor.getString(cursor.getColumnIndex(BookTable.COLUMN_SOURCE));
 						
 						Cursor authorsCursor = getContentResolver().query(Uri.withAppendedPath(ThreeBookContentProvider.BOOK_AUTHORS_URI, String.valueOf(id)), null, null, null, null);
 						
@@ -184,7 +185,9 @@ public class FileBrowserActivity extends ActionBarActivity {
 						toast.append("Id: ")
 							.append(id)
 							.append(" Title: ")
-							.append(title);
+							.append(title)
+							.append("Path: ")
+							.append(path);
 						
 						for(authorsCursor.moveToFirst(); !authorsCursor.isAfterLast(); authorsCursor.moveToNext()) {
 						    toast.append(", ")

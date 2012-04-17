@@ -18,7 +18,8 @@ public class BookTable {
 
 	private static final String DATABASE_CREATE = "CREATE TABLE " + TABLE_BOOKS
 			+ "( " + COLUMN_ID + " integer primary key autoincrement, "
-			+ COLUMN_TITLE + " text not null);";
+			+ COLUMN_TITLE + " text not null, "
+			+ COLUMN_SOURCE + " text not null);";
 
 	public static void onCreate(SQLiteDatabase db) {
 		db.execSQL(DATABASE_CREATE);

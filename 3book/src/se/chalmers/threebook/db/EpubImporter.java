@@ -55,7 +55,8 @@ public class EpubImporter implements Importer {
 
 	public Book createBook() {
 		Book book = new Book()
-			.setTitle(readTitle());
+			.setTitle(readTitle())
+			.setSource(path.getPath());
 		
 		List<Author> authors = book.getAuthors();
 		for(Author a : readAuthors()) {

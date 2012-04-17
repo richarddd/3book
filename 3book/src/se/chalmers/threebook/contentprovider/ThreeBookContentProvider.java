@@ -102,9 +102,11 @@ public class ThreeBookContentProvider extends ContentProvider {
 	    checkColumns(AuthorTable.TABLE_AUTHORS, projection);
 
 	    if (projection == null) {
-		projection = new String[] { AuthorTable.COLUMN_ID,
+		projection = new String[] {
+			AuthorTable.COLUMN_ID,
 			AuthorTable.COLUMN_FIRSTNAME,
-			AuthorTable.COLUMN_LASTNAME };
+			AuthorTable.COLUMN_LASTNAME
+	    	};
 	    }
 
 	    // FROM author_table
@@ -175,7 +177,7 @@ public class ThreeBookContentProvider extends ContentProvider {
 		ContentValues joinValues = new ContentValues();
 		joinValues.put(BookAuthorsTable.COLUMN_BOOK, bookId);
 		joinValues.put(BookAuthorsTable.COLUMN_AUTHOR, id);
-		Long baId = db.insert(BookAuthorsTable.TABLE_BOOK_AUTHORS,
+		db.insert(BookAuthorsTable.TABLE_BOOK_AUTHORS,
 			null, joinValues);
 
 		db.setTransactionSuccessful();
@@ -398,8 +400,11 @@ public class ThreeBookContentProvider extends ContentProvider {
 
 	// determine available columns
 	if (table.equals(BookTable.TABLE_BOOKS)) {
-	    available = new String[] { BookTable.COLUMN_ID,
-		    BookTable.COLUMN_TITLE };
+	    available = new String[] {
+		    BookTable.COLUMN_ID,
+		    BookTable.COLUMN_TITLE,
+		    BookTable.COLUMN_SOURCE
+	    };
 	} else if (table.equals(AuthorTable.TABLE_AUTHORS)) {
 	    available = new String[] { AuthorTable.COLUMN_ID,
 		    AuthorTable.COLUMN_FIRSTNAME, AuthorTable.COLUMN_LASTNAME };
