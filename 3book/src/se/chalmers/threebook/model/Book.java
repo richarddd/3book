@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
+import se.chalmers.threebook.content.ContentStream;
+
 public class Book {
 	private Long id;
 	private String title;
@@ -15,7 +17,7 @@ public class Book {
 	private String source;
 //	private int rating;
 //	private File cover;
-//	private ContentStream contentStream;
+	private Position position;
 	
 	public enum Format {
 		TXT, EPUB, PDF
@@ -101,13 +103,16 @@ public class Book {
 //		this.cover = cover;
 //		return this;
 //	}
-//
-//	public ContentStream getContentStream() {
-//		return contentStream;
-//	}
-//
-//	public Book setContentStream(ContentStream contentStream) {
-//		this.contentStream = contentStream;
-//		return this;
-//	}
+
+	public Position getPosition() {
+		return position;
+	}
+
+	public Book setPosition(Position position) {
+		this.position = position;
+		return this;
+	}
+	
+	
 }
+

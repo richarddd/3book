@@ -403,7 +403,8 @@ public class ThreeBookContentProvider extends ContentProvider {
 	    available = new String[] {
 		    BookTable.COLUMN_ID,
 		    BookTable.COLUMN_TITLE,
-		    BookTable.COLUMN_SOURCE
+		    BookTable.COLUMN_SOURCE,
+		    BookTable.COLUMN_POSITION
 	    };
 	} else if (table.equals(AuthorTable.TABLE_AUTHORS)) {
 	    available = new String[] { AuthorTable.COLUMN_ID,

@@ -16,6 +16,7 @@ import se.chalmers.threebook.db.EpubImporter;
 import se.chalmers.threebook.db.Importer;
 import se.chalmers.threebook.model.Author;
 import se.chalmers.threebook.model.Book;
+import se.chalmers.threebook.model.Position;
 import se.chalmers.threebook.ui.actionbarcompat.ActionBarActivity;
 import se.chalmers.threebook.util.Helper;
 import android.app.ActionBar;
@@ -155,10 +156,15 @@ public class FileBrowserActivity extends ActionBarActivity {
 				importer.focusOn(file);
 				Book book = importer.createBook();
 				
-				//Insert book with title
+				//Insert book 
 				ContentValues values = new ContentValues();
 				values.put(BookTable.COLUMN_TITLE, book.getTitle());
 				values.put(BookTable.COLUMN_SOURCE, book.getSource());
+				
+				Position p = new Position();
+				p.setCurrentNode(1337).setResourcePath("Leet");
+				values.put(BookTable.COLUMN_POSITION, p.getBlob());
+				
 				Uri bookUid = getContentResolver().insert(ThreeBookContentProvider.BOOK_URI, values);
 				Long bookId = Long.parseLong(bookUid.getLastPathSegment());
 				
@@ -178,19 +184,25 @@ public class FileBrowserActivity extends ActionBarActivity {
 						long id = cursor.getLong(cursor.getColumnIndexOrThrow(BookTable.COLUMN_ID));
 						String title = cursor.getString(cursor.getColumnIndexOrThrow(BookTable.COLUMN_TITLE));
 						String path = cursor.getString(cursor.getColumnIndex(BookTable.COLUMN_SOURCE));
+						Position pos = Position.fromBlob(cursor.getBlob(cursor.getColumnIndex(BookTable.COLUMN_POSITION)));
+						
 						
 						Cursor authorsCursor = getContentResolver().query(Uri.withAppendedPath(ThreeBookContentProvider.BOOK_AUTHORS_URI, String.valueOf(id)), null, null, null, null);
+						
+						
 						
 						StringBuilder toast = new StringBuilder();
 						toast.append("Id: ")
 							.append(id)
-							.append(" Title: ")
+							.append(", Title: ")
 							.append(title)
-							.append("Path: ")
-							.append(path);
+							.append(", Path: ")
+							.append(path)
+							.append(", Position: ")
+							.append(pos);
 						
 						for(authorsCursor.moveToFirst(); !authorsCursor.isAfterLast(); authorsCursor.moveToNext()) {
-						    toast.append(", ")
+						    toast.append(", Author: ")
 						    	.append(authorsCursor.getString(authorsCursor.getColumnIndex(AuthorTable.COLUMN_FIRSTNAME)))
 						    	.append(" ")
 						    	.append(authorsCursor.getString(authorsCursor.getColumnIndex(AuthorTable.COLUMN_LASTNAME)));
