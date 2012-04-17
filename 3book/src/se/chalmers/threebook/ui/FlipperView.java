@@ -64,6 +64,7 @@ public class FlipperView extends AdapterView<Adapter> {
 	private int mNextScreen = INVALID_SCREEN;
 	private boolean mFirstLayout = true;
 	private ViewSwitchListener mViewSwitchListener;
+	private OnTouchListener mTouchListener;
 	private Adapter mAdapter;
 	private int mLastScrollDirection;
 	private AdapterDataSetObserver mDataSetObserver;
@@ -96,7 +97,6 @@ public class FlipperView extends AdapterView<Adapter> {
 
 	}
 
-
 	public FlipperView(Context context) {
 		super(context);
 		mSideBuffer = 2;
@@ -123,8 +123,8 @@ public class FlipperView extends AdapterView<Adapter> {
 		mTouchSlop = configuration.getScaledTouchSlop();
 		mMaximumVelocity = configuration.getScaledMaximumFlingVelocity();
 	}
-	
-	public int getSideBuffer(){
+
+	public int getSideBuffer() {
 		return mSideBuffer;
 	}
 
@@ -188,101 +188,13 @@ public class FlipperView extends AdapterView<Adapter> {
 
 	@Override
 	public boolean onInterceptTouchEvent(MotionEvent ev) {
-		if (getChildCount() == 0)
-			return false;
-
-		if (mVelocityTracker == null) {
-			mVelocityTracker = VelocityTracker.obtain();
-		}
-		mVelocityTracker.addMovement(ev);
-
-		final int action = ev.getAction();
-		final float x = ev.getX();
-
-		switch (action) {
-		case MotionEvent.ACTION_DOWN:
-			/*
-			 * If being flinged and user touches, stop the fling. isFinished
-			 * will be false if being flinged.
-			 */
-			if (!mScroller.isFinished()) {
-				mScroller.abortAnimation();
-			}
-
-			// Remember where the motion event started
-			mLastMotionX = x;
-
-			mTouchState = mScroller.isFinished() ? TOUCH_STATE_REST
-					: TOUCH_STATE_SCROLLING;
-
-			break;
-
-		case MotionEvent.ACTION_MOVE:
-			final int xDiff = (int) Math.abs(x - mLastMotionX);
-
-			boolean xMoved = xDiff > mTouchSlop;
-
-			if (xMoved) {
-				// Scroll if the user moved far enough along the X axis
-				mTouchState = TOUCH_STATE_SCROLLING;
-			}
-
-			if (mTouchState == TOUCH_STATE_SCROLLING) {
-				// Scroll to follow the motion event
-				final int deltaX = (int) (mLastMotionX - x);
-				mLastMotionX = x;
-
-				final int scrollX = getScrollX();
-				if (deltaX < 0) {
-					if (scrollX > 0) {
-						scrollBy(Math.max(-scrollX, deltaX), 0);
-					}
-				} else if (deltaX > 0) {
-					final int availableToScroll = getChildAt(
-							getChildCount() - 1).getRight()
-							- scrollX - getWidth();
-					if (availableToScroll > 0) {
-						scrollBy(Math.min(availableToScroll, deltaX), 0);
-					}
-				}
-				return true;
-			}
-			break;
-
-		case MotionEvent.ACTION_UP:
-			if (mTouchState == TOUCH_STATE_SCROLLING) {
-				final VelocityTracker velocityTracker = mVelocityTracker;
-				velocityTracker.computeCurrentVelocity(1000, mMaximumVelocity);
-				int velocityX = (int) velocityTracker.getXVelocity();
-
-				if (velocityX > SNAP_VELOCITY && mCurrentScreen > 0) {
-					// Fling hard enough to move left
-					snapToScreen(mCurrentScreen - 1);
-				} else if (velocityX < -SNAP_VELOCITY
-						&& mCurrentScreen < getChildCount() - 1) {
-					// Fling hard enough to move right
-					snapToScreen(mCurrentScreen + 1);
-				} else {
-					snapToDestination();
-				}
-
-				if (mVelocityTracker != null) {
-					mVelocityTracker.recycle();
-					mVelocityTracker = null;
-				}
-			}
-
-			mTouchState = TOUCH_STATE_REST;
-
-			break;
-		case MotionEvent.ACTION_CANCEL:
-			mTouchState = TOUCH_STATE_REST;
-		}
+		//return touchReceived(ev);
 		return false;
 	}
+	
 
-	@Override
-	public boolean onTouchEvent(MotionEvent ev) {
+
+	public boolean touchReceived(MotionEvent ev) {
 		if (getChildCount() == 0)
 			return false;
 
@@ -340,7 +252,7 @@ public class FlipperView extends AdapterView<Adapter> {
 						scrollBy(Math.min(availableToScroll, deltaX), 0);
 					}
 				}
-				return true;
+				return false;
 			}
 			break;
 
@@ -376,6 +288,19 @@ public class FlipperView extends AdapterView<Adapter> {
 		}
 		return true;
 	}
+
+//	@Override
+//	public boolean onTouchEvent(MotionEvent ev) { //is called as soon as we touch
+//		if(mTouchListener == null){
+//			return touchReceived(ev);
+//		}else{
+//			return mTouchListener.onTouch(this, ev);
+//		}
+//	}
+//	
+//	@Override public void setOnTouchListener(OnTouchListener l) {
+//		this.mTouchListener = l;
+//	};
 
 	@Override
 	protected void onScrollChanged(int h, int v, int oldh, int oldv) {
@@ -635,8 +560,7 @@ public class FlipperView extends AdapterView<Adapter> {
 	}
 
 	private View setupChild(View child, boolean addToEnd, boolean recycle) {
-		ViewGroup.LayoutParams p = child
-				.getLayoutParams();
+		ViewGroup.LayoutParams p = child.getLayoutParams();
 		if (p == null) {
 			p = new AbsListView.LayoutParams(
 					ViewGroup.LayoutParams.FILL_PARENT,
@@ -660,13 +584,11 @@ public class FlipperView extends AdapterView<Adapter> {
 		public void onChanged() {
 			View v = getChildAt(mCurrentBufferIndex);
 			if (v != null) {
-				/*for (int index = 0; index < mAdapter.getCount(); index++) {
-					Log.d("this", "loop");
-					if (v.equals(mAdapter.getItem(index))) {
-						mCurrentAdapterIndex = index;
-						break;
-					}
-				}*/
+				/*
+				 * for (int index = 0; index < mAdapter.getCount(); index++) {
+				 * Log.d("this", "loop"); if (v.equals(mAdapter.getItem(index)))
+				 * { mCurrentAdapterIndex = index; break; } }
+				 */
 
 			}
 			resetFocus();

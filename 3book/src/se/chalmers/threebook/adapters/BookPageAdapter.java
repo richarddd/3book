@@ -41,6 +41,7 @@ public class BookPageAdapter extends BaseAdapter {
 	private int bookObjectHeight;
 	private int bookObjectSideMargin;
 	private Context context;
+	private Integer basicViewCount;
 	
 	private String imageString; //TODO add more support for strings here
 
@@ -111,30 +112,39 @@ public class BookPageAdapter extends BaseAdapter {
 		} else {
 			holder = (ViewHolder) convertView.getTag();
 		}
+		
+		if(basicViewCount == null){
+			basicViewCount = ((ViewGroup)convertView).getChildCount();
+		}
+		
+
 
 		if (curPage != null) {
 			holder.img.setImageBitmap(curPage.getBitmap());
 			
 			Map<Integer, RenderElement> specialObjectsMap = curPage.getSpecialObjectsMap();
 			
-			for(Integer i : specialObjectsMap.keySet()){
-				
-				View bookObject = mInflater.inflate(R.layout.view_book_object, null);	
-				RelativeLayout.LayoutParams params = new LayoutParams(android.view.ViewGroup.LayoutParams.FILL_PARENT, bookObjectHeight);
-				params.topMargin = i;
-				params.leftMargin = bookObjectSideMargin;
-				params.rightMargin = bookObjectSideMargin;
-				ImageView img = (ImageView) bookObject.findViewById(R.id.img_book_object);		
-				RenderElement element = specialObjectsMap.get(i);
-				Button btn = (Button) bookObject.findViewById(R.id.btn_view_book_object);
-				if(element instanceof ImageElement){
-					String imgFilePath = new File(context.getCacheDir(), MyBook.get().book().getTitle()+"/"+((ImageElement)element).getUrl()).getAbsolutePath();	
-					img.setImageBitmap(BitmapFactory.decodeFile(imgFilePath));
-					btn.setText(btn.getText()+ " "+imageString);
-					btn.setOnClickListener(new ImageObjectClickListener(imgFilePath));		
-				}	
-				bookObject.setLayoutParams(params);
-				((ViewGroup)convertView).addView(bookObject, params);
+			if(specialObjectsMap.isEmpty() && ((ViewGroup)convertView).getChildCount() != basicViewCount){
+				((ViewGroup)convertView).removeViews(basicViewCount, ((ViewGroup)convertView).getChildCount()-1);
+			}else{
+				for(Integer i : specialObjectsMap.keySet()){
+					
+					View bookObject = mInflater.inflate(R.layout.view_book_object, null);	
+					RelativeLayout.LayoutParams params = new LayoutParams(android.view.ViewGroup.LayoutParams.FILL_PARENT, bookObjectHeight);
+					params.topMargin = i;
+					params.leftMargin = bookObjectSideMargin;
+					params.rightMargin = bookObjectSideMargin;
+					ImageView img = (ImageView) bookObject.findViewById(R.id.img_book_object);		
+					RenderElement element = specialObjectsMap.get(i);
+					Button btn = (Button) bookObject.findViewById(R.id.btn_view_book_object);
+					if(element instanceof ImageElement){
+						img.setImageBitmap(((ImageElement)element).getBitmap());
+						btn.setText(btn.getText()+ " "+imageString);
+						btn.setOnClickListener(new ImageObjectClickListener(((ImageElement)element).getAbsoluteUrl()));		
+					}	
+					bookObject.setLayoutParams(params);
+					((ViewGroup)convertView).addView(bookObject, params);
+				}
 			}
 			
 		}

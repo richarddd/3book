@@ -23,6 +23,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Paint;
+import android.graphics.Rect;
 import android.graphics.Typeface;
 import android.util.Log;
 
@@ -36,12 +37,17 @@ import android.util.Log;
 public class HtmlRenderer{
 
 	private static final int RENDER_LIST_INITIAL_CAPACITY = 2048;
-	private static final int WORD_ROW_LIST_INITIAL_CAPACITY = 10; //not likley to have more then 10 words in a row
+	private static final int WORD_ROW_LIST_INITIAL_CAPACITY = 10;
+	private static final int BOOK_OBJECT_HEIGHT_DP = 191;
+	private static final int IMAGE_HEIGHT_LIMIT_DP = 400;
+
 	
+	private int imageHeightLimit;
 	private int bookObjectHeight;
 	private int viewWidth;
 	private int viewHeight;
 	private String htmlSource = "";
+	private File cacheDir;
 	private int baseTextSize = 26;
 	private int minWordSpace = 2;
 	private int rowMargin = (int) (baseTextSize * 0.2);
@@ -166,10 +172,11 @@ public class HtmlRenderer{
 	private void init(Context context, int viewWidth, int viewHeight){
 		this.viewWidth = viewWidth;
 		this.viewHeight = viewHeight;
-		this.bookObjectHeight = (int) Helper.dpToPx(context, 191);
+		this.bookObjectHeight = (int) Helper.dpToPx(context, BOOK_OBJECT_HEIGHT_DP);
+		this.cacheDir = context.getCacheDir();
+		this.imageHeightLimit = (int) Helper.dpToPx(context, IMAGE_HEIGHT_LIMIT_DP);
 
 		paint = new Paint();
-		paint.setFilterBitmap(true); //XXX testing if this renders bitmaps
 		paint.setColor(Color.BLACK);
 		paint.setAntiAlias(true);
 		paint.setStyle(Paint.Style.FILL);
@@ -359,14 +366,12 @@ public class HtmlRenderer{
 	}
 	
 	
-	private int renderTextRow(Canvas canvas, List<CharPosition> charList, List<TextElement> words, int totalRowHeight, boolean justified, int curWordSpace, float rowCurWidth, float wordCurWidth){
-		
-		
+	private int renderTextRow(Canvas canvas, List<WordPosition> wordList, List<TextElement> words, int totalRowHeight, boolean justified, int curWordSpace, float rowCurWidth, float wordCurWidth){
 		int count = words.size();
 		int rowHeight = 0;
-		float lastWidth = 0;
-		
+		float lastWidth = 0;	
 		float glue = curWordSpace;
+		int diffFix = 6;
 		
 		if(justified){
 			glue = ((viewWidth - (2 * widthMargin)) - (rowCurWidth - wordCurWidth - (curWordSpace * (count+1))))
@@ -374,7 +379,6 @@ public class HtmlRenderer{
 		}
 		
 		for(TextElement e : words){
-			//Log.d(tag, "Printing: "+e.getText());
 			setStyle(e.getStyle());
 			rowHeight = (int) (paint.getTextSize() + rowMargin);
 			float xPos = widthMargin + lastWidth;
@@ -382,13 +386,8 @@ public class HtmlRenderer{
 			canvas.drawText(e.getText(), xPos, yPos, paint);
 			float wordWidth = paint.measureText(e.getText());
 			lastWidth += wordWidth + glue;
-			char[] charArray = e.getText().toCharArray();
-			int wordLength = charArray.length;
-			float charWidth = wordWidth / wordLength;
-			for(char c : charArray){
-				charList.add(new CharPosition(xPos, yPos - paint.getTextSize(), xPos
-						+ charWidth, yPos, c));
-			}
+			wordList.add(new WordPosition(xPos, yPos-paint.getTextSize()+diffFix, xPos+wordWidth, yPos+diffFix, e.getText()));
+			wordList.add(new WordPosition(xPos+wordWidth, yPos-paint.getTextSize()+diffFix, xPos+wordWidth+glue, yPos+diffFix," ")); //add space as well
 			objectsIterated++;
 		}
 		
@@ -406,7 +405,7 @@ public class HtmlRenderer{
 
 		int drawFrom = objsByPage.get(pageNumber);
 
-		List<CharPosition> charList = new ArrayList<CharPosition>();
+		List<WordPosition> charList = new ArrayList<WordPosition>();
 		Map<Integer, RenderElement> specialObjectsMap = new HashMap<Integer, RenderElement>(5);
 
 		Bitmap bitmap = Bitmap.createBitmap(viewWidth, viewHeight, Bitmap.Config.ARGB_4444);
@@ -429,18 +428,23 @@ public class HtmlRenderer{
 		
 		List<TextElement> currentRowWords = new ArrayList<TextElement>(WORD_ROW_LIST_INITIAL_CAPACITY);
 		for(int i = drawFrom, size = printObjects.size(); i < size; i++){
+			
+			
 			float wordCurWidth = 0;
-			if(printObjects.get(i) instanceof BreakElement){		
+			
+			RenderElement curElement = printObjects.get(i);
+			
+			if(curElement instanceof BreakElement){		
 				if(!currentRowWords.isEmpty()){		
 					totalRowHeight = renderTextRow(canvas, charList, currentRowWords, totalRowHeight, false, curWordSpace, rowCurWidth, wordCurWidth);
 					rowCurWidth = 0;
 				}	
-				breakSize = ((BreakElement) printObjects.get(i)).getSpan() + rowMargin;		
+				breakSize = ((BreakElement) curElement).getSpan() + rowMargin;		
 				totalRowHeight += breakSize;
 				objectsIterated++; // this is also an object in the array
-			}else if(printObjects.get(i) instanceof TextElement){		
-				TextElement e = (TextElement) printObjects.get(i);
-				setStyle(e.getStyle());
+			}else if(curElement instanceof TextElement){		
+				
+				setStyle(((TextElement)curElement).getStyle());
 				curWordSpace = (int) (paint.getTextSize() * 0.2);
 				
 				if(firstRow){ //first row fix
@@ -451,34 +455,59 @@ public class HtmlRenderer{
 				if(curWordSpace < minWordSpace){
 					curWordSpace = minWordSpace;
 				}
-				wordCurWidth = paint.measureText(e.getText());
+				wordCurWidth = paint.measureText(((TextElement)curElement).getText());
 				rowCurWidth += wordCurWidth;
 				if(!firstWordInRow){
 					rowCurWidth += curWordSpace;
 				}
 				firstWordInRow = false;
-				if(rowCurWidth <= (viewWidth - (2 * widthMargin))){ //there is room for more words
-					currentRowWords.add(e);
-					//rowWordCount++;
-				}else{ //there is not room for more words
+				
+				//TODO fix if the word does not fit screen
+				if(wordCurWidth > (viewWidth - (2 * widthMargin))){ //the word itself does not fit, render it anyway
+					currentRowWords.add(((TextElement)curElement));
 					totalRowHeight = renderTextRow(canvas, charList, currentRowWords, totalRowHeight, true, curWordSpace, rowCurWidth, wordCurWidth); //we should print words justified
 					rowCurWidth = 0;
-					i--; //the last word we checked did not fit, so dont forget that
+				}else{
+					if(rowCurWidth <= (viewWidth - (2 * widthMargin))){ //there is room for more words
+						currentRowWords.add(((TextElement)curElement));
+					}else{ //there is not room for more words
+						totalRowHeight = renderTextRow(canvas, charList, currentRowWords, totalRowHeight, true, curWordSpace, rowCurWidth, wordCurWidth); //we should print words justified
+						rowCurWidth = 0;
+						i--; //the last word we checked did not fit, so dont forget that
+					}
 				}
-			}else if(printObjects.get(i) instanceof ImageElement){
+				
+				
+			}else if(curElement instanceof ImageElement){
+				
+				
+				boolean textBefore = false;
 				if(!currentRowWords.isEmpty()){		
 					totalRowHeight = renderTextRow(canvas, charList, currentRowWords, totalRowHeight, false, curWordSpace, rowCurWidth, wordCurWidth);
 					rowCurWidth = 0;
-				}	
+					textBefore = true;
+				}
 				objectsIterated++;
-				Log.d(tag, "Trying to print image");
-				if(viewHeight - totalRowHeight - heightMargin >= bookObjectHeight){				
-					specialObjectsMap.put(totalRowHeight, printObjects.get(i));
-					totalRowHeight += bookObjectHeight;
+				String imagePath = new File(cacheDir, MyBook.get().book().getTitle()+"/"+((ImageElement)curElement).getUrl()).getAbsolutePath();
+				Bitmap imageBitmap = BitmapFactory.decodeFile(imagePath);
+				((ImageElement)curElement).setBitmap(imageBitmap);
+				((ImageElement)curElement).setAbsoluteUrl(imagePath);
+				
+
+				//if bitmap is small enough to just draw on canvas
+				if(imageBitmap.getHeight() <= imageHeightLimit && imageBitmap.getWidth() <= viewWidth-(2 * widthMargin)){
+					Matrix matrix = new Matrix();
+					matrix.setTranslate((float) ((viewWidth-imageBitmap.getWidth())*0.5), totalRowHeight+(textBefore?baseTextSize:0));
+					canvas.drawBitmap(imageBitmap,matrix, null);
+					totalRowHeight += imageBitmap.getHeight() + rowMargin+(textBefore?baseTextSize:0);
 				}else{
-					Log.d(tag, "No Room for image, image on next page");
-					objectsIterated--;
-					break;
+					if(viewHeight - totalRowHeight - heightMargin >= bookObjectHeight+rowMargin+baseTextSize){				
+						specialObjectsMap.put(totalRowHeight+rowMargin+(textBefore?baseTextSize:0), printObjects.get(i)); //just ad
+						totalRowHeight += bookObjectHeight;
+					}else{ //no room for image, render on next page
+						objectsIterated--;
+						break;
+					}
 				}
 			}
 			
@@ -512,6 +541,8 @@ public class HtmlRenderer{
 		if(onDrawCompleteListener != null){
 			onDrawCompleteListener.drawComplete();
 		}
+		
+		Log.d(tag, "-------------------PAGE FINNISHED-----------------");
 		
 		return new RenderedPage(bitmap, drawFrom, charList, specialObjectsMap);
 	}

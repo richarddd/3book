@@ -8,7 +8,7 @@ import android.view.View;
 
 public class RenderedPage {
 	
-	private List<CharPosition> positionList;
+	private List<WordPosition> positionList;
 	private Bitmap bitmap;
 	private int nodePosition;
 	
@@ -16,17 +16,17 @@ public class RenderedPage {
 	private Map<Integer, RenderElement> specialObjectsMap;
 	
 	public RenderedPage(Bitmap bitmap, int nodePosition,
-			List<CharPosition> positionList, Map<Integer, RenderElement> specialObjectsMap) {
+			List<WordPosition> positionList, Map<Integer, RenderElement> specialObjectsMap) {
 		this.bitmap = bitmap;
 		this.nodePosition = nodePosition;
 		this.positionList = positionList;
 		this.specialObjectsMap = specialObjectsMap;
 	}
 	
-	public List<CharPosition> getPositionList() {
+	public List<WordPosition> getPositionList() {
 		return positionList;
 	}
-	public void setPositionList(List<CharPosition> positionList) {
+	public void setPositionList(List<WordPosition> positionList) {
 		this.positionList = positionList;
 	}
 	public Bitmap getBitmap() {

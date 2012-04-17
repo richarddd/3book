@@ -13,6 +13,7 @@ import se.chalmers.threebook.adapters.BookPageAdapter;
 import se.chalmers.threebook.content.ContentStream;
 import se.chalmers.threebook.content.EpubContentStream;
 import se.chalmers.threebook.content.MyBook;
+import se.chalmers.threebook.html.WordPosition;
 import se.chalmers.threebook.html.HtmlRenderer;
 import se.chalmers.threebook.html.RenderedPage;
 import se.chalmers.threebook.ui.FlipperView;
@@ -28,9 +29,15 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.AssetManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
 import android.graphics.Point;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.GestureDetector;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -41,6 +48,7 @@ import android.view.View;
 import android.view.View.OnLongClickListener;
 import android.view.View.OnTouchListener;
 import android.view.WindowManager;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.ImageView.ScaleType;
 import android.widget.LinearLayout;
@@ -61,6 +69,7 @@ public class ReadActivity extends ActionBarActivity {
 
 	private boolean menuShown = false;
 	private RelativeLayout layoutOverlay;
+	private FrameLayout layoutView;
 	// private HorizontalListView chapterListView;
 
 	// private Gallery galleryChapters;
@@ -70,9 +79,12 @@ public class ReadActivity extends ActionBarActivity {
 	private int currentPosition = 0;
 	private boolean endOfFile = false;
 	private float lastDownX;
-	private boolean touchingBook = false;
+	private float lastDownY;
+	private boolean touchingPage = false;
+	private boolean movingPage = false;
+	private int firstSelectionIndex = 0;
 	// private TextView txtBookNavChapterNo;
-	// private TextView txtBookNavChapterTitle;
+	// private TextView txtBookNavChapterTitle
 
 	private int navRowHeight;
 	private List<BookNavigationRow> navigationList;
@@ -82,12 +94,21 @@ public class ReadActivity extends ActionBarActivity {
 	private HtmlRenderer render;
 	private RenderedPage renderedPage;
 	private int chapterSize;
-	
+
 	RelativeLayout.LayoutParams handleParams;
 
-	//private Object navigationSelectListener;
+	// private Object navigationSelectListener;
 
 	private int handleHeight;
+
+	//selection stuff
+	private ImageView imgBackground;
+	private Canvas selectionCanvas;
+	private Paint selectionPaint;
+	private ImageView sectionHandleRight;
+	private ImageView sectionHandleLeft;
+
+	private Bitmap selectionBitmap;
 
 	public enum IntentType {
 		READ_BOOK_NOT_IN_LIBRARY, READ_BOOK_FROM_LIBRARY, GO_TO_TOC_INDEX;
@@ -95,7 +116,9 @@ public class ReadActivity extends ActionBarActivity {
 
 	public enum IntentKey {
 		INTENT_TYPE("MYINTENTTYPE"), TOC_INDEX("GETTOCINDEX"), TOC_ANCHOR(
-				"GETTOCANCHOR"), // optional anchor information
+				"GETTOCANCHOR"), // optional
+									// anchor
+									// information
 		FILE_PATH("GETFILETYPE");
 
 		private String id;
@@ -133,7 +156,6 @@ public class ReadActivity extends ActionBarActivity {
 			bookFlipper
 					.setAdapter(pagerAdapter, BookPageAdapter.START_POSITION);
 
-
 			dialog.dismiss();
 
 		} catch (FileNotFoundException e) {
@@ -149,30 +171,42 @@ public class ReadActivity extends ActionBarActivity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_read);
 
+		layoutView = (FrameLayout) findViewById(R.id.lay_read);
 		layoutOverlay = (RelativeLayout) findViewById(R.id.lay_book_overlay);
 		bookFlipper = (FlipperView) findViewById(R.id.pgr_book);
+		imgBackground = (ImageView) findViewById(R.id.img_book_bg);
+		
+		/*
+		Bitmap handleBitmapRight = BitmapFactory.decodeResource(getResources(), R.styleable.);
+		Bitmap handleBitmapLeft;
+		FrameLayout.LayoutParams selectionParams = new FrameLayout.LayoutParams(width, height)*/
+		
+		sectionHandleRight = new ImageView(this);
+		sectionHandleLeft = new ImageView(this);
 
 		navigationList = new ArrayList<BookNavigationRow>(3);
-		navRowHeight = (int) getResources().getDimension(R.dimen.book_nav_height);
+		navRowHeight = (int) getResources().getDimension(
+				R.dimen.book_nav_height);
 		Point size = Helper.getDisplaySize(this);
 		screenWidth = size.x;
 		screenHeight = size.y;
-		
+
+		selectionBitmap = Bitmap.createBitmap((int) screenWidth,
+				(int) screenHeight, Bitmap.Config.ARGB_4444);
+		selectionCanvas = new Canvas(selectionBitmap);
+		selectionPaint = new Paint();
+		selectionPaint.setColor(Color.YELLOW);
+		selectionPaint.setAntiAlias(true);
+		selectionPaint.setStyle(Paint.Style.FILL);
+
+		imgBackground.setImageBitmap(selectionBitmap);
+
 		setFullScreen(true);
 
 		if (Helper.SupportsNewApi()) {
 			ActionBar actionBar = getActionBar();
 			actionBar.setDisplayHomeAsUpEnabled(true);
 		}
-
-	
-		// TODO longclick fastflipp
-		bookFlipper.setOnLongClickListener(new OnLongClickListener() {
-			public boolean onLongClick(View v) {
-				Log.d("bookView", "long press invoked");
-				return true;
-			}
-		});
 
 		dialog = ProgressDialog.show(this, "",
 				this.getString(R.string.loading_please_wait), true);
@@ -182,33 +216,69 @@ public class ReadActivity extends ActionBarActivity {
 			bookFlipper.setSelection(0);
 		}
 
+		bookFlipper.setLongClickable(true);
+		// layoutView.setFocusable(true);
+
+		// TODO longclick fastflipp
+		bookFlipper.setOnLongClickListener(new OnLongClickListener() {
+			public boolean onLongClick(View v) {
+				if (!movingPage) {
+					Log.d(tag, "Long press invoked!");
+					selectText();
+				}
+				return true;
+			}
+		});
+
 		bookFlipper.setOnTouchListener(new View.OnTouchListener() {
 
 			public boolean onTouch(View v, MotionEvent event) {
 
-				if (!menuShown) {
-					bookFlipper.onTouchEvent(event);
+				if (!menuShown && !selectionMode) {
+					bookFlipper.touchReceived(event);
 				}
 
 				switch (event.getAction()) {
 
 				case MotionEvent.ACTION_MOVE:
-					return true;
+					if (selectionMode) {
+						int index = 0;
+						List<WordPosition> posList = pagerAdapter.getItem(0).getPositionList();
+						for (WordPosition cp : posList) {
+							index++;
+							if (cp.area.contains((int) lastDownX, (int) lastDownY)) {	
+								break;
+							}
+						}
+						int from = (index >= firstSelectionIndex?firstSelectionIndex:index);
+						for(int i = from; (int) i < from+Math.abs(index-firstSelectionIndex);i++){
+							selectionCanvas.drawRect(posList.get(i).area, selectionPaint);
+							imgBackground.setImageBitmap(selectionBitmap);
+						}
+						
+					}
+					movingPage = true;
+					break;
 				case MotionEvent.ACTION_DOWN:
 					lastDownX = event.getX();
-					touchingBook = true;
+					lastDownY = event.getY();
+					touchingPage = true;
 					break;
 				case MotionEvent.ACTION_UP:
-					touchingBook = false;
-					float diff = event.getX() / screenWidth;
-					float diffOld = lastDownX / screenWidth;
-					if (diff <= 0.33 && diffOld <= 0.33 && !menuShown) { // left
-						prevPage();
-					} else if (diff >= 0.66 && diffOld >= 0.66 && !menuShown) {// right
-						nextPage();
-					} else if (diff < 0.66 && diff > 0.33 && diffOld < 0.66
-							&& diffOld > 0.33) { // middle
-						showOverlay(!menuShown);
+					movingPage = false;
+					touchingPage = false;
+					if (!selectionMode) {
+						float diff = event.getX() / screenWidth;
+						float diffOld = lastDownX / screenWidth;
+						if (diff <= 0.33 && diffOld <= 0.33 && !menuShown) { // left
+							prevPage();
+						} else if (diff >= 0.66 && diffOld >= 0.66
+								&& !menuShown) {// right
+							nextPage();
+						} else if (diff < 0.66 && diff > 0.33 && diffOld < 0.66
+								&& diffOld > 0.33) { // middle
+							showOverlay(!menuShown);
+						}
 					}
 					break;
 				default:
@@ -262,17 +332,15 @@ public class ReadActivity extends ActionBarActivity {
 					R.dimen.book_nav_list_height);
 
 			View view = null;
-			
 
 			final ImageView handle = new ImageView(this);
 			handle.setBackgroundResource(R.drawable.action_bar_top_background);
 			handle.setImageResource(R.drawable.handle_bar_fg);
 			handle.setScaleType(ScaleType.CENTER);
-			
-			
-			final int loopSize = 3; //XXX levels down
 
-			for (int i = loopSize-1; i > -1; i--) {
+			final int loopSize = 3; // XXX levels down
+
+			for (int i = loopSize - 1; i > -1; i--) {
 
 				view = layoutInflater.inflate(R.layout.view_navigation_row,
 						null);
@@ -298,25 +366,32 @@ public class ReadActivity extends ActionBarActivity {
 						return false;
 					}
 				});
-				
+
 				BookNavigationRow navRow = new BookNavigationRow(view, gallery,
 						txtTitle, txtNumbering, adapter);
-				
+
 				navigationList.add(navRow);
 				RelativeLayout.LayoutParams rowParams = new LayoutParams(
-						android.view.ViewGroup.LayoutParams.FILL_PARENT, navRowHeight);
+						android.view.ViewGroup.LayoutParams.FILL_PARENT,
+						navRowHeight);
 				rowParams.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
 
 				layoutOverlay.addView(view, rowParams);
 			}
-			
-			navigationList.get(loopSize-1).getView().setVisibility(View.VISIBLE);//make first row visible
-			
-			handleParams = new LayoutParams(android.view.ViewGroup.LayoutParams.FILL_PARENT,
+
+			navigationList.get(loopSize - 1).getView()
+					.setVisibility(View.VISIBLE);// make
+													// first
+													// row
+													// visible
+
+			handleParams = new LayoutParams(
+					android.view.ViewGroup.LayoutParams.FILL_PARENT,
 					(int) getResources().getDimension(
 							R.dimen.book_nav_handle_height));
 			handleParams.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
-			handleHeight = (int)getResources().getDimension(R.dimen.book_nav_handle_height);
+			handleHeight = (int) getResources().getDimension(
+					R.dimen.book_nav_handle_height);
 			handleParams.bottomMargin = navRowHeight;
 			layoutOverlay.addView(handle, handleParams);
 
@@ -327,85 +402,109 @@ public class ReadActivity extends ActionBarActivity {
 				View currentView;
 				RelativeLayout.LayoutParams viewParams;
 				boolean isInBottom = true;
+
 				public boolean onTouch(View v, MotionEvent event) {
-					switch (event.getAction()) {	
+					switch (event.getAction()) {
 					case MotionEvent.ACTION_DOWN:
-						offset = handleHeight-(int)event.getY();
+						offset = handleHeight - (int) event.getY();
 						break;
 					case MotionEvent.ACTION_MOVE:
-						int value = (int) ((screenHeight-event.getRawY())-offset);
-						
-						if(value <= navRowHeight){ //dont drag less then 1st row
+						int value = (int) ((screenHeight - event.getRawY()) - offset);
+
+						if (value <= navRowHeight) { // dont drag less then 1st
+														// row
 							value = navRowHeight;
 							isInBottom = true;
-							if(currentView != null){ //make 1st invisible
+							if (currentView != null) { // make 1st invisible
 								currentView.setVisibility(View.INVISIBLE);
 							}
-						}else if(value >= navRowHeight*loopSize){ //and no longer then 3
-							value = navRowHeight*loopSize;
-						}else{
+						} else if (value >= navRowHeight * loopSize) { // and no
+																		// longer
+																		// then
+																		// 3
+							value = navRowHeight * loopSize;
+						} else {
 							isInBottom = false;
 						}
-						
-						//if 1st is invisible
-						if(!isInBottom && currentView != null && currentView.getVisibility() == View.INVISIBLE){
+
+						// if 1st is invisible
+						if (!isInBottom
+								&& currentView != null
+								&& currentView.getVisibility() == View.INVISIBLE) {
 							currentView.setVisibility(View.VISIBLE);
 						}
-						
+
 						handleParams.bottomMargin = value;
 						handle.setLayoutParams(handleParams);
-						int instanceNo = loopSize-(int) Math.floor(value/navRowHeight)-1;
-						
-						if(instanceNo < 0){
+						int instanceNo = loopSize
+								- (int) Math.floor(value / navRowHeight) - 1;
+
+						if (instanceNo < 0) {
 							instanceNo = 0;
 						}
-						
-						if(instanceNo != oldInstanceNo){
-							
-							//snap last view
-							if(currentView != null){
-								viewParams.bottomMargin = oldInstanceNo*navRowHeight;
+
+						if (instanceNo != oldInstanceNo) {
+
+							// snap last view
+							if (currentView != null) {
+								viewParams.bottomMargin = oldInstanceNo
+										* navRowHeight;
 								currentView.setLayoutParams(viewParams);
-								if(instanceNo > oldInstanceNo){
+								if (instanceNo > oldInstanceNo) {
 									currentView.setVisibility(View.INVISIBLE);
 								}
 							}
-							BookNavigationRow r = navigationList.get(instanceNo);
-							currentRow = r==null?currentRow:r;
+							BookNavigationRow r = navigationList
+									.get(instanceNo);
+							currentRow = r == null ? currentRow : r;
 							currentView = currentRow.getView();
 							currentView.setVisibility(View.VISIBLE);
-							viewParams = (LayoutParams) currentView.getLayoutParams();
+							viewParams = (LayoutParams) currentView
+									.getLayoutParams();
 						}
-					
-						viewParams.bottomMargin = value-navRowHeight;
+
+						viewParams.bottomMargin = value - navRowHeight;
 						currentView.setLayoutParams(viewParams);
-						
+
 						oldInstanceNo = instanceNo;
-						
+
 						break;
 					case MotionEvent.ACTION_UP:
-						int upValue = (int) ((screenHeight-event.getRawY())-offset);
-						int row = (int) Math.floor(upValue/navRowHeight)-1;
-						if(upValue <= navRowHeight*loopSize && upValue >= navRowHeight){ //if we are not in the end
-							if((upValue-navRowHeight) >= (navRowHeight*0.5)+(navRowHeight*row)){ //snap to top
-								snapTo(navRowHeight*(row+2), navRowHeight*(row+1));
-							}else{ //snap to bottom
-								snapTo(navRowHeight*(row+1), navRowHeight*row);
+						int upValue = (int) ((screenHeight - event.getRawY()) - offset);
+						int row = (int) Math.floor(upValue / navRowHeight) - 1;
+						if (upValue <= navRowHeight * loopSize
+								&& upValue >= navRowHeight) { // if
+																// we
+																// are
+																// not
+																// in
+																// the
+																// end
+							if ((upValue - navRowHeight) >= (navRowHeight * 0.5)
+									+ (navRowHeight * row)) { // snap to top
+								snapTo(navRowHeight * (row + 2), navRowHeight
+										* (row + 1));
+							} else { // snap to bottom
+								snapTo(navRowHeight * (row + 1), navRowHeight
+										* row);
 								currentView.setVisibility(View.INVISIBLE);
 							}
 						}
-						
+
 						break;
 					}
 					return true;
 				}
-				
-				private void snapTo(int handleTarget, final int viewTarget){
-					AnimationHelper.TargetMargin[] ta = {AnimationHelper.TargetMargin.BOTTOM};
-					currentView.startAnimation(AnimationHelper.animateMargin(currentView, viewParams.bottomMargin, viewTarget, 250, ta));
-					handle.startAnimation(AnimationHelper.animateMargin(handle, handleParams.bottomMargin, handleTarget, 250, ta));
+
+				private void snapTo(int handleTarget, final int viewTarget) {
+					AnimationHelper.TargetMargin[] ta = { AnimationHelper.TargetMargin.BOTTOM };
+					currentView.startAnimation(AnimationHelper.animateMargin(
+							currentView, viewParams.bottomMargin, viewTarget,
+							250, ta));
+					handle.startAnimation(AnimationHelper.animateMargin(handle,
+							handleParams.bottomMargin, handleTarget, 250, ta));
 				}
-				
+
 			});
 
 			display(lastIndex);
@@ -425,7 +524,7 @@ public class ReadActivity extends ActionBarActivity {
 		new Runnable() {
 			public void run() {
 				int loopCount = 0;
-				while (touchingBook) {
+				while (touchingPage) {
 					try {
 						int sleepVal = 500 - (25 * loopCount);
 						Log.d("Should sleep in fastflip as", "Sleep value = "
@@ -472,6 +571,20 @@ public class ReadActivity extends ActionBarActivity {
 		} else {
 			// /TODO nextChapter
 		}
+	}
+
+	private void selectText() {
+		firstSelectionIndex = 0;
+		for (WordPosition cp : pagerAdapter.getItem(0).getPositionList()) {
+			firstSelectionIndex++;
+			if (cp.area.contains((int) lastDownX, (int) lastDownY)) {
+				Log.d(tag, "Touched " + cp.word);
+				selectionCanvas.drawRect(cp.area, selectionPaint);
+				imgBackground.setImageBitmap(selectionBitmap);
+				break;
+			}
+		}
+		selectionMode = true;
 	}
 
 	private void prevPage() {
@@ -535,17 +648,17 @@ public class ReadActivity extends ActionBarActivity {
 			break;
 		case R.id.menu_overflow:
 			Toast.makeText(this, "Tapped overflow", Toast.LENGTH_SHORT).show();
-			
-			//closeOptionsMenu();
-			//openOptionsMenu();
-			//getWindow().openPanel(Window.FEATURE_OPTIONS_PANEL, null);
+
+			// closeOptionsMenu();
+			// openOptionsMenu();
+			// getWindow().openPanel(Window.FEATURE_OPTIONS_PANEL, null);
 			break;
 		}
 		return super.onOptionsItemSelected(item);
 	}
 
-	
-	@Override //disable volume buttons
+	@Override
+	// disable volume buttons
 	public boolean onKeyDown(int keyCode, KeyEvent event) {
 		if (!menuShown && (keyCode == 25 || keyCode == 24)) {
 			return true;
@@ -555,20 +668,17 @@ public class ReadActivity extends ActionBarActivity {
 
 	@Override
 	public boolean onKeyUp(int keyCode, KeyEvent event) {
-		Log.d(tag, "Keycode is = "+keyCode);
-		if (keyCode == 82) {
-			if (!menuShown) {
-				//openOptionsMenu();
-				showOverlay(true);
-			} else {
-				showOverlay(false);
-			}
-			//getWindow().openPanel(Window.FEATURE_OPTIONS_PANEL, null);
-			return true;
-		} else if (keyCode == 4 && menuShown) {
+		if (keyCode == 4 && menuShown) {
 			showOverlay(false);
 			return true;
+		} else if (keyCode == 4 && selectionMode) {
+			selectionMode = false;
+			selectionCanvas.drawColor(Color.WHITE);
+			imgBackground.setImageBitmap(selectionBitmap);
+			// TODO clear selection
+			return true;
 		} else if (keyCode == 25 && !menuShown) {
+
 			prevPage();
 			return true;
 		} else if (keyCode == 24 && !menuShown) {

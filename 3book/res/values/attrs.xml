@@ -27,5 +27,13 @@
         <attr name="maskDrawable" format="reference" />
         <attr name="borderDrawable" format="reference" />
     </declare-styleable>
+    
+    <declare-styleable name="TextSelectHandleRight">
+        <attr name="@android:drawable/text_select_handle_right"/>
+    </declare-styleable>
+    
+    <declare-styleable name="TextSelectHandleLeft">
+        <attr name="@android:drawable/text_select_handle_left"/>
+    </declare-styleable>  
 
 </resources>
