@@ -8,4 +8,5 @@ public interface TableOfContents {
 	public int size();
 	public List<TocReference> getTocReferences();
 	public List<TocReference> getLinearToc();
+	public TocReference getSection(int index);
 }

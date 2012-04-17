@@ -31,8 +31,6 @@ public class HtmlRenderer {
 	private int heightMargin = 10;
 	private int widthMargin = 10;
 
-	
-
 	private float h1TextSize = (float) (baseTextSize * 2);
 	private float h2TextSize = (float) (baseTextSize * 1.5);
 	private float h3TextSize = (float) (baseTextSize * 1.2);

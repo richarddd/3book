@@ -38,6 +38,10 @@ public class EpubTableOfContents implements TableOfContents{
 		return linearToc;
 	}
 	
+	public TocReference getSection(int index){
+		return getLinearToc().get(index);
+	}
+	
 	private void buildLinearTocFrom(List<TocReference> refs){
 		for (TocReference r: refs){
 			linearToc.add(r);

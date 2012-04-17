@@ -12,16 +12,17 @@ import se.chalmers.threebook.model.TocReference;
  * @author monkeycid
  *
  */
-public class EpubNavigator implements BookNavigator{
+public class EpubNavigator implements BookNavigator {
 	
-	private PegpubContentStream content;
+	
+	private EpubContentStream content;
 	private HtmlRenderer renderer;
 	private TocReference curSection;
 	private int curPage;
 	private RenderedPage curRender;
 	
 	public EpubNavigator(String bookFileName, File cacheDir, HtmlRenderer renderer) throws IOException{
-		content = new PegpubContentStream(bookFileName, cacheDir);
+		content = new EpubContentStream(bookFileName, cacheDir);
 		this.renderer = renderer;
 	}
 	
@@ -72,6 +73,10 @@ public class EpubNavigator implements BookNavigator{
 		curPage = renderer.getPageNumber(curSection.getHtmlId());
 		return nextPage(); // XXX due to renderer currently returning previous page!
 		// TODO figure out a good way to distribute renders and page numbers - maybe send out renderEvents? 
+	}
+	
+	public TableOfContents getToc(){
+		return content.getToc();
 	}
 	
 }

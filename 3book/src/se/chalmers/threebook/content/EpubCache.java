@@ -51,6 +51,9 @@ public class EpubCache implements BookCache {
 			throw new IOException("Could not ensure presence of book cache dir: " + bookDir.getAbsolutePath());
 		}
 	}
+	public File getImage(String imageHref){
+		return cache.get(imageHref);
+	}
 	
 	public void cacheImage(String imageHref) throws IOException {
 		Resource r = book.getResources().getByHref(imageHref);

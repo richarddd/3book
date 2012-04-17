@@ -4,7 +4,7 @@ import java.io.IOException;
 
 
 import se.chalmers.threebook.content.ContentStream;
-import se.chalmers.threebook.content.EpubContentStream;
+import se.chalmers.threebook.content.OldEpubContentStream;
 import se.chalmers.threebook.content.MyBook;
 import se.chalmers.threebook.model.TocReference;
 import se.chalmers.threebook.ui.actionbarcompat.ActionBarActivity;
@@ -30,7 +30,7 @@ public class TocActivity extends ActionBarActivity {
 
 	}
 
-	EpubContentStream book;
+	OldEpubContentStream book;
 	ListView view;
 
 	@Override
@@ -42,7 +42,7 @@ public class TocActivity extends ActionBarActivity {
 
 		ContentStream book = null;
 		try {
-			book = new EpubContentStream(MyBook.get().book(), getCacheDir());
+			book = new OldEpubContentStream(MyBook.get().book(), getCacheDir());
 		} catch (IOException e) {
 			Log.d("3", "Could not open book in TocActivity, crapcakes!");
 			e.printStackTrace();

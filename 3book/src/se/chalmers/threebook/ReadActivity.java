@@ -9,11 +9,13 @@ import java.util.List;
 import nl.siegmann.epublib.epub.EpubReader;
 import se.chalmers.threebook.adapters.BookNavAdapter;
 import se.chalmers.threebook.adapters.BookPageAdapter;
+import se.chalmers.threebook.content.BookNavigator;
 import se.chalmers.threebook.content.ContentStream;
-import se.chalmers.threebook.content.EpubContentStream;
+import se.chalmers.threebook.content.OldEpubContentStream;
 import se.chalmers.threebook.content.MyBook;
 import se.chalmers.threebook.html.HtmlRenderer;
 import se.chalmers.threebook.html.RenderedPage;
+import se.chalmers.threebook.model.TocReference;
 import se.chalmers.threebook.ui.FlipperView;
 import se.chalmers.threebook.ui.FlipperView.ViewSwitchListener;
 import se.chalmers.threebook.ui.HorizontalListView;
@@ -64,11 +66,13 @@ public class ReadActivity extends ActionBarActivity {
 	private float lastDownX;
 	private boolean webviewOnTouch = false;
 
-	private ContentStream stream = null;
+	private ContentStream content = null;
 
 	private ImageView imgPageRender;
 	private HtmlRenderer render;
 	private RenderedPage renderedPage;
+	private TocReference curSection;
+	private BookNavigator navigator; // this is the cat's meow.
 
 	public enum IntentType {
 		READ_BOOK_NOT_IN_LIBRARY, READ_BOOK_FROM_LIBRARY, GO_TO_TOC_INDEX;
@@ -96,6 +100,8 @@ public class ReadActivity extends ActionBarActivity {
 		display(index, "");
 	}
 
+	
+	
 	public void display(int index, String anchor) {
 
 		try {
@@ -105,8 +111,12 @@ public class ReadActivity extends ActionBarActivity {
 				long t1 = System.currentTimeMillis();
 				Log.d(tag, "Initializing renderer.");
 				render = new HtmlRenderer(p.x, p.y);
-			render.setHtmlSource(Helper.streamToString(new FileInputStream(
-					stream.jumpTo(index))));
+				// Work here
+				curSection = navigator.toSection(navigator.getToc().getSection(index));				
+				render.setHtmlSource(curSection.getHtml(), curSection.getUniqueIdentifier());
+
+				//render.setHtmlSource(Helper.streamToString(new FileInputStream(stream.jumpTo(index))));
+			
 				long t2 = System.currentTimeMillis();
 				Log.d(tag, "Fetching data and rendering the HTML took " + (t2-t1) + "ms.");
 			}
@@ -183,8 +193,8 @@ public class ReadActivity extends ActionBarActivity {
 			public void onItemClick(AdapterView<?> parent, View view,
 					int position, long id) {
 				dialog.show();
-				Log.d(tag, "Clicking in chapscroller, id is: " + stream.getToc().getTocReferences().get((int)id).getId());
-				display((int) id, stream.getToc().getTocReferences().get((int)id).getId());
+				Log.d(tag, "Clicking in chapscroller, id is: " + content.getToc().getTocReferences().get((int)id).getId());
+				display((int) id, content.getToc().getTocReferences().get((int)id).getId());
 				showOverlay(false);
 
 			}
@@ -279,7 +289,7 @@ public class ReadActivity extends ActionBarActivity {
 				 */
 				MyBook.setBook(new EpubReader().readEpub(new FileInputStream(fileName)));
 				// stream = new EpubContentStream(MyBook.get().book(), this);
-				stream = new EpubContentStream(MyBook.get().book(),
+				content = new OldEpubContentStream(MyBook.get().book(),
 						getCacheDir());
 				long t2 = System.currentTimeMillis();
 				Log.d("3", "opening book took " + (t2 - t1) + "ms.");
@@ -293,12 +303,12 @@ public class ReadActivity extends ActionBarActivity {
 			// Set up listeners and data for the overlay chapter-scroller
 
 			List<BookNavItem> chapters = chapterAdapter.getItems();
-			for (String title : stream.getTocNames()) {
+			for (String title : content.getTocNames()) {
 				chapters.add(new BookNavItem(title, null));
 			}
 
 			((TextView) findViewById(R.id.txt_book_nav_chapter_no))
-					.setText(lastIndex + "/" + stream.getToc().size());
+					.setText(lastIndex + "/" + content.getToc().size());
 
 			display(lastIndex);
 			break;
