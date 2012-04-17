@@ -51,10 +51,11 @@ public class Position implements Serializable {
 
 			if (o instanceof Position) {
 				return (Position) o;
+			} else {
+				return null;
 			}
-		} finally {
+		} catch (Exception e) {
 			Log.e("Position", "Couldn't convert blob to Position.");
-			
 			return null;
 		}
 	}

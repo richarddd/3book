@@ -9,8 +9,6 @@ import android.util.Log;
 // http://www.vogella.de/articles/AndroidSQLite/article.html#databasetutorial_database
 public class DBHelper extends SQLiteOpenHelper {
 
-	
-
 	public DBHelper(Context context, String name, CursorFactory factory,
 			int version) {
 		super(context, name, factory, version);

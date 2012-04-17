@@ -28,7 +28,7 @@
     
      <!-- COMMON -->
      <string name="ok">Ok</string>
-     <string name="cancle">Cancel</string>
+     <string name="cancel">Cancel</string>
     
     <!-- ERRORS -->
     <string name="err_general">Error</string>
@@ -51,4 +51,6 @@
     <string name="open_at_startup">Open at startup</string>
     <string name="open_at_startup_on">Opens the last read book when application starts</string>
     <string name="open_at_startup_off">Opens the main screen when application starts</string>
+    <string name="open_book">Open</string>
+    <string name="import_book">Import</string>
 </resources>

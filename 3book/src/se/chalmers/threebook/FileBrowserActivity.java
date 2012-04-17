@@ -10,7 +10,7 @@ import java.util.List;
 import se.chalmers.threebook.adapters.FileBrowserAdapter;
 import se.chalmers.threebook.contentprovider.ThreeBookContentProvider;
 import se.chalmers.threebook.db.AuthorTable;
-import se.chalmers.threebook.db.BookAuthorsTable;
+import se.chalmers.threebook.db.BookDataHelper;
 import se.chalmers.threebook.db.BookTable;
 import se.chalmers.threebook.db.EpubImporter;
 import se.chalmers.threebook.db.Importer;
@@ -22,6 +22,8 @@ import se.chalmers.threebook.util.Helper;
 import android.app.ActionBar;
 import android.app.AlertDialog;
 import android.content.ContentValues;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
@@ -69,8 +71,10 @@ public class FileBrowserActivity extends ActionBarActivity {
 
 	lstFiles.setOnItemClickListener(new OnItemClickListener() {
 
-	    public void onItemClick(AdapterView<?> parent, View view,
-		    int position, long id) {
+	    private String[] openChoiseItems;
+
+		public void onItemClick(AdapterView<?> parent, View view,
+		     final int position, long id) {
 		if (adapter.getItem(position).isDirectory()) {
 		    try {
 			browseTo(adapter.getItem(position));
@@ -87,8 +91,26 @@ public class FileBrowserActivity extends ActionBarActivity {
 		    }
 
 		} else {
-		    // openFile(adapter.getItem(position));
-		    importFileTest(adapter.getItem(position));
+		    openChoiseItems = new String[] {
+		    		getString(R.string.open_book),
+		    		getString(R.string.import_book)
+		    };
+		    
+		    new AlertDialog.Builder(FileBrowserActivity.this)
+			.setIcon(android.R.drawable.ic_menu_help)
+			.setTitle(getString(R.string.open_import))
+			.setItems(openChoiseItems, new DialogInterface.OnClickListener() {
+				
+				public void onClick(DialogInterface dialog, int which) {
+					
+					if(openChoiseItems[which].equals(getString(R.string.open_book))){
+						BookDataHelper.openBook(FileBrowserActivity.this, adapter.getItem(position));
+					} else {
+						importFileTest(adapter.getItem(position));
+					}
+				}
+			})
+			.create().show();
 		}
 	    }
 	});
@@ -136,17 +158,6 @@ public class FileBrowserActivity extends ActionBarActivity {
 
     }
 
-    private void openFile(File file) {
-	if (file.getName().endsWith(".epub")) {
-	    Intent displayBook = new Intent(this, ReadActivity.class);
-	    displayBook.putExtra(ReadActivity.IntentKey.FILE_PATH.toString(),
-		    file.getAbsolutePath());
-	    displayBook.putExtra(ReadActivity.IntentKey.INTENT_TYPE.toString(),
-		    ReadActivity.IntentType.READ_BOOK_FROM_LIBRARY);
-	    startActivity(displayBook);
-	}
-    }
-
     private void importFileTest(File file) {
 
 		if(file.getName().endsWith(".epub")) {
@@ -186,10 +197,7 @@ public class FileBrowserActivity extends ActionBarActivity {
 						String path = cursor.getString(cursor.getColumnIndex(BookTable.COLUMN_SOURCE));
 						Position pos = Position.fromBlob(cursor.getBlob(cursor.getColumnIndex(BookTable.COLUMN_POSITION)));
 						
-						
 						Cursor authorsCursor = getContentResolver().query(Uri.withAppendedPath(ThreeBookContentProvider.BOOK_AUTHORS_URI, String.valueOf(id)), null, null, null, null);
-						
-						
 						
 						StringBuilder toast = new StringBuilder();
 						toast.append("Id: ")

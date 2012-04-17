@@ -6,6 +6,8 @@ import java.util.List;
 import se.chalmers.threebook.R;
 import se.chalmers.threebook.model.Book;
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,23 +19,26 @@ import android.widget.TextView;
 public class CollectionBookAdapter extends BaseAdapter {
 
 	private LayoutInflater layoutInflater;
-	private List<Book> items = new ArrayList<Book>();
+	private List<Book> books = new ArrayList<Book>();
+	private Context context;
 
-	public CollectionBookAdapter(Context context) {
+	public CollectionBookAdapter(Context context, List<Book> books) {
+		this.context = context;
 		layoutInflater = (LayoutInflater) context
 				.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+		this.books = books; 
 	}
 
 	public List<Book> getItems() {
-		return items;
+		return books;
 	}
 
 	public int getCount() {
-		return items.size();
+		return books.size();
 	}
 
 	public Book getItem(int position) {
-		return items.get(position);
+		return books.get(position);
 	}
 
 	public long getItemId(int position) {
@@ -54,12 +59,19 @@ public class CollectionBookAdapter extends BaseAdapter {
 			holder = (ViewHolder) convertView.getTag();
 		}
 
-		Book b = items.get(position);
+		Book b = books.get(position);
 
 		holder.title.setText(b.getTitle());
 //		holder.author.setText(b.getAuthor());
 //		holder.ratingBar.setRating(b.getRating());
-		// holder.imgView.setImageBitmap(bm);
+		Bitmap bm = b.getCover();
+		
+		if(bm == null) {
+			bm = BitmapFactory.decodeResource(context.getResources(), R.id.img_book_cover);
+		}
+		
+		holder.imgView.setImageBitmap(b.getCover());
+		
 		return convertView;
 	}
 

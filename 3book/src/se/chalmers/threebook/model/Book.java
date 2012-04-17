@@ -1,11 +1,9 @@
 package se.chalmers.threebook.model;
 
-import java.io.File;
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
-import se.chalmers.threebook.content.ContentStream;
+import android.graphics.Bitmap;
 
 public class Book {
 	private Long id;
@@ -16,7 +14,8 @@ public class Book {
 //	private Format format;
 	private String source;
 //	private int rating;
-//	private File cover;
+	private Bitmap cover;
+
 	private Position position;
 	
 	public enum Format {
@@ -49,34 +48,7 @@ public class Book {
 	public List<Author> getAuthors() {
 		return authors;
 	}
-
-//	public Date getPublished() {
-//		return published;
-//	}
-//
-//	public Book setPublished(Date published) {
-//		this.published = published;
-//		return this;
-//	}
-//
-//	public Date getLastRead() {
-//		return lastRead;
-//	}
-//
-//	public Book setLastRead(Date lastRead) {
-//		this.lastRead = lastRead;
-//		return this;
-//	}
-//
-//	public Format getFormat() {
-//		return format;
-//	}
-//
-//	public Book setFormat(Format format) {
-//		this.format = format;
-//		return this;
-//	}
-//
+	
 	public String getSource() {
 		return source;
 	}
@@ -85,24 +57,15 @@ public class Book {
 		this.source = source;
 		return this;
 	}
-//
-//	public int getRating() {
-//		return rating;
-//	}
-//
-//	public Book setRating(int rating) {
-//		this.rating = rating;
-//		return this;
-//	}
-//
-//	public File getCover() {
-//		return cover;
-//	}
-//
-//	public Book setCover(File cover) {
-//		this.cover = cover;
-//		return this;
-//	}
+	
+	public Bitmap getCover() {
+		return cover;
+	}
+
+	public Book setCover(Bitmap cover) {
+		this.cover = cover;
+		return this;
+	}
 
 	public Position getPosition() {
 		return position;

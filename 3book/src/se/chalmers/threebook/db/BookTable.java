@@ -20,6 +20,7 @@ public class BookTable {
 			+ "( " + COLUMN_ID + " integer primary key autoincrement, "
 			+ COLUMN_TITLE + " text not null, "
 			+ COLUMN_SOURCE + " text not null, "
+			+ COLUMN_LASTREAD + " datetime, "
 			+ COLUMN_POSITION + " blob);";
 
 	public static void onCreate(SQLiteDatabase db) {
