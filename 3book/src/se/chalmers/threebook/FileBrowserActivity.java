@@ -104,7 +104,7 @@ public class FileBrowserActivity extends ActionBarActivity {
 				public void onClick(DialogInterface dialog, int which) {
 					
 					if(openChoiseItems[which].equals(getString(R.string.open_book))){
-						BookDataHelper.openBook(FileBrowserActivity.this, adapter.getItem(position));
+						Helper.openBook(FileBrowserActivity.this, adapter.getItem(position));
 					} else {
 						importFileTest(adapter.getItem(position));
 					}

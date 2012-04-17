@@ -1,18 +1,11 @@
 package se.chalmers.threebook.db;
 
-import java.io.File;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
-
-import se.chalmers.threebook.ReadActivity;
 import se.chalmers.threebook.contentprovider.ThreeBookContentProvider;
 import se.chalmers.threebook.model.Author;
 import se.chalmers.threebook.model.Book;
-import android.content.ContentValues;
 import android.content.Context;
-import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 
@@ -51,50 +44,5 @@ public class BookDataHelper {
 			}
 		}
 		return books;
-	}
-	
-	public static void openBook(Context context, File file) {
-		if (file.getName().endsWith(".epub")) {
-
-			SimpleDateFormat dateFormat = new SimpleDateFormat(
-					"yyyy-MM-dd HH:mm:ss");
-			Date date = new Date();
-			ContentValues values = new ContentValues();
-			values.put(BookTable.COLUMN_LASTREAD, dateFormat.format(date));
-
-			int nrUpdated = context.getContentResolver().update(
-					ThreeBookContentProvider.BOOK_URI, values, BookTable.COLUMN_SOURCE + "=?",
-					new String[]{file.getPath()});
-
-			Intent displayBook = new Intent(context, BookDataHelper.class);
-			displayBook.putExtra(ReadActivity.IntentKey.FILE_PATH.toString(),
-					file.getAbsolutePath());
-			
-			if(nrUpdated == 0) {
-				displayBook.putExtra(ReadActivity.IntentKey.INTENT_TYPE.toString(),
-						ReadActivity.IntentType.READ_BOOK_NOT_IN_LIBRARY);
-			} else {
-				displayBook.putExtra(ReadActivity.IntentKey.INTENT_TYPE.toString(),
-						ReadActivity.IntentType.READ_BOOK_FROM_LIBRARY);
-			}
-			
-			context.startActivity(displayBook);
-		}
-	}
-	
-	public static void openBook(Context context, Book book) {
-		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"); 
-		Date date = new Date();
-		ContentValues values = new ContentValues(); 
-		values.put(BookTable.COLUMN_LASTREAD, dateFormat.format(date));
-		
-		context.getContentResolver().update(ThreeBookContentProvider.BOOK_URI, values, BookTable.COLUMN_ID + "=?", new String[]{String.valueOf(book.getId())});
-		
-		Intent displayBook = new Intent(context, BookDataHelper.class);
-	    displayBook.putExtra(ReadActivity.IntentKey.FILE_PATH.toString(),
-		    book.getSource());
-	    displayBook.putExtra(ReadActivity.IntentKey.INTENT_TYPE.toString(),
-		    ReadActivity.IntentType.READ_BOOK_FROM_LIBRARY);
-	    context.startActivity(displayBook);
 	}
 }

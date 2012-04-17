@@ -1,14 +1,25 @@
 package se.chalmers.threebook.util;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
+import se.chalmers.threebook.ReadActivity;
+import se.chalmers.threebook.contentprovider.ThreeBookContentProvider;
+import se.chalmers.threebook.db.BookDataHelper;
+import se.chalmers.threebook.db.BookTable;
+import se.chalmers.threebook.model.Book;
+
+import android.content.ContentValues;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Matrix;
 import android.os.Build;
@@ -65,7 +76,7 @@ public class Helper {
 	}
 	
 	/**
-	 * Returns a bitmap from the views drawing cache. Warining: disables drawing cache after usage.
+	 * Returns a bitmap from the views drawing cache. Warning: disables drawing cache after usage.
 	 * @param view
 	 * @return
 	 */
@@ -78,4 +89,33 @@ public class Helper {
 		return bitmap;
 	}
 
+	public static void openBook(Context context, File file) {
+		if (file.getName().endsWith(".epub")) {
+		    openBook(context, new Book().setSource(file.getPath()));
+		}
+	}
+	
+	public static void openBook(Context context, Book book) {
+		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"); 
+		Date date = new Date();
+		ContentValues values = new ContentValues(); 
+		values.put(BookTable.COLUMN_LASTREAD, dateFormat.format(date));
+		
+		int nrUpdated = context.getContentResolver().update(ThreeBookContentProvider.BOOK_URI, values, BookTable.COLUMN_ID + "=?", new String[]{String.valueOf(book.getId())});
+		
+		Intent displayBook = new Intent(context, BookDataHelper.class);
+		displayBook.putExtra(ReadActivity.IntentKey.FILE_PATH.toString(),
+		    book.getSource());
+		
+		if(nrUpdated == 0) {
+			displayBook.putExtra(ReadActivity.IntentKey.INTENT_TYPE.toString(),
+					ReadActivity.IntentType.READ_BOOK_NOT_IN_LIBRARY);
+		} else {
+			displayBook.putExtra(ReadActivity.IntentKey.INTENT_TYPE.toString(),
+					ReadActivity.IntentType.READ_BOOK_FROM_LIBRARY);
+		}
+		
+		context.startActivity(displayBook);
+	}
+	
 }

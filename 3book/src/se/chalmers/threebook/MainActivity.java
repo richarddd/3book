@@ -1,13 +1,13 @@
 package se.chalmers.threebook;
 
 import java.util.List;
-import java.util.ListResourceBundle;
 
-import se.chalmers.threebook.R;
 import se.chalmers.threebook.adapters.RecentBookAdapter;
+import se.chalmers.threebook.db.BookDataHelper;
+import se.chalmers.threebook.model.Book;
 import se.chalmers.threebook.ui.HorizontalListView;
 import se.chalmers.threebook.ui.actionbarcompat.ActionBarActivity;
-import se.chalmers.threebook.ui.util.RecentBook;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.Menu;
@@ -42,7 +42,8 @@ public class MainActivity extends ActionBarActivity {
 		layFavourites = (RelativeLayout) findViewById(R.id.lay_favourites);
 		lstRecentBooks = (HorizontalListView) findViewById(R.id.lst_recent_books);
 		
-		adapter = new RecentBookAdapter(this);
+		Context context = ?;
+		adapter = new RecentBookAdapter(context, BookDataHelper.getBooks(context));
 		
 		lstRecentBooks.setOnItemClickListener(new OnItemClickListener() {
 
@@ -68,10 +69,10 @@ public class MainActivity extends ActionBarActivity {
 		layCollection.setOnClickListener(new StartOnClick(CollectionActivity.class));
 		layFavourites.setOnClickListener(new StartOnClick(CanvasActivity.class));
 		
-		List<RecentBook> bookList = adapter.getItems();
+		List<Book> bookList = adapter.getItems();
 		
 		for(int i = 0; i < 25; i++){
-			bookList.add(new RecentBook(new String("Test "+i).toUpperCase(), R.drawable.recent_book_cover));	
+			bookList.add(new Book(new String("Test "+i).toUpperCase(), R.drawable.recent_book_cover));	
 		}
 		
 		
