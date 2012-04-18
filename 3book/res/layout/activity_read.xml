@@ -20,13 +20,20 @@
         android:layout_height="fill_parent"
         android:background="@color/default_background"
         android:visibility="invisible" />  -->
+        
+        
+    <ImageView android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:background="@color/default_background"
+        android:id="@+id/img_page_render" />
      
-    
+    <!-- 
     <se.chalmers.threebook.ui.BookView
         android:id="@+id/view_book_view"
           android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         android:background="@color/default_background" />
+         -->
 
 
     <RelativeLayout

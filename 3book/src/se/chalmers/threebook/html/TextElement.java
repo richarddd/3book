@@ -1,11 +1,11 @@
 package se.chalmers.threebook.html;
 
-public class PrintElement extends RenderElement {
+public class TextElement extends RenderElement {
 	
 	private String text;
 	private StyleFlag style;
 	
-	public PrintElement(String text, StyleFlag style) {
+	public TextElement(String text, StyleFlag style) {
 		super();
 		this.text = text;
 		this.style = style;

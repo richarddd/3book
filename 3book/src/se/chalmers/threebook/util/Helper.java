@@ -22,12 +22,14 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Matrix;
+import android.graphics.Point;
 import android.os.Build;
-import android.util.TypedValue;
+import android.view.Display;
 import android.view.View;
+import android.view.WindowManager;
 
 public class Helper {
-	
+
 	public static boolean SupportsNewApi() {
 		return Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB;
 	}
@@ -43,17 +45,33 @@ public class Helper {
 				matrix, false);
 		return resizedBitmap;
 	}
-	
-	public static float dpToPx(Context c, float dp){
-	    float px = dp * (c.getResources().getDisplayMetrics().densityDpi/160f);
-	    return px;
+
+	public static float dpToPx(Context c, float dp) {
+		float px = dp
+				* (c.getResources().getDisplayMetrics().densityDpi / 160f);
+		return px;
 	}
-	
-	public static float pxToDp(Context c, float px){
-		float dp = px / (c.getResources().getDisplayMetrics().densityDpi/160f);
-	    return dp;
+
+	public static float pxToDp(Context c, float px) {
+		float dp = px
+				/ (c.getResources().getDisplayMetrics().densityDpi / 160f);
+		return dp;
 	}
-	
+
+	public static Point getDisplaySize(Context context) {
+		Display display = ((WindowManager) context
+				.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay();
+		Point p = new Point();
+
+		if (Helper.SupportsNewApi()) {
+			display.getSize(p);
+		} else {
+			p.x = display.getWidth();
+			p.y = display.getHeight();
+		}
+		return p;
+	}
+
 	public static String streamToString(InputStream is) throws IOException {
 		if (is != null) {
 			Writer writer = new StringWriter();
@@ -74,9 +92,11 @@ public class Helper {
 			return "";
 		}
 	}
-	
+
 	/**
-	 * Returns a bitmap from the views drawing cache. Warning: disables drawing cache after usage.
+	 * Returns a bitmap from the views drawing cache. Warining: disables drawing
+	 * cache after usage.
+	 * 
 	 * @param view
 	 * @return
 	 */
