@@ -24,9 +24,9 @@ public class CollectionBookAdapter extends BaseAdapter {
 
 	public CollectionBookAdapter(Context context, List<Book> books) {
 		this.context = context;
+		this.books = books;
 		layoutInflater = (LayoutInflater) context
 				.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-		this.books = books; 
 	}
 
 	public List<Book> getItems() {

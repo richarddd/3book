@@ -103,7 +103,7 @@ public class Helper {
 		
 		int nrUpdated = context.getContentResolver().update(ThreeBookContentProvider.BOOK_URI, values, BookTable.COLUMN_ID + "=?", new String[]{String.valueOf(book.getId())});
 		
-		Intent displayBook = new Intent(context, BookDataHelper.class);
+		Intent displayBook = new Intent(context, ReadActivity.class);
 		displayBook.putExtra(ReadActivity.IntentKey.FILE_PATH.toString(),
 		    book.getSource());
 		

@@ -7,6 +7,7 @@ import se.chalmers.threebook.db.BookDataHelper;
 import se.chalmers.threebook.model.Book;
 import se.chalmers.threebook.ui.HorizontalListView;
 import se.chalmers.threebook.ui.actionbarcompat.ActionBarActivity;
+import se.chalmers.threebook.util.Helper;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -42,19 +43,18 @@ public class MainActivity extends ActionBarActivity {
 		layFavourites = (RelativeLayout) findViewById(R.id.lay_favourites);
 		lstRecentBooks = (HorizontalListView) findViewById(R.id.lst_recent_books);
 		
-		Context context = ?;
+		final Context context = lstRecentBooks.getContext();
 		adapter = new RecentBookAdapter(context, BookDataHelper.getBooks(context));
 		
 		lstRecentBooks.setOnItemClickListener(new OnItemClickListener() {
-
-			public void onItemClick(AdapterView<?> arg0, View arg1, int arg2,
-					long arg3) {
-				Intent displayBook= new Intent(MainActivity.this, ReadActivity.class);
-				displayBook.putExtra(ReadActivity.IntentKey.FILE_PATH.toString(), "pride-prejudice.epub");
-				displayBook.putExtra(ReadActivity.IntentKey.INTENT_TYPE.toString(), ReadActivity.IntentType.READ_BOOK_FROM_LIBRARY);
-				startActivity(displayBook);
+			public void onItemClick(AdapterView<?> parent, View view, int position,
+					long id) {
+				
+				Helper.openBook(view.getContext(), (Book) parent.getItemAtPosition(position));
 			}
 		});
+		
+		lstRecentBooks.setAdapter(adapter);
 
 		layOpenImport.setOnClickListener(new StartOnClick(FileBrowserActivity.class));
 		/*layOpenImport.setOnClickListener(new OnClickListener() {
@@ -68,17 +68,6 @@ public class MainActivity extends ActionBarActivity {
 		//laySettings.setOnClickListener(new StartOnClick(DisplayActivity.class));
 		layCollection.setOnClickListener(new StartOnClick(CollectionActivity.class));
 		layFavourites.setOnClickListener(new StartOnClick(CanvasActivity.class));
-		
-		List<Book> bookList = adapter.getItems();
-		
-		for(int i = 0; i < 25; i++){
-			bookList.add(new Book(new String("Test "+i).toUpperCase(), R.drawable.recent_book_cover));	
-		}
-		
-		
-		lstRecentBooks.setAdapter(adapter);
-		
-		
 	}
 	
 	@Override
