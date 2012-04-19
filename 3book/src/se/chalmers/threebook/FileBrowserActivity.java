@@ -24,6 +24,28 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 public class FileBrowserActivity extends ActionBarActivity {
+	
+	public class FileSelect{
+		private File file;
+		private boolean selected;
+		
+		public FileSelect(File file, boolean selected) {
+			this.file = file;
+			this.selected = selected;
+		}
+		public File getFile() {
+			return file;
+		}
+		public void setFile(File file) {
+			this.file = file;
+		}
+		public boolean isSelected() {
+			return selected;
+		}
+		public void setSelected(boolean selected) {
+			this.selected = selected;
+		}	
+	}
 
 	private TextView txtCurrDir;
 	private ListView lstFiles;
@@ -56,9 +78,10 @@ public class FileBrowserActivity extends ActionBarActivity {
 
 			public void onItemClick(AdapterView<?> parent, View view,
 					int position, long id) {
-				if (adapter.getItem(position).isDirectory()) {
+				File file = adapter.getItem(position).getFile();
+				if (file.isDirectory()) {
 					try {
-						browseTo(adapter.getItem(position));
+						browseTo(file);
 					} catch (Exception e) {
 
 						e.printStackTrace();
@@ -72,7 +95,7 @@ public class FileBrowserActivity extends ActionBarActivity {
 					}
 
 				} else {
-					openFile(adapter.getItem(position));
+					openFile(file);
 				}
 			}
 		});
@@ -82,8 +105,8 @@ public class FileBrowserActivity extends ActionBarActivity {
 		lstFiles.setAdapter(adapter);
 
 		//XXX debuging only
-		//browseTo(new File("/"));
-		openFile(new File("/sdcard/austen-pride-and-prejudice-illustrations.epub"));
+		browseTo(new File("/"));
+		//openFile(new File("/sdcard/austen-pride-and-prejudice-illustrations.epub"));
 	}
 
 	@Override
@@ -116,8 +139,12 @@ public class FileBrowserActivity extends ActionBarActivity {
 		Collections.sort(files);
 
 		adapter.getItems().clear();
-		adapter.getItems().addAll(folders);
-		adapter.getItems().addAll(files);
+		for(File f : folders){
+			adapter.getItems().add(new FileSelect(f, false));
+		}
+		for(File f : files){
+			adapter.getItems().add(new FileSelect(f, false));
+		}
 		adapter.notifyDataSetChanged();
 
 	}

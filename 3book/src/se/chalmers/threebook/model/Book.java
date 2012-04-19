@@ -13,7 +13,7 @@ public class Book {
 	private Date lastRead;
 	private Format format;
 	private File source;
-	private int rating;
+	private float progress = (float) Math.random();
 	private File cover;
 	private ContentStream contentStream;
 	
@@ -88,15 +88,6 @@ public class Book {
 		return this;
 	}
 
-	public int getRating() {
-		return rating;
-	}
-
-	public Book setRating(int rating) {
-		this.rating = rating;
-		return this;
-	}
-
 	public File getCover() {
 		return cover;
 	}
@@ -113,5 +104,9 @@ public class Book {
 	public Book setContentStream(ContentStream contentStream) {
 		this.contentStream = contentStream;
 		return this;
+	}
+
+	public float getProgress() {
+		return progress;
 	}
 }

@@ -4,6 +4,7 @@
     <dimen name="padding_s">4dp</dimen>
     <dimen name="padding_m">8dp</dimen>
     <dimen name="padding_l">16dp</dimen>
+    
     <dimen name="listview_one_row">64dp</dimen>
     <dimen name="icon_size_m">32dp</dimen>
     <dimen name="icon_size_l">48dp</dimen>
