@@ -478,10 +478,8 @@ public class HtmlRenderer {
 			objsByPage.set(pageNumber+1, objCount);
 		}
 		
-		objsByPage.set(pageNumber + 1, objCount);
-		
 		Log.d(tag, "Determining page end: object count/printObjSize (max objects): " + objCount + "/" +  printObjects.size());
-		if (objCount >= printObjects.size()){ // 
+		if (objCount >= printObjects.size()){ 
 			Log.d(tag, "Setting end of sourcePage for current source to " + pageNumber);
 			tracker.setEosPageNum(sourceIdent, pageNumber);
 		}
