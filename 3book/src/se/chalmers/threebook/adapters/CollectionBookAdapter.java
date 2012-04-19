@@ -6,34 +6,45 @@ import java.util.List;
 import se.chalmers.threebook.R;
 import se.chalmers.threebook.model.Book;
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AlphabetIndexer;
 import android.widget.BaseAdapter;
+import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.RatingBar;
+import android.widget.SectionIndexer;
 import android.widget.TextView;
 
-public class CollectionBookAdapter extends BaseAdapter {
+public class CollectionBookAdapter extends BaseAdapter implements SectionIndexer {
 
 	private LayoutInflater layoutInflater;
-	private List<Book> items = new ArrayList<Book>();
+	private AlphabetIndexer alphaIndexer;
+	private List<Book> books = new ArrayList<Book>();
+	private Context context;
 
-	public CollectionBookAdapter(Context context) {
+	public CollectionBookAdapter(Context context, List<Book> books) {
+		this.context = context;
+		this.books = books;
 		layoutInflater = (LayoutInflater) context
 				.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+		//alphaIndexer = new AlphabetIndexer(cursor, sortedColumnIndex, alphabet)
 	}
 
 	public List<Book> getItems() {
-		return items;
+		return books;
 	}
 
 	public int getCount() {
-		return items.size();
+		return books.size();
 	}
 
 	public Book getItem(int position) {
-		return items.get(position);
+		return books.get(position);
 	}
 
 	public long getItemId(int position) {
@@ -47,35 +58,61 @@ public class CollectionBookAdapter extends BaseAdapter {
 			holder = new ViewHolder(
 					(TextView) convertView.findViewById(R.id.txt_book_title),
 					(TextView) convertView.findViewById(R.id.txt_book_author),
-					(RatingBar) convertView.findViewById(R.id.bar_book_rating),
+					(ImageButton)convertView.findViewById(R.id.btn_book_more),
+					(ProgressBar) convertView.findViewById(R.id.bar_book_progress),
 					(ImageView) convertView.findViewById(R.id.img_book_cover));
 			convertView.setTag(holder);
 		} else {
 			holder = (ViewHolder) convertView.getTag();
 		}
 
-		Book b = items.get(position);
+		Book b = books.get(position);
 
 		holder.title.setText(b.getTitle());
-		holder.author.setText(b.getAuthor());
-		holder.ratingBar.setRating(b.getRating());
-		// holder.imgView.setImageBitmap(bm);
+		holder.progressBar.setProgress((int) Math.round((b.getProgress()*100)));
+//		holder.author.setText(b.getAuthor());
+//		holder.ratingBar.setRating(b.getRating());
+		Bitmap bm = b.getCover();
+		
+		if(bm == null) {
+			bm = BitmapFactory.decodeResource(context.getResources(), R.drawable.recent_book_cover);
+		}
+		
+		holder.imgView.setImageBitmap(bm);
+		
 		return convertView;
 	}
 
 	static class ViewHolder {
 		TextView title;
 		TextView author;
-		RatingBar ratingBar;
+		ProgressBar progressBar;
 		ImageView imgView;
+		ImageButton btnMore;
 
-		public ViewHolder(TextView title, TextView author, RatingBar ratingBar,
+		public ViewHolder(TextView title, TextView author, ImageButton btnMore, ProgressBar progressBar,
 				ImageView imgView) {
 			this.title = title;
 			this.author = author;
-			this.ratingBar = ratingBar;
+			this.btnMore = btnMore;
+			this.progressBar = progressBar;
 			this.imgView = imgView;
 		}
+	}
+
+	public int getPositionForSection(int section) {
+		// TODO Auto-generated method stub
+		return alphaIndexer.getPositionForSection(section);
+	}
+
+	public int getSectionForPosition(int position) {
+		// TODO Auto-generated method stub
+		return alphaIndexer.getSectionForPosition(position);
+	}
+
+	public Object[] getSections() {
+		// TODO Auto-generated method stub
+		return alphaIndexer.getSections();
 	}
 
 }

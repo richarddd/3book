@@ -2,7 +2,6 @@ package se.chalmers.threebook.content;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -11,16 +10,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 
-import nl.siegmann.epublib.browsersupport.Navigator;
 import nl.siegmann.epublib.domain.Book;
 import nl.siegmann.epublib.domain.Resource;
-import nl.siegmann.epublib.domain.Spine;
 import nl.siegmann.epublib.domain.TOCReference;
 import nl.siegmann.epublib.epub.EpubReader;
 import se.chalmers.threebook.model.Bookmark;
-import se.chalmers.threebook.model.EpubTocReference;
 import se.chalmers.threebook.model.TocReference;
-import se.chalmers.threebook.util.HtmlParser;
 import android.util.Log;
 
 public class EpubContentStream { //implements ContentStream {
@@ -129,6 +124,10 @@ public class EpubContentStream { //implements ContentStream {
 			
 		}
 		return list; 
+	}
+	
+	public Book getBook(){
+		return book;
 	}
 	
 }

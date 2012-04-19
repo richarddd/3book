@@ -2,8 +2,11 @@ package se.chalmers.threebook.model;
 
 import java.io.File;
 import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
 
 import se.chalmers.threebook.content.ContentStream;
+import android.graphics.Bitmap;
 
 public class Book {
 	private Long id;
@@ -12,17 +15,20 @@ public class Book {
 	private Date published;
 	private Date lastRead;
 	private Format format;
-	private File source;
-	private int rating;
-	private File cover;
+	private String source;
+	private float progress = (float) Math.random();
+	private Bitmap cover;
 	private ContentStream contentStream;
+	private List<Author> authors;
+	private Position position;
 	
 	public enum Format {
 		TXT, EPUB, PDF
 	}
 	
 	public Book() {
-		
+		title = "";
+		authors = new LinkedList<Author>();
 	}
 
 	public Long getId() {
@@ -43,75 +49,39 @@ public class Book {
 		return this;
 	}
 
-	public String getAuthor() {
-		return author;
+	public List<Author> getAuthors() {
+		return authors;
 	}
-
-	public Book setAuthor(String author) {
-		this.author = author;
-		return this;
-	}
-
-	public Date getPublished() {
-		return published;
-	}
-
-	public Book setPublished(Date published) {
-		this.published = published;
-		return this;
-	}
-
-	public Date getLastRead() {
-		return lastRead;
-	}
-
-	public Book setLastRead(Date lastRead) {
-		this.lastRead = lastRead;
-		return this;
-	}
-
-	public Format getFormat() {
-		return format;
-	}
-
-	public Book setFormat(Format format) {
-		this.format = format;
-		return this;
-	}
-
-	public File getSource() {
+	
+	public String getSource() {
 		return source;
 	}
 
-	public Book setSource(File source) {
+	public Book setSource(String source) {
 		this.source = source;
 		return this;
 	}
-
-	public int getRating() {
-		return rating;
-	}
-
-	public Book setRating(int rating) {
-		this.rating = rating;
-		return this;
-	}
-
-	public File getCover() {
+	
+	public Bitmap getCover() {
 		return cover;
 	}
 
-	public Book setCover(File cover) {
+	public Book setCover(Bitmap cover) {
 		this.cover = cover;
 		return this;
 	}
 
-	public ContentStream getContentStream() {
-		return contentStream;
+	public Position getPosition() {
+		return position;
 	}
 
-	public Book setContentStream(ContentStream contentStream) {
-		this.contentStream = contentStream;
+	public Book setPosition(Position position) {
+		this.position = position;
 		return this;
 	}
+
+	public float getProgress() {
+		return progress;
+	}
 }
+

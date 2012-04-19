@@ -3,7 +3,6 @@ package se.chalmers.threebook;
 import java.io.File;
 
 import se.chalmers.threebook.ui.TouchImageView;
-import se.chalmers.threebook.ui.actionbarcompat.ActionBarActivity;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
@@ -13,55 +12,41 @@ import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.util.Log;
 
-public class ImageViewActivity extends Activity {
+public class ImageViewActivity extends Activity{
 
 	// private TouchImageView view;
 
 	@Override
-	public void onCreate(Bundle savedInstanceState) {
+	public void onCreate(Bundle savedInstanceState){
 		super.onCreate(savedInstanceState);
 		// setContentView(R.layout.activity_image_view);
 
 		TouchImageView touch = new TouchImageView(this);
-		String path = (String) getIntent().getSerializableExtra("imagePath");
-		Log.d("3", "Here's the image path we get in imagevewact: " + path);
-		
-		
-		
+		String imagePath = (String) getIntent().getSerializableExtra("imagePath");
+
 		boolean success = false;
-		if (path != null && !path.equals("")) {
-			File cacheDir = getCacheDir();
-			File imgFile = new File(cacheDir, path);
-			//File imgFile = new File(path);
-			if (imgFile.exists()) {
-				Log.d("3", "Image exists.");
+		if(imagePath != null && !imagePath.equals("")){
+			File imgFile = new File(imagePath);
+			if(imgFile.exists()){
 				success = true;
-				Bitmap myBitmap = BitmapFactory.decodeFile(imgFile
-						.getAbsolutePath());
-				
+				Bitmap myBitmap = BitmapFactory.decodeFile(imagePath);
 				touch.setImageBitmap(myBitmap);
-				
-			} else {
-				Log.d("3", "Image does NOT exist.");
 			}
 		}
 
 		touch.setMaxZoom(4f);
 		setContentView(touch);
 
-		if (!success) {
-			new AlertDialog.Builder(this)
-					.setMessage(R.string.err_file_browser_general)
+		if(!success){
+			new AlertDialog.Builder(this).setMessage(R.string.err_file_browser_general)
 					.setIcon(android.R.drawable.ic_dialog_alert)
 					.setTitle(getString(R.string.err_general))
-					.setPositiveButton(getString(R.string.ok),
-							new OnClickListener() {
+					.setPositiveButton(getString(R.string.ok), new OnClickListener() {
 
-								public void onClick(DialogInterface dialog,
-										int which) {
-									finish();
-								}
-							}).create().show();
+						public void onClick(DialogInterface dialog, int which){
+							finish();
+						}
+					}).create().show();
 		}
 	}
 

@@ -7,6 +7,7 @@ import android.util.Log;
 
 import se.chalmers.threebook.html.HtmlRenderer;
 import se.chalmers.threebook.html.RenderedPage;
+import se.chalmers.threebook.model.Book;
 import se.chalmers.threebook.model.TocReference;
 
 /**
@@ -23,10 +24,14 @@ public class EpubNavigator implements BookNavigator {
 	private int curPage;
 	private RenderedPage curRender;
 	private String tag = "EpubNavigator";
+	private Book metaBook;
 	
 	public EpubNavigator(String bookFileName, File cacheDir, HtmlRenderer renderer) throws IOException{
 		content = new EpubContentStream(bookFileName, cacheDir);
 		this.renderer = renderer;
+		this.metaBook = new Book();
+		metaBook.setTitle(content.getBook().getTitle());
+		
 	}
 	
 	// TODO for all methods returning renderedPage - figure out whether they need to return 
@@ -85,6 +90,10 @@ public class EpubNavigator implements BookNavigator {
 	
 	public TableOfContents getToc(){
 		return content.getToc();
+	}
+
+	public Book getBook() {
+		return metaBook;
 	}
 	
 }

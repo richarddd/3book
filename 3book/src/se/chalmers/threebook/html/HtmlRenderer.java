@@ -1,5 +1,6 @@
 package se.chalmers.threebook.html;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -11,43 +12,66 @@ import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
 
+import se.chalmers.threebook.R;
+import se.chalmers.threebook.content.MyBook;
+import se.chalmers.threebook.util.Helper;
+
+import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Matrix;
 import android.graphics.Paint;
+import android.graphics.Rect;
 import android.graphics.Typeface;
 import android.util.Log;
 
+/**
+ * 
+ * TODO: Fix so that the renderer doesn't populate the pagePos list if the page
+ * already has been rendered.
+ * 
+ */
 
-public class HtmlRenderer {
+public class HtmlRenderer{
 
 	private static final int RENDER_LIST_INITIAL_CAPACITY = 2048;
+	private static final int WORD_ROW_LIST_INITIAL_CAPACITY = 10;
+	public static final int BOOK_OBJECT_HEIGHT_DP = 191;
+	public static final int IMAGE_HEIGHT_LIMIT_DP = 400;
+
+	
+	private int imageHeightLimit;
+	private int bookObjectHeight;
+
 	private int viewWidth;
 	private int viewHeight;
 	private String htmlSource = "";
+	private File cacheDir;
 	private int baseTextSize = 26;
 	private int minWordSpace = 2;
 	private int rowMargin = (int) (baseTextSize * 0.2);
 	private int heightMargin = 10;
 	private int widthMargin = 10;
 
-	private float h1TextSize = (float) (baseTextSize * 2);
+
+	private float h1TextSize = (baseTextSize * 2);
 	private float h2TextSize = (float) (baseTextSize * 1.5);
 	private float h3TextSize = (float) (baseTextSize * 1.2);
-	private float h4TextSize = (float) (baseTextSize * 1);
+	private float h4TextSize = (baseTextSize * 1);
 	private float h5TextSize = (float) (baseTextSize * 0.85);
 	private float h6TextSize = (float) (baseTextSize * 0.7);
+	
 
-	
-	//private LinkedList<RenderElement> printObjects; // TODO evaluate whether a LL is the best choice
-	private ArrayList<RenderElement> printObjects; // AL has amortized O(n) insertion and O(1) retrieval
-	
-	
+
+	// private LinkedList<RenderElement> printObjects; // TODO evaluate whether
+	// a LL is the best choice
+	private ArrayList<RenderElement> printObjects; // AL has amortized O(n)
+													// insertion and O(1)
+													// retrieval
 
 	private Paint paint;
-
-	
-
 	private OnDrawCompleteListener onDrawCompleteListener;
 	private String tag = "HtmlRenderer";
 	
@@ -59,28 +83,63 @@ public class HtmlRenderer {
 	private PageTracker tracker = new PageTracker(); // tracks source word counts 
 	private int sourceIdent; // integer that uniquely identifies the current source
 	
+	// TODO: implement these in a more reasonable manner. Likely they will not
+	// be a part of
+	// the HTML-renderer class but rather reside in the middle layer.
+	private boolean endOfSource = false;
+	private boolean startOfSource = true;
+
 	// TODO figure out whether this should be moved to the tracker
 	// probably not as long as we re-parse on each source shift
 	// TODO ensure that it only contains TOC-valid IDs 
 	// TODO enable notification of listeners upon rendering a TOC-valid ID
-	private Map<String, Integer> idMap = new HashMap<String, Integer>(); // anchor, objectCount of anchor 
+	private Map<String, Integer> idMap = new HashMap<String, Integer>(); // anchor,
+																		// objectCount
+																		// of
+																		// anchor
+	private String bookName;
+																			
 
-	public static class OnDrawCompleteListener {
-		public void drawComplete() {
+	public static class OnDrawCompleteListener{
+		public void drawComplete(){
 
 		}
 	}
 
-	public HtmlRenderer(int viewWidth, int viewHeight) {
-		init(viewWidth, viewHeight);
+	public HtmlRenderer(File cacheDir, int viewWidth, int viewHeight, int bookObjectHeight, int imageHeightLimit, String bookName){
+		this.bookName = bookName;
+		this.viewWidth = viewWidth;
+		this.viewHeight = viewHeight;
+		this.bookObjectHeight = bookObjectHeight;
+		this.cacheDir = cacheDir;
+		this.imageHeightLimit = imageHeightLimit;
+
+		paint = new Paint();
+		paint.setColor(Color.BLACK);
+		paint.setAntiAlias(true);
+		paint.setStyle(Paint.Style.FILL);
+		paint.setTextAlign(Paint.Align.LEFT);
+		paint.setTextSize(baseTextSize);
 	}
-	
-	
-	public void setOnDrawCompleteListener(OnDrawCompleteListener l) {
+
+	/**
+	 * Returns whether the last render was the end of source
+	 * 
+	 * @return whether the last render was the end of source
+	 */
+	public boolean atEndOfSource(){
+		return endOfSource;
+	}
+
+	public boolean atStartOfSource(){
+		return startOfSource;
+	}
+
+	public void setOnDrawCompleteListener(OnDrawCompleteListener l){
 		this.onDrawCompleteListener = l;
 	}
 
-	public String getHtmlSource() {
+	public String getHtmlSource(){
 		return htmlSource;
 	}
 
@@ -112,7 +171,7 @@ public class HtmlRenderer {
 		parseHtml();
 	}
 
-	public int getBaseTextSize() {
+	public int getBaseTextSize(){
 		return baseTextSize;
 	}
 
@@ -121,25 +180,26 @@ public class HtmlRenderer {
 		this.baseTextSize = baseTextSize;
 	}
 
-	public int getMinWordSpace() {
+	public int getMinWordSpace(){
 		return minWordSpace;
 	}
 
 	public void setMinWordSpace(int minWordSpace) {
 		if (this.minWordSpace != minWordSpace) invalidate();
-		this.minWordSpace = minWordSpace;
+		this.minWordSpace= minWordSpace;
 	}
 
-	public int getRowMargin() {
+	public int getRowMargin(){
 		return rowMargin;
 	}
 
 	public void setRowMargin(int rowMargin) {
 		if (this.rowMargin != rowMargin) invalidate();
+
 		this.rowMargin = rowMargin;
 	}
 
-	public int getHeightMargin() {
+	public int getHeightMargin(){
 		return heightMargin;
 	}
 
@@ -148,7 +208,7 @@ public class HtmlRenderer {
 		this.heightMargin = heightMargin;
 	}
 
-	public int getWidthMargin() {
+	public int getWidthMargin(){
 		return widthMargin;
 	}
 
@@ -162,19 +222,8 @@ public class HtmlRenderer {
 		objsByPage = tracker.getPageStartList(sourceIdent); // get new object to work with
 	}
 
-	private void init(int viewWidth, int viewHeight) {
-		this.viewWidth = viewWidth;
-		this.viewHeight = viewHeight;
-
-		paint = new Paint();
-		paint.setColor(Color.BLACK);
-		paint.setAntiAlias(true);
-		paint.setStyle(Paint.Style.FILL);
-		paint.setTextAlign(Paint.Align.LEFT);
-		paint.setTextSize(baseTextSize);
-	}
-
-	private void parseHtml() {
+	private void parseHtml(){
+		objsByPage.add(0); // draw first page from word zero
 
 		long t1 = System.currentTimeMillis();
 		Document doc = Jsoup.parse(htmlSource);
@@ -183,41 +232,44 @@ public class HtmlRenderer {
 
 		Node rootNode = doc.body();
 		Node node = rootNode;
-		while (node != null) {
+		while(node != null){
 
-			if (node instanceof Element) {
-				if (((Element) node).tagName().equals("p")) {
+			if(node instanceof Element){
+				if(((Element) node).tagName().equals("p")){
 					printObjects.add(new BreakElement(baseTextSize));
 				}
-				
+
 				// Detect elements with IDs and squirrel them away
 				String id = ((Element) node).id();
-				if (id != null && id != ""){
-					idMap.put(id, printObjects.size()+1); // XXX +1 could mean crazy EOF bugs if nothing is rendered on last-anchor ?
+				if(id != null && id != ""){
+					idMap.put(id, printObjects.size() + 1); // XXX +1 could mean
+															// crazy EOF bugs if
+															// nothing is
+															// rendered on
+															// last-anchor ?
 				}
 			}
 
-			if (node.childNodes().size() != 0) {
+			if(node.childNodes().size() != 0){
 				node = node.childNodes().get(0);
-			} else { // leaf
-				if (node instanceof TextNode) {
+			}else{ // leaf
+				if(node instanceof TextNode){
 					TextNode tNode = (TextNode) node;
-					if (!tNode.text().equals("")) {
+					if(!tNode.text().equals("")){
 
 						String parentTag = ((Element) tNode.parent()).tagName();
 						StyleFlag flag = StyleFlag.NORMAL;
 
-						for (StyleFlag f : StyleFlag.values()) {
-							if (f.name().equals(parentTag.toUpperCase())) {
-								flag = StyleFlag.valueOf(parentTag
-										.toUpperCase());
+						for(StyleFlag f : StyleFlag.values()){
+							if(f.name().equals(parentTag.toUpperCase())){
+								flag = StyleFlag.valueOf(parentTag.toUpperCase());
 							}
 						}
 						String[] words = tNode.text().split(" ");
-						for (String word : words) {
+						for(String word : words){
 							printObjects.add(new TextElement(word, flag));
 						}
-						switch (flag) {
+						switch(flag){
 						case H1:
 							printObjects.add(new BreakElement(0));
 							break;
@@ -238,27 +290,39 @@ public class HtmlRenderer {
 							break;
 						}
 					}
-				} else if (node instanceof Element) {
+				}else if(node instanceof Element){
 					Element eNode = (Element) node;
-					if (eNode.tagName().equals("br")) {
+					if(eNode.tagName().equals("br")){
 						printObjects.add(new BreakElement(0));
 					}
-					
+
+					if(eNode.tagName().equals("img")){
+						String sWidth = eNode.attr("width").replace("[A-z]*",""); //TODO fix something better here to remove 250px
+						String sHeight = eNode.attr("height").replace("[A-z]*","");
+						//int width = sWidth.equals("")?-1:Integer.parseInt(sWidth);
+						//int height = sHeight.equals("")?-1:Integer.parseInt(sHeight);
+						printObjects.add(new ImageElement(eNode.attr("src"), 0, 0)); //TODO fix correct with and height;
+					}
+
 				}
 
-				while (node.nextSibling() == null && node != rootNode) {
+				while(node.nextSibling() == null && node != rootNode){
 					node = node.parent();
 				}
 				node = node.nextSibling();
 			}
 
 		}
+
+		printObjects.add(new BreakElement(0)); // last word fix		
+
 		long t2 = System.currentTimeMillis();
-		Log.d(tag, "Parsing HTML took " + (t2-t1) + "ms");
+		Log.d(tag, "Parsing HTML took " + (t2 - t1) + "ms");
+
 	}
 
-	private void setStyle(StyleFlag flag) {
-		switch (flag) {
+	private void setStyle(StyleFlag flag){
+		switch(flag){
 		case H1:
 			paint.setTextSize(h1TextSize);
 			paint.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
@@ -339,132 +403,165 @@ public class HtmlRenderer {
 		} 
 		 
 		
+	}	
+	
+	private int renderTextRow(Canvas canvas, List<WordPosition> wordList, List<TextElement> words, int totalRowHeight, boolean justified, int curWordSpace, float rowCurWidth, float wordCurWidth){
+		int count = words.size();
+		int rowHeight = 0;
+		float lastWidth = 0;	
+		float glue = curWordSpace;
+		int diffFix = 6;
+		
+		if(justified){
+			glue = ((viewWidth - (2 * widthMargin)) - (rowCurWidth - wordCurWidth - (curWordSpace * (count+1))))
+				/ (count-1);
+		}
+		
+		for(TextElement e : words){
+			setStyle(e.getStyle());
+			rowHeight = (int) (paint.getTextSize() + rowMargin);
+			float xPos = widthMargin + lastWidth;
+			float yPos = totalRowHeight + rowHeight;
+			canvas.drawText(e.getText(), xPos, yPos, paint);
+			float wordWidth = paint.measureText(e.getText());
+			lastWidth += wordWidth + glue;
+			wordList.add(new WordPosition(xPos, yPos-paint.getTextSize()+diffFix, xPos+wordWidth, yPos+diffFix, e.getText()));
+			wordList.add(new WordPosition(xPos+wordWidth, yPos-paint.getTextSize()+diffFix, xPos+wordWidth+glue, yPos+diffFix," ")); //add space as well
+			objectsIterated++;
+		}
+		
+		words.clear();
+		totalRowHeight += rowHeight;
+		return totalRowHeight;
 	}
 	
-	public RenderedPage getRenderedPage(int pageNumber) {
-		Log.d(tag, "Asked to render page with number: " + pageNumber);
-		if (pageNumber < 0) {
+	public RenderedPage getRenderedPage(int pageNumber){
+		if(pageNumber < 0){
 			throw new IllegalArgumentException("pageNumber must be > 0. Number was: " + pageNumber);
 		}
+		
 		if (pageNumber >= objsByPage.size()){
 			// TODO: consider IAE here, though how would callers check the contract?
 			// XXX experimental method to ignore look-ahead buffering - just ignore invaid calls
 			Log.d(tag, "WARNING: page number requested is too big. pnum requested[0index]/pages rendered[1index]:" + pageNumber + "/" + objsByPage.size());
 			// throw new IllegalArgumentException("")
 		}
-		
+
 		long milis = System.currentTimeMillis();
 
 		int drawFrom = objsByPage.get(pageNumber);
 
-		List<CharPosition> charList = new ArrayList<CharPosition>();
+		List<WordPosition> charList = new ArrayList<WordPosition>();
+		Map<Integer, RenderElement> specialObjectsMap = new HashMap<Integer, RenderElement>(5);
 
-		Bitmap bitmap = Bitmap.createBitmap(viewWidth, viewHeight,
-				Bitmap.Config.ARGB_4444);
+		Bitmap bitmap = Bitmap.createBitmap(viewWidth, viewHeight, Bitmap.Config.ARGB_4444);
 
 		Canvas canvas = new Canvas(bitmap);
 
 		// TODO document the purpose of these variables
 		objectsIterated = 0;
 		float rowCurWidth = 0;
-		int rowWordCount = 0;
-		int totalRowHeight = 0;
+		int totalRowHeight = heightMargin;
 		boolean firstWordInRow = true;
-		boolean shouldPrintRow = false;
-		boolean newParagraph = true;
+		boolean firstRow = true;
 		int breakSize = 0;
 		int curWordSpace = 0;
-
-		if (printObjects == null){
-			throw new NullPointerException("HtmlRenderer: printObjects was null when asked to render, most likely HTML is not parsed yet!");
+		
+		if(printObjects == null){
+			throw new NullPointerException(
+					"HtmlRenderer: printObjects was null when asked to render, most likely HTML is not parsed yet!");
 		}
 		
-		for (int i = drawFrom, size = printObjects.size(); i < size; i++) {
-
-			float wordCurWith = 0;
-			if (printObjects.get(i) instanceof BreakElement) {
-				shouldPrintRow = true;
-				newParagraph = false;
-				rowWordCount++;
+		List<TextElement> currentRowWords = new ArrayList<TextElement>(WORD_ROW_LIST_INITIAL_CAPACITY);
+		for(int i = drawFrom, size = printObjects.size(); i < size; i++){
+			
+			
+			float wordCurWidth = 0;
+			
+			RenderElement curElement = printObjects.get(i);
+			
+			if(curElement instanceof BreakElement){		
+				if(!currentRowWords.isEmpty()){		
+					totalRowHeight = renderTextRow(canvas, charList, currentRowWords, totalRowHeight, false, curWordSpace, rowCurWidth, wordCurWidth);
+					rowCurWidth = 0;
+				}	
+				breakSize = ((BreakElement) curElement).getSpan() + rowMargin;		
+				totalRowHeight += breakSize;
 				objectsIterated++; // this is also an object in the array
-				breakSize = ((BreakElement) printObjects.get(i)).getSpan()+rowMargin;
-			} else { // TODO make this less fragile by not presupposing ONLY break or text elements 
-				TextElement e = (TextElement) printObjects.get(i);
-				setStyle(e.getStyle());
+			}else if(curElement instanceof TextElement){		
+				
+				setStyle(((TextElement)curElement).getStyle());
 				curWordSpace = (int) (paint.getTextSize() * 0.2);
-				if (curWordSpace < minWordSpace) {
+				
+				if(firstRow){ //first row fix
+					rowCurWidth += curWordSpace;
+					firstRow = false;
+				}
+				
+				if(curWordSpace < minWordSpace){
 					curWordSpace = minWordSpace;
 				}
-				wordCurWith = paint.measureText(e.getText());
-				rowCurWidth += wordCurWith;
-				if (!firstWordInRow) {
+				wordCurWidth = paint.measureText(((TextElement)curElement).getText());
+				rowCurWidth += wordCurWidth;
+				if(!firstWordInRow){
 					rowCurWidth += curWordSpace;
 				}
 				firstWordInRow = false;
-				if (rowCurWidth <= (viewWidth - (2 * widthMargin))) {
-					rowWordCount++;
-				} else {
-					newParagraph = true;
-					shouldPrintRow = true;
+				
+				//TODO fix if the word does not fit screen
+				if(wordCurWidth > (viewWidth - (2 * widthMargin))){ //the word itself does not fit, render it anyway
+					currentRowWords.add(((TextElement)curElement));
+					totalRowHeight = renderTextRow(canvas, charList, currentRowWords, totalRowHeight, true, curWordSpace, rowCurWidth, wordCurWidth); //we should print words justified
+					rowCurWidth = 0;
+				}else{
+					if(rowCurWidth <= (viewWidth - (2 * widthMargin))){ //there is room for more words
+						currentRowWords.add(((TextElement)curElement));
+					}else{ //there is not room for more words
+						totalRowHeight = renderTextRow(canvas, charList, currentRowWords, totalRowHeight, true, curWordSpace, rowCurWidth, wordCurWidth); //we should print words justified
+						rowCurWidth = 0;
+						i--; //the last word we checked did not fit, so dont forget that
+					}
 				}
+				
+				
+			}else if(curElement instanceof ImageElement){
+				
+				
+				boolean textBefore = false;
+				if(!currentRowWords.isEmpty()){		
+					totalRowHeight = renderTextRow(canvas, charList, currentRowWords, totalRowHeight, false, curWordSpace, rowCurWidth, wordCurWidth);
+					rowCurWidth = 0;
+					textBefore = true;
+				}
+				objectsIterated++;
+				String imagePath = new File(cacheDir, bookName+"/"+((ImageElement)curElement).getUrl()).getAbsolutePath(); 
+				Bitmap imageBitmap = BitmapFactory.decodeFile(imagePath);
+				((ImageElement)curElement).setBitmap(imageBitmap);
+				((ImageElement)curElement).setAbsoluteUrl(imagePath);
+				
+
+				//if bitmap is small enough to just draw on canvas
+				if(imageBitmap.getHeight() <= imageHeightLimit && imageBitmap.getWidth() <= viewWidth-(2 * widthMargin)){
+					Matrix matrix = new Matrix();
+					matrix.setTranslate((float) ((viewWidth-imageBitmap.getWidth())*0.5), totalRowHeight+(textBefore?baseTextSize:0));
+					canvas.drawBitmap(imageBitmap,matrix, null);
+					totalRowHeight += imageBitmap.getHeight() + rowMargin+(textBefore?baseTextSize:0);
+				}else{
+					if(viewHeight - totalRowHeight - heightMargin >= bookObjectHeight+rowMargin+baseTextSize){				
+						specialObjectsMap.put(totalRowHeight+rowMargin+(textBefore?baseTextSize:0), printObjects.get(i)); //just ad
+						totalRowHeight += bookObjectHeight;
+					}else{ //no room for image, render on next page
+						objectsIterated--;
+						break;
+					}
+
+				}
+
 			}
 			
-			if (shouldPrintRow) {
-				float tGlue = ((viewWidth - (2 * widthMargin)) - (rowCurWidth
-						- wordCurWith - (curWordSpace * rowWordCount)))
-						/ (rowWordCount - 1);
-				rowWordCount--;
-				float lastWidth = 0;
-				int from = i - rowWordCount - (newParagraph ? 1 : 0);
-				int to = i;
-
-				if (from < 0) {
-					from = 0;
-				}
-
-				int rowHeight = 0;
-				for (int j = from; j < to; j++) {
-					TextElement e = (TextElement) printObjects.get(j);
-					setStyle(e.getStyle());
-					float glue = (float) (newParagraph ? tGlue
-							: curWordSpace);
-					rowHeight = (int) (paint.getTextSize() + rowMargin);
-					float xPos = widthMargin + lastWidth;
-					float yPos = totalRowHeight + rowHeight;
-					canvas.drawText(e.getText(), xPos, yPos, paint);
-					float wordWidth = paint.measureText(e.getText());
-					lastWidth += wordWidth + glue;
-					char[] charArray = e.getText().toCharArray();
-					int wordLength = charArray.length;
-					float charWidth = wordWidth / wordLength;
-					for (char c : charArray) {
-						charList.add(new CharPosition(xPos, yPos
-								- paint.getTextSize(), xPos + charWidth,
-								yPos, c));
-					}
-					objectsIterated++;
-				}
-
-				totalRowHeight += rowHeight + breakSize;
-
-				breakSize = 0;
-
-				if (newParagraph) {
-					// we rewind the word counter if we couldn't fit the
-					// word on the just-finished line, so the word gets a
-					// fit-attempt on the next line.
-					i--;
-				}
-				rowCurWidth = 0;
-				rowWordCount = 0;
-				firstWordInRow = true;
-				shouldPrintRow = false;
-
-				if (totalRowHeight + ((baseTextSize + rowMargin))
-						+ heightMargin > viewHeight) {
-					break;
-				}
-
+			if(totalRowHeight + ((baseTextSize + rowMargin)) + heightMargin > viewHeight){
+				Log.d(tag, "reached end of page");
+				break;
 			}
 		}
 		
@@ -493,7 +590,14 @@ public class HtmlRenderer {
 		if (onDrawCompleteListener != null){
 			onDrawCompleteListener.drawComplete();
 		}
-		return new RenderedPage(bitmap, drawFrom, charList);
+
+		Log.d(tag, "-------------------PAGE FINNISHED-----------------");
+		
+		return new RenderedPage(bitmap, drawFrom, charList, specialObjectsMap);
+	}
+
+	public int getBookObjectHeight(){	
+		return bookObjectHeight;
 	}
 
 

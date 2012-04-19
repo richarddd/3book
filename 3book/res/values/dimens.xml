@@ -4,6 +4,7 @@
     <dimen name="padding_s">4dp</dimen>
     <dimen name="padding_m">8dp</dimen>
     <dimen name="padding_l">16dp</dimen>
+    
     <dimen name="listview_one_row">64dp</dimen>
     <dimen name="icon_size_m">32dp</dimen>
     <dimen name="icon_size_l">48dp</dimen>
@@ -13,8 +14,11 @@
     <dimen name="actionbar_compat_button_width">48dp</dimen>
     <dimen name="actionbar_compat_button_home_width">56dp</dimen>
     
+    <dimen name="book_nav_handle_height">32dp</dimen>
     <dimen name="book_nav_title_height">32dp</dimen>
     <dimen name="book_nav_list_height">96dp</dimen>
     <dimen name="book_nav_height">128dp</dimen>
+    
+    <dimen name="font_preview_size">128dp</dimen>
 
 </resources>

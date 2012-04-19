@@ -148,7 +148,8 @@ public class ActionBarHelperBase extends ActionBarHelper {
      * Returns a {@link android.view.MenuInflater} that can read action bar metadata on
      * pre-Honeycomb devices.
      */
-    public MenuInflater getMenuInflater(MenuInflater superMenuInflater) {
+    @Override
+	public MenuInflater getMenuInflater(MenuInflater superMenuInflater) {
         return new WrappedMenuInflater(mActivity, superMenuInflater);
     }
 

@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:visibility="invisible"
+    android:layout_height="@dimen/book_nav_height" >
+
+    <se.chalmers.threebook.ui.GalleryFix
+        android:id="@+id/gal_navigation"
+        android:layout_width="fill_parent"
+        android:layout_height="@dimen/book_nav_list_height"
+        android:spacing="0dp" />
+
+    <View
+        android:layout_width="fill_parent"
+        android:layout_height="@dimen/book_nav_list_height"
+        android:background="@drawable/recent_frame_shadow" />
+
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/lay_book_navinfo"
+        android:layout_centerHorizontal="true"
+        android:src="@drawable/book_naw_arrow" />
+    
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:rotation="180"
+        android:src="@drawable/book_naw_arrow" />
+
+    <RelativeLayout
+        android:id="@+id/lay_book_navinfo"
+        android:layout_width="fill_parent"
+        android:layout_height="@dimen/book_nav_title_height"
+        android:layout_alignParentBottom="true"
+        android:background="@drawable/action_bar_top_background" >
+
+        <TextView
+            android:id="@+id/txt_book_nav_title"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:layout_toLeftOf="@+id/txt_book_nav_no"
+            android:gravity="center_vertical"
+            android:paddingLeft="@dimen/padding_l"
+            android:singleLine="true"
+            android:text="Title"
+            android:textColor="@color/default_background" />
+
+        <TextView
+            android:id="@+id/txt_book_nav_no"
+            android:layout_width="wrap_content"
+            android:layout_height="fill_parent"
+            android:layout_alignParentRight="true"
+            android:gravity="center_vertical"
+            android:paddingRight="@dimen/padding_l"
+            android:text="*/*"
+            android:textColor="@color/default_background" />
+    </RelativeLayout>
+
+</RelativeLayout>

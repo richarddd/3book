@@ -1,8 +1,70 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
-    android:layout_height="@dimen/listview_one_row" >
+    android:layout_height="@dimen/listview_one_row"
+    android:paddingRight="@dimen/padding_m" >
 
+    <ImageView
+        android:id="@+id/img_book_cover"
+        android:layout_width="@dimen/listview_one_row"
+        android:layout_height="@dimen/listview_one_row"
+        android:scaleType="centerCrop"
+        android:src="@drawable/recent_book_cover" />
+
+    <TextView
+        android:id="@+id/txt_book_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_alignWithParentIfMissing="true"
+        android:layout_marginLeft="@dimen/padding_m"
+        android:layout_marginRight="@dimen/padding_s"
+        android:layout_marginTop="@dimen/padding_m"
+        android:layout_toLeftOf="@+id/btn_book_more"
+        android:layout_toRightOf="@+id/img_book_cover"
+        android:ellipsize="marquee"
+        android:singleLine="true"
+        android:text="Title"
+        android:textAppearance="?android:attr/textAppearanceMedium" />
+
+    <ImageButton
+        android:id="@+id/btn_book_more"
+        android:layout_width="wrap_content"
+        android:layout_height="fill_parent"
+        android:layout_alignParentRight="true"
+        android:background="@null"
+        android:layout_centerVertical="true"
+        android:paddingLeft="@dimen/padding_m"
+        android:paddingRight="@dimen/padding_m"
+        android:src="@android:drawable/ic_menu_more" />
+
+    <ProgressBar
+        android:id="@+id/bar_book_progress"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="@dimen/listview_one_row"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:indeterminate="false"
+        android:max="100"
+        android:progress="50" />
+
+    <TextView
+        android:id="@+id/txt_book_author"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/txt_book_title"
+        android:layout_alignWithParentIfMissing="true"
+        android:layout_marginTop="@dimen/padding_m"
+        android:layout_marginLeft="@dimen/padding_m"
+        android:layout_marginRight="@dimen/padding_s"
+        android:layout_toLeftOf="@+id/btn_book_more"
+        android:layout_toRightOf="@+id/img_book_cover"
+        android:ellipsize="end"
+        android:singleLine="true"
+        android:text="Author"
+        android:textAppearance="?android:attr/textAppearanceSmall" />
+
+    <!--
     <ImageView
         android:id="@+id/img_book_cover"
         android:layout_width="@dimen/listview_one_row"
@@ -36,23 +98,24 @@
         android:textAppearance="@android:style/TextAppearance.Small"
         android:textColor="@color/font_light" />
 
-    <RatingBar
-        android:id="@+id/bar_book_rating"
-        style="@android:style/Widget.Holo.RatingBar.Small"
+    <ProgressBar
+        android:id="@+id/bar_book_progress"
+        android:progress="50"
+        android:max="100"
+        android:indeterminate="false"
         android:layout_width="wrap_content"
         android:layout_height="0dp"
         android:layout_alignParentBottom="true"
         android:layout_below="@+id/txt_book_author"
         android:layout_marginLeft="@dimen/padding_m"
         android:layout_toLeftOf="@+id/chk_book"
-        android:layout_toRightOf="@+id/img_book_cover"
-        android:numStars="5"
-        android:stepSize="1.0" />
+        android:layout_toRightOf="@+id/img_book_cover" />
     <CheckBox
         android:id="@+id/chk_book"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentRight="true"
-        android:layout_centerVertical="true" />
+        android:layout_centerVertical="true" />
+    -->
 
 </RelativeLayout>

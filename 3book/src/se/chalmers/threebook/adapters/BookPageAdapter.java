@@ -1,14 +1,24 @@
 package se.chalmers.threebook.adapters;
 
+import java.util.Map;
+
+import se.chalmers.threebook.ImageViewActivity;
 import se.chalmers.threebook.R;
 import se.chalmers.threebook.html.HtmlRenderer;
+import se.chalmers.threebook.html.ImageElement;
+import se.chalmers.threebook.html.RenderElement;
 import se.chalmers.threebook.html.RenderedPage;
 import android.content.Context;
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
+import android.widget.RelativeLayout.LayoutParams;
 
 public class BookPageAdapter extends BaseAdapter {
 
@@ -20,10 +30,18 @@ public class BookPageAdapter extends BaseAdapter {
 	private LayoutInflater mInflater;
 	private HtmlRenderer render;
 	private RenderedPage[] pageCache;
-
-	private int objectsBuffered; // provides special case code for initial buffering 
+ 
 	private int lateOffset; // used for non-zero jump buffering re-initialization  
 	
+
+	private int objectsBuffered;
+	private int bookObjectHeight;
+	private int bookObjectSideMargin;
+	private Context context;
+	private Integer basicViewCount;
+	
+	private String imageString; //TODO add more support for strings here
+
 
 	/**
 	 * 
@@ -37,8 +55,11 @@ public class BookPageAdapter extends BaseAdapter {
 		mInflater = (LayoutInflater) context
 				.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 		this.render = render;
+		this.context = context;
+		this.imageString = context.getResources().getString(R.string.image);
+		this.bookObjectHeight = render.getBookObjectHeight();
+		this.bookObjectSideMargin = render.getWidthMargin();
 		pageCache = new RenderedPage[(sideBuffer * 2) + 1];
-
 	}
 
 	public HtmlRenderer getRenderer() {
@@ -64,8 +85,11 @@ public class BookPageAdapter extends BaseAdapter {
 		if (objectsBuffered < pageCache.length) {
 			if (objectsBuffered == 0){ lateOffset = -offset;}
 			objectsBuffered++;
-			int insertAtIndex = ((int) (pageCache.length / 2)) + (offset+lateOffset);
-			pageCache[insertAtIndex] = offset < 0 ? null : render.getRenderedPage(offset); // TODO: check side buffer
+
+			int insertAtIndex = ((pageCache.length / 2)) + (offset+lateOffset);
+			pageCache[insertAtIndex] = offset < 0 ? null : render
+					.getRenderedPage(offset);
+
 			curPage = pageCache[insertAtIndex];
 
 		} else {
@@ -90,7 +114,7 @@ public class BookPageAdapter extends BaseAdapter {
 
 		ViewHolder holder;
 		if (convertView == null) {
-			convertView = mInflater.inflate(R.layout.fragment_book_image, null);
+			convertView = mInflater.inflate(R.layout.view_book_page, null);
 			holder = new ViewHolder(
 					(ImageView) convertView
 							.findViewById(R.id.img_book_page_image));
@@ -98,13 +122,60 @@ public class BookPageAdapter extends BaseAdapter {
 		} else {
 			holder = (ViewHolder) convertView.getTag();
 		}
+		
+		if(basicViewCount == null){
+			basicViewCount = ((ViewGroup)convertView).getChildCount();
+		}
+		
+
 
 		if (curPage != null) {
 			holder.img.setImageBitmap(curPage.getBitmap());
+			
+			Map<Integer, RenderElement> specialObjectsMap = curPage.getSpecialObjectsMap();
+			
+			if(specialObjectsMap.isEmpty() && ((ViewGroup)convertView).getChildCount() != basicViewCount){
+				((ViewGroup)convertView).removeViews(basicViewCount, ((ViewGroup)convertView).getChildCount()-1);
+			}else{
+				for(Integer i : specialObjectsMap.keySet()){
+					
+					View bookObject = mInflater.inflate(R.layout.view_book_object, null);	
+					RelativeLayout.LayoutParams params = new LayoutParams(android.view.ViewGroup.LayoutParams.FILL_PARENT, bookObjectHeight);
+					params.topMargin = i;
+					params.leftMargin = bookObjectSideMargin;
+					params.rightMargin = bookObjectSideMargin;
+					ImageView img = (ImageView) bookObject.findViewById(R.id.img_book_object);		
+					RenderElement element = specialObjectsMap.get(i);
+					Button btn = (Button) bookObject.findViewById(R.id.btn_view_book_object);
+					if(element instanceof ImageElement){
+						img.setImageBitmap(((ImageElement)element).getBitmap());
+						btn.setText(btn.getText()+ " "+imageString);
+						btn.setOnClickListener(new ImageObjectClickListener(((ImageElement)element).getAbsoluteUrl()));		
+					}	
+					bookObject.setLayoutParams(params);
+					((ViewGroup)convertView).addView(bookObject, params);
+				}
+			}
+			
 		}
 		lastPosition = position;
 
 		return convertView;
+	}
+	
+	private class ImageObjectClickListener implements OnClickListener{	
+		private String imagePath;
+		
+		public ImageObjectClickListener(String imagePath){
+			this.imagePath = imagePath;
+		}
+
+		public void onClick(View v){
+			Intent intent = new Intent();
+	        intent.setClass(context, ImageViewActivity.class);
+	        intent.putExtra("imagePath", imagePath);
+	        context.startActivity(intent);
+		}	
 	}
 	
 	public void clear(){

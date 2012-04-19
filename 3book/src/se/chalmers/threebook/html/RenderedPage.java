@@ -1,25 +1,32 @@
 package se.chalmers.threebook.html;
 
 import java.util.List;
+import java.util.Map;
 
 import android.graphics.Bitmap;
+import android.view.View;
 
 public class RenderedPage {
 	
-	private List<CharPosition> positionList;
+	private List<WordPosition> positionList;
 	private Bitmap bitmap;
 	private int nodePosition;
 	
+	private View imageContainer;
+	private Map<Integer, RenderElement> specialObjectsMap;
+	
 	public RenderedPage(Bitmap bitmap, int nodePosition,
-			List<CharPosition> positionList) {
+			List<WordPosition> positionList, Map<Integer, RenderElement> specialObjectsMap) {
 		this.bitmap = bitmap;
 		this.nodePosition = nodePosition;
 		this.positionList = positionList;
+		this.specialObjectsMap = specialObjectsMap;
 	}
-	public List<CharPosition> getPositionList() {
+	
+	public List<WordPosition> getPositionList() {
 		return positionList;
 	}
-	public void setPositionList(List<CharPosition> positionList) {
+	public void setPositionList(List<WordPosition> positionList) {
 		this.positionList = positionList;
 	}
 	public Bitmap getBitmap() {
@@ -33,5 +40,8 @@ public class RenderedPage {
 	}
 	public void setNodePosition(int nodePosition) {
 		this.nodePosition = nodePosition;
+	}
+	public Map<Integer, RenderElement> getSpecialObjectsMap(){
+		return specialObjectsMap;
 	}
 }

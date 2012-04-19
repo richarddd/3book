@@ -3,6 +3,7 @@ package se.chalmers.threebook.content;
 import java.io.IOException;
 
 import se.chalmers.threebook.html.RenderedPage;
+import se.chalmers.threebook.model.Book;
 import se.chalmers.threebook.model.TocReference;
 
 public interface BookNavigator {
@@ -12,4 +13,5 @@ public interface BookNavigator {
 	public RenderedPage prevSource() throws IOException;
 	public RenderedPage toSection(TocReference section) throws IOException;
 	public TableOfContents getToc();
+	public Book getBook();
 }
