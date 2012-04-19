@@ -1,18 +1,14 @@
 package se.chalmers.threebook;
 
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.List;
 
-import nl.siegmann.epublib.epub.EpubReader;
 import se.chalmers.threebook.adapters.BookNavAdapter;
 import se.chalmers.threebook.adapters.BookPageAdapter;
 import se.chalmers.threebook.content.BookNavigator;
 import se.chalmers.threebook.content.ContentStream;
-import se.chalmers.threebook.content.OldEpubContentStream;
-import se.chalmers.threebook.content.MyBook;
+import se.chalmers.threebook.content.EpubNavigator;
 import se.chalmers.threebook.html.HtmlRenderer;
 import se.chalmers.threebook.html.RenderedPage;
 import se.chalmers.threebook.model.TocReference;
@@ -66,13 +62,13 @@ public class ReadActivity extends ActionBarActivity {
 	private float lastDownX;
 	private boolean webviewOnTouch = false;
 
-	private ContentStream content = null;
-
 	private ImageView imgPageRender;
 	private HtmlRenderer render;
 	private RenderedPage renderedPage;
 	private TocReference curSection;
 	private BookNavigator navigator; // this is the cat's meow.
+	
+	private int curChapter = 1;
 
 	public enum IntentType {
 		READ_BOOK_NOT_IN_LIBRARY, READ_BOOK_FROM_LIBRARY, GO_TO_TOC_INDEX;
@@ -96,31 +92,19 @@ public class ReadActivity extends ActionBarActivity {
 		}
 	}
 
-	public void display(int index) {
-		display(index, "");
+	public void goToChapter(int index) {
+		goToChapter(index, "");
 	}
 
 	
 	
-	public void display(int index, String anchor) {
+	public void goToChapter(int index, String anchor) {
 
+		int curChapter = index;
+		
 		try {
 			Log.d(tag, "Display called, index and anchor: " + index +","+anchor);
-			Point p = Helper.getDisplaySize(this);
-			if (render == null){
-				long t1 = System.currentTimeMillis();
-				Log.d(tag, "Initializing renderer.");
-				render = new HtmlRenderer(p.x, p.y);
-				// Work here
-				curSection = navigator.toSection(navigator.getToc().getSection(index));				
-				render.setHtmlSource(curSection.getHtml(), curSection.getUniqueIdentifier());
 
-				//render.setHtmlSource(Helper.streamToString(new FileInputStream(stream.jumpTo(index))));
-			
-				long t2 = System.currentTimeMillis();
-				Log.d(tag, "Fetching data and rendering the HTML took " + (t2-t1) + "ms.");
-			}
-			
 			pagerAdapter = new BookPageAdapter(this, render, bookFlipper.getSideBuffer());
 			
 			bookFlipper.setOnViewSwitchListener(new ViewSwitchListener() {
@@ -133,10 +117,10 @@ public class ReadActivity extends ActionBarActivity {
 
 				}
 			});
-			
+			navigator.toSection(navigator.getToc().getSection(index)); // sets up navigator source			
 			if (anchor != null && anchor != ""){
 				Log.d(tag, "Trying to go to anchor. Anchor: " + anchor);
-				bookFlipper.setAdapter(pagerAdapter, BookPageAdapter.START_POSITION+render.getPageNumber(anchor));
+				bookFlipper.setAdapter(pagerAdapter, BookPageAdapter.START_POSITION + render.getPageNumber(anchor));
 				//bookFlipper.setSelection(); // TODO set up some caching for this
 			}else{
 				bookFlipper.setAdapter(pagerAdapter, BookPageAdapter.START_POSITION);
@@ -146,9 +130,9 @@ public class ReadActivity extends ActionBarActivity {
 			
 			
 		} catch (FileNotFoundException e) {
-			Log.d("3", "FNFE in display: " + e.getMessage());
+			Log.d("3", "FNFE in goToChapter: " + e.getMessage());
 		} catch (IOException e) {
-			Log.d("3", "IOE in display: " + e.getMessage());
+			Log.d("3", "IOE in goToChapter: " + e.getMessage());
 		}
 		
 		// XXX remember to remove this shit
@@ -193,10 +177,10 @@ public class ReadActivity extends ActionBarActivity {
 			public void onItemClick(AdapterView<?> parent, View view,
 					int position, long id) {
 				dialog.show();
-				Log.d(tag, "Clicking in chapscroller, id is: " + content.getToc().getTocReferences().get((int)id).getId());
-				display((int) id, content.getToc().getTocReferences().get((int)id).getId());
+				Log.d(tag, "Clicking in chapscroller, index is : " + (int)id + ", anchor-id is: " + navigator.getToc().getTocReferences().get((int)id).getId());
+				//display((int) id, content.getToc().getTocReferences().get((int)id).getId());
+				goToChapter((int) id, navigator.getToc().getTocReferences().get((int)id).getId());
 				showOverlay(false);
-
 			}
 
 		});
@@ -273,7 +257,6 @@ public class ReadActivity extends ActionBarActivity {
 		case READ_BOOK_FROM_LIBRARY:
 			Log.d("3", "reading from files and shit!");
 
-			AssetManager assetManager = getAssets();
 			String fileName = (String) getIntent().getSerializableExtra(
 					IntentKey.FILE_PATH.toString());
 			// int lastIndex = getFromDatabase.lastChapterForUserDude(); // TODO
@@ -282,17 +265,16 @@ public class ReadActivity extends ActionBarActivity {
 
 			try { // Open and store ye olde book
 				long t1 = System.currentTimeMillis();
-				InputStream epubInputStream = new FileInputStream(fileName);
-				/*
-				 * InputStream epubInputStream = assetManager.open("books/" +
-				 * fileName);
-				 */
-				MyBook.setBook(new EpubReader().readEpub(new FileInputStream(fileName)));
-				// stream = new EpubContentStream(MyBook.get().book(), this);
-				content = new OldEpubContentStream(MyBook.get().book(),
-						getCacheDir());
+				
+				Point p = Helper.getDisplaySize(this);
+				Log.d(tag, "Initializing renderer, setting up book and navigator.");
+				render = new HtmlRenderer(p.x, p.y);
+				
+				navigator = new EpubNavigator(fileName, getCacheDir(), render); // TODO use factory;
+				navigator.toSection(navigator.getToc().getSection(0));
+				
 				long t2 = System.currentTimeMillis();
-				Log.d("3", "opening book took " + (t2 - t1) + "ms.");
+				Log.d("3", "Initializing took " + (t2 - t1) + "ms.");
 
 			} catch (FileNotFoundException e) {
 				Log.e("3", "ReadActivity FNFE: " + e.getMessage());
@@ -303,21 +285,20 @@ public class ReadActivity extends ActionBarActivity {
 			// Set up listeners and data for the overlay chapter-scroller
 
 			List<BookNavItem> chapters = chapterAdapter.getItems();
-			for (String title : content.getTocNames()) {
-				chapters.add(new BookNavItem(title, null));
+			for (TocReference r : navigator.getToc().getTocReferences()){
+				chapters.add(new BookNavItem(r.getTitle(), null));
 			}
-
 			((TextView) findViewById(R.id.txt_book_nav_chapter_no))
-					.setText(lastIndex + "/" + content.getToc().size());
+					.setText(lastIndex + "/" + navigator.getToc().size());
 
-			display(lastIndex);
+			goToChapter(lastIndex);
 			break;
 		case GO_TO_TOC_INDEX:
 			int id = (int) (Integer) getIntent().getSerializableExtra(
 					IntentKey.TOC_INDEX.toString());
 			String anchor = (String) getIntent().getSerializableExtra(
 					IntentKey.TOC_ANCHOR.toString());
-			display(id, anchor);
+			goToChapter(id, anchor);
 			break;
 		}
 
@@ -369,17 +350,35 @@ public class ReadActivity extends ActionBarActivity {
 	}
 
 	private void nextPage() {
-		if (!endOfFile) {
+//		if (!endOfFile) {
+//			imgPageRender.setVisibility(View.INVISIBLE);
+//			bookFlipper.nextScreen();
+//		} else {
+//			// /TODO nextChapter
+//		} 
+		try {
+			navigator.nextPage();
 			imgPageRender.setVisibility(View.INVISIBLE);
 			bookFlipper.nextScreen();
-		} else {
-			// /TODO nextChapter
+		} catch (Exception e){
+			// XXX TODO handle exceptions correctly
+			Log.d(tag, "exception when user clicked next page! msg: " + e.getMessage());
+			e.printStackTrace();
 		}
 	}
 
 	private void prevPage() {
-		imgPageRender.setVisibility(View.INVISIBLE);
-		bookFlipper.prevousScreen();
+//		imgPageRender.setVisibility(View.INVISIBLE);
+//		bookFlipper.prevousScreen(); 
+		try {
+			navigator.prevPage();
+			imgPageRender.setVisibility(View.INVISIBLE);
+			bookFlipper.prevousScreen(); 
+		} catch (Exception e){
+			// XXX TODO handle exceptions correctly
+			Log.d(tag, "exception when user clicked previous page! msg: " + e.getMessage());
+			e.printStackTrace();
+		}
 	}
 
 	public void setFullScreen(boolean fullscreen) {
@@ -421,8 +420,12 @@ public class ReadActivity extends ActionBarActivity {
 		case R.id.menu_bookmark:
 			// selectText();
 			// setFullScreen(false);
+			//try { navigator.prevSource(); } catch (Exception e) { Log.d(tag, "TEST: prevSource via bookmark exception: " + e.getMessage());} // XXX test
+			try { goToChapter(curChapter-1, ""); } catch (Exception e) { Log.d(tag, "TEST: prevSource via bookmark exception: " + e.getMessage());} // XXX test
 			break;
 		case R.id.menu_day_night_mode:
+			//try {navigator.nextSource(); } catch (Exception e) { Log.d(tag, "TEST: prevSource via daynight exception: " + e.getMessage());} // XXX test
+			try {goToChapter(curChapter+1, ""); } catch (Exception e) { Log.d(tag, "TEST: prevSource via daynight exception: " + e.getMessage());} // XXX test
 			break;
 		case R.id.menu_settings:
 			break;

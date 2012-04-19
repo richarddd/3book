@@ -45,6 +45,7 @@ public class EpubCache implements BookCache {
 	public EpubCache(String bookIdentifier, File cacheDir, Book book) throws IOException{
 		bookName = bookIdentifier;
 		//this.cacheDir = cacheDir;
+		this.book = book;
 		bookDir = new File(cacheDir, bookIdentifier);
 		bookDir.mkdirs();
 		if (!bookDir.exists()){

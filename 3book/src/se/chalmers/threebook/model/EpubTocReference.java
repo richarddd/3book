@@ -141,4 +141,8 @@ public final class EpubTocReference implements TocReference {
 	public int hashCode(){
 		return getUniqueIdentifier();
 	}
+
+	public Object getBackingObject() {
+		return ref;
+	}
 }

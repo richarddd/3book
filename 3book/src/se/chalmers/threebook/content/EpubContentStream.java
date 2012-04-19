@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -28,11 +29,12 @@ public class EpubContentStream { //implements ContentStream {
 	private BookCache cache;
 	private Book book;	// yay, we can use a real book!
 	private TableOfContents toc;
-	private Map<String, Integer> hrefOrder; // used by TocRefs to find their 
-											// place in the TocRef partial order
+	private Map<String, Integer> hrefOrder =	// used by TocRefs to find their 
+		new HashMap<String,Integer>();			// place in the TocRef partial order
 	
-	private Map<Integer, TocReference> sourceOrder; // Used to find TocRef based
-													// on their place in partial order
+	private Map<Integer, TocReference> sourceOrder =  	// Used to find TocRef based
+		new HashMap<Integer,TocReference>();			// on their place in partial order
+	private String tag = "EpubContentStream";
 
 	
 	/**
@@ -49,6 +51,7 @@ public class EpubContentStream { //implements ContentStream {
 		toc = new EpubTableOfContents(book.getTableOfContents(), cache);
 		
 		{ 	int i = 0;
+			int debugI = 0; // TODO remove
 			// Do note that we're iterating over the TOC, which is not guaranteed to be the right order
 			// At some point we will have to figure out how to balance TOC, Spine and Guide.
 			// This looks like O(n*m) but should be more like O(n+m+C){n=tocSize, m=uniqueRefs}
@@ -60,10 +63,13 @@ public class EpubContentStream { //implements ContentStream {
 				do {
 					// strip away til we match
 					head = tocDeque.poll(); 
-				} while (head.getBaseFileName() != source.getHref());
+					debugI++;
+				} while (tocDeque.size() != 0 && !(head.getBaseFileName().equals(source.getHref()))); // TODO remove size once we've figured this out.
 				sourceOrder.put(i, head); // establish mapping between order and start of href source
-				i++;
-		}}
+				i++;  
+		}
+			Log.d("EpubContentStream", i + " resources processed against " + toc.getLinearToc().size() + "records, for at most " + (i*toc.getLinearToc().size()) + "iterations. ACtual iterations: " + debugI);
+		}
 		
 		
 		//nav = new Navigator(book);
@@ -72,10 +78,12 @@ public class EpubContentStream { //implements ContentStream {
 	public boolean hasNextSource(TocReference section){
 		return hrefOrder.get(section.getBaseFileName()) < hrefOrder.size(); 
 		
-	}
+	} 
 	
 	public boolean hasPrevSource(TocReference section){
-		return hrefOrder.get(section.getBaseFileName()) >= 0;
+		Log.d(tag , "Checking whether previous resource exists. Current resource has index: " + book.getSpine().getResourceIndex((	(TOCReference) section.getBackingObject()).getResource()));
+		return book.getSpine().getResourceIndex((	(TOCReference) section.getBackingObject()).getResource()) > 0; // XXX haxx 
+		//return hrefOrder.get(section.getBaseFileName()) >= 0;
 	}
 	
 	public TocReference getPreviousSource(TocReference relativeTo){

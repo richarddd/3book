@@ -44,7 +44,7 @@
             android:label="@string/preferences" />
         
         <activity
-            android:name="se.chalmers.threebook.ReadActivity"
+            android:name=".ReadActivity"
             android:label="@string/my_collection" />
         <activity android:name="se.chalmers.threebook.TocActivity"
             android:label="@string/table_of_contents"

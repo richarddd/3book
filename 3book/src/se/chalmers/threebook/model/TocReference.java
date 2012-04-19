@@ -3,6 +3,8 @@ package se.chalmers.threebook.model;
 import java.io.IOException;
 import java.util.List;
 
+import nl.siegmann.epublib.domain.Resource;
+
 public interface TocReference {
 	
 	@Override
@@ -54,4 +56,6 @@ public interface TocReference {
 	 * @throws IOException if the file can't be read
 	 */
 	public String getHtml() throws IOException;
+
+	public Object getBackingObject();
 }

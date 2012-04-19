@@ -34,7 +34,7 @@ class PageTracker {
 	 * @return the page where the source ends or -1 if this is unknown
 	 */
 	public int getEosPageNum(int sourceIdent){
-		return eosPageNumCache.containsKey(sourceIdent) ? -1 : eosPageNumCache.get(sourceIdent);
+		return eosPageNumCache.containsKey(sourceIdent) ? eosPageNumCache.get(sourceIdent) : -1;
 	}
 	
 	/**

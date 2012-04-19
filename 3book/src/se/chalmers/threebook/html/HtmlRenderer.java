@@ -86,15 +86,25 @@ public class HtmlRenderer {
 
 	public boolean isEndOfSource(int pageNumber) {
 		// refactor this once we're sure of the functionality
-		if (tracker.getEosPageNum(sourceIdent) <= pageNumber){
+		Log.d(tag, "isEndOfSource called. PageNumber: " + pageNumber + ", source-end page number: " + tracker.getEosPageNum(sourceIdent));
+		int eosPnum = tracker.getEosPageNum(sourceIdent);
+		if (eosPnum < 0){
+			// this means we don't know where we are; most likely at the beginning.
+			Log.d(tag, "isEndOfSource: FALSE (we don't know where the thing ends)");
+			return false;
+		}
+		if (eosPnum <= pageNumber){
 			Log.d(tag, "At end of source " + sourceIdent + ", page " + pageNumber);
 			if (tracker.getEosPageNum(sourceIdent) < pageNumber){ Log.d(tag, "MONKEY-WARNING: eos *less* than page number, this is probably bad. pn/eos: " + pageNumber + "/" + tracker.getEosPageNum(sourceIdent)); }
+			Log.d(tag, "isEndOfSource: TRUE");
 			return true;
 		}
+		Log.d(tag, "isEndOfSource: FALSE (we know where it ends tho)");
 		return false;
 	}
 	
 	public void setHtmlSource(String htmlSource, int sourceIdentifier) {
+		Log.d(tag, "Changing htmlSource identifier " + sourceIdentifier);
 		this.htmlSource = htmlSource;
 		this.sourceIdent = sourceIdentifier;
 		this.objectsIterated = 0;
@@ -294,8 +304,10 @@ public class HtmlRenderer {
 	 * @return the page at which it resides
 	 */
 	public int getPageNumber(String id){
-		
-		int anchorWord = idMap.get(id);
+		Log.d(tag, "getPageNumber(String id) called with id: " + id);
+		// null implies that we dont know where in the file this ID is - 
+		// so we'll return 0, the beginning of the file.
+		int anchorWord = idMap.get(id) != null ? idMap.get(id) : 0;  
 		int pageNumber = 0;
 		
 		Log.d(tag, "Going to anchor! AnchorWord for anchor " + id + " is: " + anchorWord);
@@ -322,6 +334,7 @@ public class HtmlRenderer {
 			}
 
 			// TODO once caching is implemented this should return -1 
+			Log.d(tag, "Found anchor, returning page number: " + (objsByPage.size()-2));
 			return objsByPage.size()-2; // XXX
 		} 
 		 
@@ -329,8 +342,15 @@ public class HtmlRenderer {
 	}
 	
 	public RenderedPage getRenderedPage(int pageNumber) {
+		Log.d(tag, "Asked to render page with number: " + pageNumber);
 		if (pageNumber < 0) {
 			throw new IllegalArgumentException("pageNumber must be > 0. Number was: " + pageNumber);
+		}
+		if (pageNumber >= objsByPage.size()){
+			// TODO: consider IAE here, though how would callers check the contract?
+			// XXX experimental method to ignore look-ahead buffering - just ignore invaid calls
+			Log.d(tag, "WARNING: page number requested is too big. pnum requested[0index]/pages rendered[1index]:" + pageNumber + "/" + objsByPage.size());
+			// throw new IllegalArgumentException("")
 		}
 		
 		long milis = System.currentTimeMillis();
@@ -460,7 +480,9 @@ public class HtmlRenderer {
 		
 		objsByPage.set(pageNumber + 1, objCount);
 		
-		if (printObjects.size() == objCount){ // 
+		Log.d(tag, "Determining page end: object count/printObjSize (max objects): " + objCount + "/" +  printObjects.size());
+		if (objCount >= printObjects.size()){ // 
+			Log.d(tag, "Setting end of sourcePage for current source to " + pageNumber);
 			tracker.setEosPageNum(sourceIdent, pageNumber);
 		}
 		
