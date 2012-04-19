@@ -1,17 +1,34 @@
 package se.chalmers.threebook;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 import se.chalmers.threebook.adapters.FileBrowserAdapter;
+import se.chalmers.threebook.contentprovider.ThreeBookContentProvider;
+import se.chalmers.threebook.db.AuthorTable;
+import se.chalmers.threebook.db.BookDataHelper;
+import se.chalmers.threebook.db.BookTable;
+import se.chalmers.threebook.db.EpubImporter;
+import se.chalmers.threebook.db.Importer;
+import se.chalmers.threebook.model.Author;
+import se.chalmers.threebook.model.Book;
+import se.chalmers.threebook.model.Position;
 import se.chalmers.threebook.ui.actionbarcompat.ActionBarActivity;
 import se.chalmers.threebook.util.Helper;
 import android.app.ActionBar;
 import android.app.AlertDialog;
+import android.content.ContentValues;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -24,27 +41,31 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 public class FileBrowserActivity extends ActionBarActivity {
-	
-	public class FileSelect{
+
+	public class FileSelect {
 		private File file;
 		private boolean selected;
-		
+
 		public FileSelect(File file, boolean selected) {
 			this.file = file;
 			this.selected = selected;
 		}
+
 		public File getFile() {
 			return file;
 		}
+
 		public void setFile(File file) {
 			this.file = file;
 		}
+
 		public boolean isSelected() {
 			return selected;
 		}
+
 		public void setSelected(boolean selected) {
 			this.selected = selected;
-		}	
+		}
 	}
 
 	private TextView txtCurrDir;
@@ -59,8 +80,8 @@ public class FileBrowserActivity extends ActionBarActivity {
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_file_browser);
-		
-		/*getActionBarHelper().set*/
+
+		/* getActionBarHelper().set */
 
 		if (Helper.SupportsNewApi()) {
 			ActionBar actionBar = getActionBar();
@@ -76,9 +97,13 @@ public class FileBrowserActivity extends ActionBarActivity {
 
 		lstFiles.setOnItemClickListener(new OnItemClickListener() {
 
+			private String[] openChoiseItems;
+
 			public void onItemClick(AdapterView<?> parent, View view,
-					int position, long id) {
-				File file = adapter.getItem(position).getFile();
+					final int position, long id) {
+				
+				final File file = adapter.getItem(position).getFile();
+
 				if (file.isDirectory()) {
 					try {
 						browseTo(file);
@@ -95,7 +120,30 @@ public class FileBrowserActivity extends ActionBarActivity {
 					}
 
 				} else {
-					openFile(file);
+					openChoiseItems = new String[] {
+							getString(R.string.open_book),
+							getString(R.string.import_book) };
+
+					new AlertDialog.Builder(FileBrowserActivity.this)
+							.setIcon(android.R.drawable.ic_menu_help)
+							.setTitle(getString(R.string.open_import))
+							.setItems(openChoiseItems,
+									new DialogInterface.OnClickListener() {
+
+										public void onClick(
+												DialogInterface dialog,
+												int which) {
+
+											if (openChoiseItems[which]
+													.equals(getString(R.string.open_book))) {
+												Helper.openBook(
+														FileBrowserActivity.this,
+														file);
+											} else {
+												importFileTest(file);
+											}
+										}
+									}).create().show();
 				}
 			}
 		});
@@ -104,9 +152,7 @@ public class FileBrowserActivity extends ActionBarActivity {
 
 		lstFiles.setAdapter(adapter);
 
-		//XXX debuging only
 		browseTo(new File("/"));
-		//openFile(new File("/sdcard/austen-pride-and-prejudice-illustrations.epub"));
 	}
 
 	@Override
@@ -139,22 +185,111 @@ public class FileBrowserActivity extends ActionBarActivity {
 		Collections.sort(files);
 
 		adapter.getItems().clear();
-		for(File f : folders){
+		for (File f : folders) {
 			adapter.getItems().add(new FileSelect(f, false));
 		}
-		for(File f : files){
+		for (File f : files) {
 			adapter.getItems().add(new FileSelect(f, false));
 		}
 		adapter.notifyDataSetChanged();
 
+		adapter.getItems().clear();
+		adapter.notifyDataSetChanged();
 	}
 
-	private void openFile(File file) {	
-		if(file.getName().endsWith(".epub")){		
-			Intent displayBook= new Intent(this, ReadActivity.class);
-			displayBook.putExtra(ReadActivity.IntentKey.FILE_PATH.toString(), file.getAbsolutePath());
-			displayBook.putExtra(ReadActivity.IntentKey.INTENT_TYPE.toString(), ReadActivity.IntentType.READ_BOOK_FROM_LIBRARY);
-			startActivity(displayBook);
+	private void importFileTest(File file) {
+
+		if (file.getName().endsWith(".epub")) {
+
+			Importer importer = new EpubImporter();
+			try {
+				importer.focusOn(file);
+				Book book = importer.createBook();
+
+				// Insert book
+				ContentValues values = new ContentValues();
+				values.put(BookTable.COLUMN_TITLE, book.getTitle());
+				values.put(BookTable.COLUMN_SOURCE, book.getSource());
+
+				Position p = new Position();
+				p.setCurrentNode(1337).setResourcePath("Leet");
+				values.put(BookTable.COLUMN_POSITION, p.getBlob());
+
+				Uri bookUid = getContentResolver().insert(
+						ThreeBookContentProvider.BOOK_URI, values);
+				Long bookId = Long.parseLong(bookUid.getLastPathSegment());
+
+				// Store book authors
+				for (Author a : book.getAuthors()) {
+					ContentValues authorValues = new ContentValues();
+					authorValues.put(AuthorTable.COLUMN_FIRSTNAME,
+							a.getFirstName());
+					authorValues.put(AuthorTable.COLUMN_LASTNAME,
+							a.getLastName());
+					getContentResolver().insert(
+							Uri.withAppendedPath(
+									ThreeBookContentProvider.BOOK_AUTHORS_URI,
+									String.valueOf(bookId)), authorValues);
+				}
+
+				// Display all books and authors
+				Cursor cursor = getContentResolver().query(
+						ThreeBookContentProvider.BOOK_URI, null, null, null,
+						null);
+
+				if (cursor != null) {
+					for (cursor.moveToFirst(); !cursor.isAfterLast(); cursor
+							.moveToNext()) {
+						long id = cursor.getLong(cursor
+								.getColumnIndexOrThrow(BookTable.COLUMN_ID));
+						String title = cursor.getString(cursor
+								.getColumnIndexOrThrow(BookTable.COLUMN_TITLE));
+						String path = cursor.getString(cursor
+								.getColumnIndex(BookTable.COLUMN_SOURCE));
+						Position pos = Position.fromBlob(cursor.getBlob(cursor
+								.getColumnIndex(BookTable.COLUMN_POSITION)));
+
+						Cursor authorsCursor = getContentResolver()
+								.query(Uri.withAppendedPath(
+										ThreeBookContentProvider.BOOK_AUTHORS_URI,
+										String.valueOf(id)), null, null, null,
+										null);
+
+						StringBuilder toast = new StringBuilder();
+						toast.append("Id: ").append(id).append(", Title: ")
+								.append(title).append(", Path: ").append(path)
+								.append(", Position: ").append(pos);
+
+						for (authorsCursor.moveToFirst(); !authorsCursor
+								.isAfterLast(); authorsCursor.moveToNext()) {
+							toast.append(", Author: ")
+									.append(authorsCursor.getString(authorsCursor
+											.getColumnIndex(AuthorTable.COLUMN_FIRSTNAME)))
+									.append(" ")
+									.append(authorsCursor.getString(authorsCursor
+											.getColumnIndex(AuthorTable.COLUMN_LASTNAME)));
+						}
+
+						Toast.makeText(this, toast, Toast.LENGTH_SHORT).show();
+					}
+				}
+
+				cursor.close();
+				// Toast.makeText(this, "Title: " + b.getTitle() + ", Author: "
+				// + b.getAuthors().get(0), Toast.LENGTH_SHORT).show();
+			} catch (FileNotFoundException e) {
+				Toast.makeText(this, "File not found", Toast.LENGTH_LONG)
+						.show();
+				Log.e("FileBrowserActivity", e.getMessage());
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO: do something more constructive with this exception.
+				Toast.makeText(this, "IO Exception", Toast.LENGTH_LONG).show();
+				Log.e("FileBrowserActivity",
+						(e.getMessage() != null) ? e.getMessage()
+								: "IOException: No message");
+				e.printStackTrace();
+			}
 		}
 	}
 

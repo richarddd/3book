@@ -146,7 +146,7 @@ public class PreferenceHelper {
 		builder.setTitle(R.string.dialog_margin_title);
 		builder.setView(marginView);
 		builder.setCancelable(true);
-		builder.setNegativeButton(R.string.cancle, null);
+		builder.setNegativeButton(R.string.cancel, null);
 		builder.setPositiveButton(R.string.ok, new OnClickListener() {
 			public void onClick(DialogInterface dialog, int which) {
 				SharedPreferences.Editor editor = settings.edit();
@@ -170,7 +170,7 @@ public class PreferenceHelper {
 		builder.setTitle(R.string.dialog_font_size_title);
 		builder.setView(fontSizeView);
 		builder.setCancelable(true);
-		builder.setNegativeButton(R.string.cancle, null);
+		builder.setNegativeButton(R.string.cancel, null);
 		builder.setPositiveButton(R.string.ok, new OnClickListener() {
 			public void onClick(DialogInterface dialog, int which) {
 				SharedPreferences.Editor editor = settings.edit();
