@@ -25,7 +25,7 @@ public class FileBrowserAdapter extends BaseAdapter {
 	private static final int FILETYPE_FOLDER = R.drawable.ic_folder;
 	private static final int FILETYPE_FILE = R.drawable.ic_file;
 	private static final int FILETYPE_EBOOK = R.drawable.ic_ebook;
-	private static final List<String> SUPPORTED_FILES = new ArrayList<String>();
+	private static final String[] SUPPORTED_FILES = {"epub"}; //TODO implement more formats
 
 	public FileBrowserAdapter(Context context) {
 		layoutInflater = (LayoutInflater) context
@@ -80,19 +80,34 @@ public class FileBrowserAdapter extends BaseAdapter {
 		holder.text.setText(name);
 		if (fs.getFile().isDirectory()) {
 			imageId = FILETYPE_FOLDER;
-		} else if (name.endsWith(".epub")) { //TODO implement for all supported types
+		} else if (fileSupported(name)) {
 			holder.checkbox.setVisibility(CheckBox.VISIBLE);
 			imageId = FILETYPE_EBOOK;
 		} else {
 			imageId = FILETYPE_FILE;
+			fs.setEnabled(false);
 		}
 
 		holder.checkbox.setChecked(fs.isSelected());
 		holder.imgView.setImageResource(imageId);
 		return convertView;
 	}
+	
+	private static boolean fileSupported(String name){
+		for(String val : SUPPORTED_FILES){
+			if(name.endsWith(val)){
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	@Override
+	public boolean isEnabled(int position) {
+		return (items.get(position).getEnabled());
+	}
 
-	static class ViewHolder {
+	private static class ViewHolder {
 		TextView text;
 		ImageView imgView;
 		CheckBox checkbox;

@@ -75,10 +75,10 @@ public class CollectionBookAdapter extends BaseAdapter implements SectionIndexer
 		Bitmap bm = b.getCover();
 		
 		if(bm == null) {
-			bm = BitmapFactory.decodeResource(context.getResources(), R.id.img_book_cover);
+			bm = BitmapFactory.decodeResource(context.getResources(), R.drawable.recent_book_cover);
 		}
 		
-		holder.imgView.setImageBitmap(b.getCover());
+		holder.imgView.setImageBitmap(bm);
 		
 		return convertView;
 	}

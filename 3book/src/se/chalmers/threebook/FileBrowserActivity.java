@@ -45,6 +45,7 @@ public class FileBrowserActivity extends ActionBarActivity {
 	public class FileSelect {
 		private File file;
 		private boolean selected;
+		private boolean enabled = true;
 
 		public FileSelect(File file, boolean selected) {
 			this.file = file;
@@ -65,6 +66,14 @@ public class FileBrowserActivity extends ActionBarActivity {
 
 		public void setSelected(boolean selected) {
 			this.selected = selected;
+		}
+
+		public void setEnabled(boolean b) {
+			enabled = b;	
+		}
+		
+		public boolean getEnabled(){
+			return enabled;
 		}
 	}
 
@@ -193,8 +202,6 @@ public class FileBrowserActivity extends ActionBarActivity {
 		}
 		adapter.notifyDataSetChanged();
 
-		adapter.getItems().clear();
-		adapter.notifyDataSetChanged();
 	}
 
 	private void importFileTest(File file) {

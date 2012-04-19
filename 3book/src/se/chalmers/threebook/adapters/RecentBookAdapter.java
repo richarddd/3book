@@ -8,6 +8,7 @@ import se.chalmers.threebook.model.Book;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -63,11 +64,11 @@ public class RecentBookAdapter extends BaseAdapter {
 		holder.text.setText(b.getTitle());
 		Bitmap bm = b.getCover();
 		
-		if(bm == null) {
-			bm = BitmapFactory.decodeResource(context.getResources(), R.id.img_book_cover);
+		if(bm == null) { 
+			bm = BitmapFactory.decodeResource(context.getResources(), R.drawable.recent_book_cover);
 		}
 		
-		holder.imgView.setImageBitmap(b.getCover());
+		holder.imgView.setImageBitmap(bm);
 		return convertView;
 	}
 
