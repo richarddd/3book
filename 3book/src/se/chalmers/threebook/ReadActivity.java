@@ -85,7 +85,6 @@ public class ReadActivity extends ActionBarActivity {
 	
 	private int curChapter = 1;
 
-	private HtmlRenderer render;
 	private RenderedPage renderedPage;
 	private int chapterSize;
 
@@ -140,19 +139,19 @@ public class ReadActivity extends ActionBarActivity {
 		try {
 			Log.d(tag, "Display called, index and anchor: " + index +","+anchor);
 
-			pagerAdapter = new BookPageAdapter(this, render, bookFlipper.getSideBuffer());
+			pagerAdapter = new BookPageAdapter(this, navigator, bookFlipper.getSideBuffer());
 
 			bookFlipper.setOnViewSwitchListener(new ViewSwitchListener() {
 				public void onSwitched(View view, int position) {
 
 				}
 			});
-
-			navigator.toSection(navigator.getToc().getSection(index)); // sets up navigator source			
+			
 
 			if (anchor != null && anchor != ""){
 				Log.d(tag, "Trying to go to anchor. Anchor: " + anchor);
-				bookFlipper.setAdapter(pagerAdapter, BookPageAdapter.START_POSITION + render.getPageNumber(anchor));
+				int anchorStartPage = navigator.toSection(navigator.getToc().getSection(index));
+				bookFlipper.setAdapter(pagerAdapter, BookPageAdapter.START_POSITION + anchorStartPage);
 				//bookFlipper.setSelection(); // TODO set up some caching for this
 			} else {
 				bookFlipper.setAdapter(pagerAdapter, BookPageAdapter.START_POSITION);
@@ -297,9 +296,10 @@ public class ReadActivity extends ActionBarActivity {
 
 		switch (type) {
 		case READ_BOOK_NOT_IN_LIBRARY:
+			Log.d(tag, "READ_BOOK_NOT_IN_LIBRARY case triggered.");
 			break;
 		case READ_BOOK_FROM_LIBRARY:
-			Log.d("3", "reading from files and shit!");
+			Log.d(tag, "READ_BOOK_FROM_LIBRARY case triggered - reading from files and shit!");
 
 			String fileName = (String) getIntent().getSerializableExtra(
 					IntentKey.FILE_PATH.toString());
@@ -311,14 +311,14 @@ public class ReadActivity extends ActionBarActivity {
 				long t1 = System.currentTimeMillis();
 				
 				Point p = Helper.getDisplaySize(this);
-				Log.d(tag, "Initializing renderer, setting up book and navigator.");
-				render = new HtmlRenderer(getCacheDir(), p.x, p.y, 
-						(int) (Helper.dpToPx(this, HtmlRenderer.BOOK_OBJECT_HEIGHT_DP)), 
-						(int) (Helper.dpToPx(this, HtmlRenderer.IMAGE_HEIGHT_LIMIT_DP)), 
-						navigator.getBook().getTitle());
 				
-				navigator = new EpubNavigator(fileName, getCacheDir(), render); // TODO use factory;
-				navigator.toSection(navigator.getToc().getSection(0));
+				Log.d(tag, "Initializing renderer, setting up book and navigator.");
+				navigator = new EpubNavigator(fileName, getCacheDir(), p.x, p.y, 
+						(int) (Helper.dpToPx(this, HtmlRenderer.BOOK_OBJECT_HEIGHT_DP)), 
+						(int) (Helper.dpToPx(this, HtmlRenderer.IMAGE_HEIGHT_LIMIT_DP))); // TODO use factory;
+				
+				
+				navigator.toSection(navigator.getToc().getSection(3)); // TODO implement storage of position
 				
 				long t2 = System.currentTimeMillis();
 				Log.d("3", "Initializing took " + (t2 - t1) + "ms.");
@@ -664,6 +664,7 @@ public class ReadActivity extends ActionBarActivity {
 			//try {navigator.nextSource(); } catch (Exception e) { Log.d(tag, "TEST: prevSource via daynight exception: " + e.getMessage());} // XXX test
 			try {goToChapter(curChapter+1, ""); } catch (Exception e) { Log.d(tag, "TEST: prevSource via daynight exception: " + e.getMessage());} // XXX test
 			break;
+			
 		case R.id.menu_settings:
 			break;
 		case R.id.menu_zoom_in:

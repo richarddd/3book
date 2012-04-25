@@ -35,6 +35,7 @@
     <string name="err_general">Error</string>
     <string name="err_file_browser_general">Unable to access file/folder</string>
     <string name="err_image">Unable to open image</string>
+    <string name="err_render_page">Could not render page!</string>
 
     <!-- SETTINGS -->
     <string name="reader_settings">Reader settings</string>

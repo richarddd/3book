@@ -41,13 +41,18 @@ public class HtmlRenderer{
 	public static final int BOOK_OBJECT_HEIGHT_DP = 191;
 	public static final int IMAGE_HEIGHT_LIMIT_DP = 400;
 
+	private String htmlSource = "";
+	
+	// shared objects: 
+	private String bookName;
+	private PageTracker tracker = new PageTracker(); // tracks source word counts 
 	
 	private int imageHeightLimit;
 	private int bookObjectHeight;
 
 	private int viewWidth;
 	private int viewHeight;
-	private String htmlSource = "";
+	
 	private File cacheDir;
 	private int baseTextSize = 26;
 	private int minWordSpace = 2;
@@ -63,14 +68,7 @@ public class HtmlRenderer{
 	private float h5TextSize = (float) (baseTextSize * 0.85);
 	private float h6TextSize = (float) (baseTextSize * 0.7);
 	
-
-
-	// private LinkedList<RenderElement> printObjects; // TODO evaluate whether
-	// a LL is the best choice
-	private ArrayList<RenderElement> printObjects; // AL has amortized O(n)
-													// insertion and O(1)
-													// retrieval
-
+	private ArrayList<RenderElement> printObjects; 
 	private Paint paint;
 	private OnDrawCompleteListener onDrawCompleteListener;
 	private String tag = "HtmlRenderer";
@@ -80,7 +78,7 @@ public class HtmlRenderer{
 	private int objectsIterated = 0;
 	
 	// Experimental tracker stuff!
-	private PageTracker tracker = new PageTracker(); // tracks source word counts 
+	
 	private int sourceIdent; // integer that uniquely identifies the current source
 	
 	// TODO: implement these in a more reasonable manner. Likely they will not
@@ -97,7 +95,7 @@ public class HtmlRenderer{
 																		// objectCount
 																		// of
 																		// anchor
-	private String bookName;
+	
 																			
 
 	public static class OnDrawCompleteListener{
@@ -122,6 +120,7 @@ public class HtmlRenderer{
 		paint.setTextSize(baseTextSize);
 	}
 
+	
 	/**
 	 * Returns whether the last render was the end of source
 	 * 

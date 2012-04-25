@@ -11,6 +11,7 @@ import se.chalmers.threebook.util.Helper;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -43,8 +44,7 @@ public class MainActivity extends ActionBarActivity {
 		layFavourites = (RelativeLayout) findViewById(R.id.lay_favourites);
 		lstRecentBooks = (HorizontalListView) findViewById(R.id.lst_recent_books);
 		
-		final Context context = lstRecentBooks.getContext();
-		adapter = new RecentBookAdapter(context, BookDataHelper.getBooks(context));
+		adapter = new RecentBookAdapter(this);
 		
 		lstRecentBooks.setOnItemClickListener(new OnItemClickListener() {
 			public void onItemClick(AdapterView<?> parent, View view, int position,
@@ -79,6 +79,13 @@ public class MainActivity extends ActionBarActivity {
         // action bar helpers have a chance to handle this event.
         return super.onCreateOptionsMenu(menu);
     }
+	
+	@Override
+	protected void onResume(){	
+		adapter.setItems(BookDataHelper.getBooks(this)); 
+		adapter.notifyDataSetChanged();
+		super.onResume(); 	
+	}
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {

@@ -21,16 +21,20 @@ public class RecentBookAdapter extends BaseAdapter {
 	private LayoutInflater layoutInflater;
 	private List<Book> books = new ArrayList<Book>();
 	private Context context;
+	private Bitmap noCoverBitmap;
 
-	public RecentBookAdapter(Context context, List<Book> books) {
+	public RecentBookAdapter(Context context) {
 		this.context = context;
-		this.books = books;
 		layoutInflater = (LayoutInflater) context
 				.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 	}
 
 	public List<Book> getItems() {
 		return books;
+	}
+	
+	public void setItems(List<Book> list){
+		this.books = list;
 	}
 
 	public int getCount() {
@@ -64,8 +68,11 @@ public class RecentBookAdapter extends BaseAdapter {
 		holder.text.setText(b.getTitle());
 		Bitmap bm = b.getCover();
 		
-		if(bm == null) { 
-			bm = BitmapFactory.decodeResource(context.getResources(), R.drawable.recent_book_cover);
+		if(bm == null) {
+			if(noCoverBitmap == null){
+				noCoverBitmap = BitmapFactory.decodeResource(context.getResources(), R.drawable.recent_book_cover);
+			}
+			bm = noCoverBitmap;
 		}
 		
 		holder.imgView.setImageBitmap(bm);
