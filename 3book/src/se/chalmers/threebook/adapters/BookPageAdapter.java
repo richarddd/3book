@@ -39,6 +39,8 @@ public class BookPageAdapter extends BaseAdapter{
 	private int lateOffset; // used for non-zero jump buffering
 							// re-initialization
 
+	private int sideBuffer; // convenience variable for pageCache.length/2
+	
 	private int objectsBuffered;
 	private int bookObjectHeight;
 	private int bookObjectSideMargin;
@@ -68,6 +70,7 @@ public class BookPageAdapter extends BaseAdapter{
 		this.bookObjectSideMargin = 10; // XXX TODO width margin of objects is
 										// hard coded, thats bad!
 		pageCache = new RenderedPage[(sideBuffer * 2) + 1];
+		this.sideBuffer = sideBuffer;
 	}
 
 	public int getCount(){
@@ -96,30 +99,34 @@ public class BookPageAdapter extends BaseAdapter{
 		try{// positive as lastPos=0
 
 			RenderedPage curPage = null;
-			if(objectsBuffered < pageCache.length){
+			if(objectsBuffered < pageCache.length){ // If we haven't buffered anything yet...
 				if(objectsBuffered == 0){
 					lateOffset = -offset;
 				}
 				objectsBuffered++;
 
 				int insertAtIndex = ((pageCache.length / 2)) + (offset + lateOffset);
-				pageCache[insertAtIndex] = offset < 0?null:navigator.bufferNextPage();
+				//pageCache[insertAtIndex] = offset < 0 ? null :navigator.movePage((offset < sideBuffer ? offset : sideBuffer), false);
+				pageCache[insertAtIndex] = navigator.movePage((offset < sideBuffer ? offset : sideBuffer), false);
 
 				curPage = pageCache[insertAtIndex];
 
-			}else{
+			} else {
 				if(direction > 0){
 					for(int i = 0; i < pageCache.length - 1; i++){
 						pageCache[i] = pageCache[i + 1];
 					}
-					pageCache[pageCache.length - 1] = navigator.nextPage();
+					//pageCache[pageCache.length - 1] = navigator.nextPage();
+					pageCache[pageCache.length - 1] = navigator.movePage(sideBuffer, true);
+					
 					curPage = pageCache[pageCache.length - 1];
 				}else{
 					for(int i = pageCache.length - 1; i > 0; i--){
 						pageCache[i] = pageCache[i - 1];
 					}
 
-					pageCache[0] = offset < 0?null:navigator.prevPage();
+					//pageCache[0] = offset < 0?null:navigator.prevPage();
+					pageCache[pageCache.length - 1] = navigator.movePage(-sideBuffer, true);
 					curPage = pageCache[0];
 				}
 			}

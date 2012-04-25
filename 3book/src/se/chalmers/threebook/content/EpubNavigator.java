@@ -28,6 +28,8 @@ public class EpubNavigator implements BookNavigator {
 	
 	private int displayedPage;
 	
+	private int center; 
+	
 	private RenderedPage curRender;
 	private String tag = "EpubNavigator";
 	private Book metaBook;
@@ -36,6 +38,7 @@ public class EpubNavigator implements BookNavigator {
 	private boolean hasBuffered = false;
 	private int fwdBufferOffset;
 	private int rwdBufferOffset;
+	private int basePage;
 	
 	public EpubNavigator(String bookFileName, File cacheDir, int viewWidth, int viewHeight, int bookObjectHeight, int imageHeightLimit) throws IOException{
 		content = new EpubContentStream(bookFileName, cacheDir);
@@ -48,7 +51,7 @@ public class EpubNavigator implements BookNavigator {
 	
 	// TODO for all methods returning renderedPage - figure out whether they need to return 
 	// a rendered page and how they should interact with the adapter. 
-	
+	/*
 	public RenderedPage getPage(int pNum) throws IOException {
 		// TODO: add end/start of source checks
 		fwdOffset = 0; 
@@ -56,19 +59,65 @@ public class EpubNavigator implements BookNavigator {
 		displayedPage = pNum; 
 		curRender = renderer.getRenderedPage(pNum);
 		return curRender; 
-	}
-	
-	/* public RenderedPage nextPage(int offset) throws IOException {
-		
-		
 	} */
 	
+	public RenderedPage movePage(int offset, boolean moveBase) throws IOException {
+		Log.d(tag, "movePage called with offset, moveBase: " + offset + ", " + moveBase);
+		Log.d(tag, "basePage is:" + basePage);
+		if (offset == 0){
+			return curRender != null ? curRender : renderer.getRenderedPage(basePage); 
+		}
+		
+		int targetPage = basePage+offset;
+		if (renderer.isEndOfSource(targetPage)){
+			// handle .. and this is a bitch when straddling
+			Log.d(tag, "Reached end of source - not handled yet though.");
+			return curRender;
+		} else if (targetPage < 0){
+			// handle .. and this is a bitch when straddling
+			Log.d(tag, "Reached start of page - not handled yet though.");
+			return curRender;
+		}
+		
+		curRender = renderer.getRenderedPage(targetPage);
+		if (moveBase) { basePage += (offset > 0) ? 1 : -1; }
+		
+		return curRender; 
+	}
+	
+	/**
+	 * 
+	 * @param offset must not be larger than the recieving buffer's side
+	 * @return
+	 * @throws IOException
+	 */
+	public RenderedPage forwardPage(int offset, boolean moveBase) throws IOException {
+		Log.d(tag, "nextPage called with offset " + offset + ", currently on page: " + displayedPage);
+		int targetPage = basePage+offset;
 
+		if (renderer.isEndOfSource((targetPage))){ 
+			Log.d(tag , "Navigator detected end of source, trying to switch to next source!");
+			nextSource(); // TODO detect wide offsets crossing several sources
+		}
+		
+		curRender = renderer.getRenderedPage(targetPage);
+		if (moveBase){ basePage++; }
+		return curRender;
+	} 
+	
+	/**
+	 * 
+	 * @param offset must not be larger than the recieving buffer's side
+	 * @return
+	 * @throws IOException
+	 */
+	public RenderedPage prevPage(int offset) throws IOException {
+		
+		return null;
+	}
+	
 	public RenderedPage nextPage() throws IOException{
 		Log.d(tag, "nextPage called, currently on page: " + displayedPage);
-//		if (!hasBuffered){
-//			fwdBufferOffset = 0;
-//		}
 		
 		if (renderer.isEndOfSource((displayedPage+1))){ 
 			Log.d(tag , "Navigator detected end of source, trying to switch to next source!");

@@ -75,10 +75,7 @@ public class HtmlRenderer{
 	
 	// tracker stuff!
 	private List<Integer> objsByPage; // provided and kept by the tracker
-	private int objectsIterated = 0;
-	
-	// Experimental tracker stuff!
-	
+	private int objectsIterated = 0;	
 	private int sourceIdent; // integer that uniquely identifies the current source
 	
 	// TODO: implement these in a more reasonable manner. Likely they will not

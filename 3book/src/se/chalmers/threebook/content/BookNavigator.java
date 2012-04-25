@@ -16,4 +16,6 @@ public interface BookNavigator {
 	public int toSection(TocReference section) throws IOException;
 	public TableOfContents getToc();
 	public Book getBook();
+	
+	public RenderedPage movePage(int offset, boolean moveCenter) throws IOException;
 }
