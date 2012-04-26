@@ -1,4 +1,4 @@
-package se.chalmers.threebook.content;
+package se.chalmers.threebook.content.epub;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -13,6 +13,8 @@ import java.io.OutputStreamWriter;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+
+import se.chalmers.threebook.content.BookCache;
 
 import nl.siegmann.epublib.domain.Book;
 import nl.siegmann.epublib.domain.Resource;

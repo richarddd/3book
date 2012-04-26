@@ -1,8 +1,10 @@
-package se.chalmers.threebook.content;
+package se.chalmers.threebook.content.epub;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import se.chalmers.threebook.content.BookCache;
+import se.chalmers.threebook.content.TableOfContents;
 import se.chalmers.threebook.model.EpubTocReference;
 import se.chalmers.threebook.model.TocReference;
 

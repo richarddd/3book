@@ -8,7 +8,7 @@ import java.util.List;
 import se.chalmers.threebook.adapters.BookNavAdapter;
 import se.chalmers.threebook.adapters.BookPageAdapter;
 import se.chalmers.threebook.content.BookNavigator;
-import se.chalmers.threebook.content.EpubNavigator;
+import se.chalmers.threebook.content.epub.EpubNavigator;
 import se.chalmers.threebook.html.HtmlRenderer;
 import se.chalmers.threebook.html.RenderedPage;
 import se.chalmers.threebook.html.WordPosition;

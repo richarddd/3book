@@ -20,6 +20,11 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
+/**
+ * @deprecated
+ * @author monkeycid
+ *
+ */
 public class TocActivity extends ActionBarActivity {
 
 	public enum IntentValue {

@@ -1,4 +1,4 @@
-package se.chalmers.threebook.content;
+package se.chalmers.threebook.content.epub;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -14,6 +14,8 @@ import nl.siegmann.epublib.domain.Book;
 import nl.siegmann.epublib.domain.Resource;
 import nl.siegmann.epublib.domain.TOCReference;
 import nl.siegmann.epublib.epub.EpubReader;
+import se.chalmers.threebook.content.BookCache;
+import se.chalmers.threebook.content.TableOfContents;
 import se.chalmers.threebook.model.Bookmark;
 import se.chalmers.threebook.model.TocReference;
 import android.util.Log;

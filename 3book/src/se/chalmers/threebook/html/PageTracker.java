@@ -11,6 +11,18 @@ import java.util.Map;
  * Terminology: eos is "end of source", when the contents of a source file has all been rendered.
  */
 class PageTracker {
+	
+	private static PageTracker instance;
+	
+	private PageTracker(){}
+	public static PageTracker instance(){
+		if (instance == null){
+			instance = new PageTracker();
+		}
+		
+		return instance;
+	}
+	
 	private static final int PAGE_COUNT_INITIAL_CAPACITY = 20;
 	
 	

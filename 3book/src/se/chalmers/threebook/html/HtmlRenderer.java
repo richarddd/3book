@@ -14,6 +14,8 @@ import org.jsoup.nodes.TextNode;
 
 import se.chalmers.threebook.R;
 import se.chalmers.threebook.content.MyBook;
+import se.chalmers.threebook.ui.RendererConfig;
+import se.chalmers.threebook.ui.RendererConfig.RenderConfigListener;
 import se.chalmers.threebook.util.Helper;
 
 import android.content.Context;
@@ -34,7 +36,7 @@ import android.util.Log;
  * 
  */
 
-public class HtmlRenderer{
+public class HtmlRenderer implements RenderConfigListener {
 
 	private static final int RENDER_LIST_INITIAL_CAPACITY = 2048;
 	private static final int WORD_ROW_LIST_INITIAL_CAPACITY = 10;
@@ -42,10 +44,11 @@ public class HtmlRenderer{
 	public static final int IMAGE_HEIGHT_LIMIT_DP = 400;
 
 	private String htmlSource = "";
-	
-	// shared objects: 
+	 
 	private String bookName;
-	private PageTracker tracker = new PageTracker(); // tracks source word counts 
+	private PageTracker tracker = PageTracker.instance(); // tracks source word counts 
+	private RendererConfig config = RendererConfig.instance();
+	// shared objects:
 	
 	private int imageHeightLimit;
 	private int bookObjectHeight;
@@ -60,7 +63,6 @@ public class HtmlRenderer{
 	private int heightMargin = 10;
 	private int widthMargin = 10;
 
-
 	private float h1TextSize = (baseTextSize * 2);
 	private float h2TextSize = (float) (baseTextSize * 1.5);
 	private float h3TextSize = (float) (baseTextSize * 1.2);
@@ -68,36 +70,86 @@ public class HtmlRenderer{
 	private float h5TextSize = (float) (baseTextSize * 0.85);
 	private float h6TextSize = (float) (baseTextSize * 0.7);
 	
-	private ArrayList<RenderElement> printObjects; 
+	private ArrayList<RenderElement> printObjects; // NOTE: this is null-checked to 
+												   // help laziness. handle with care!
 	private Paint paint;
 	private OnDrawCompleteListener onDrawCompleteListener;
 	private String tag = "HtmlRenderer";
 	
-	// tracker stuff!
 	private List<Integer> objsByPage; // provided and kept by the tracker
 	private int objectsIterated = 0;	
 	private int sourceIdent; // integer that uniquely identifies the current source
-	
-	// TODO: implement these in a more reasonable manner. Likely they will not
-	// be a part of
-	// the HTML-renderer class but rather reside in the middle layer.
-	private boolean endOfSource = false;
-	private boolean startOfSource = true;
 
-	// TODO figure out whether this should be moved to the tracker
-	// probably not as long as we re-parse on each source shift
 	// TODO ensure that it only contains TOC-valid IDs 
 	// TODO enable notification of listeners upon rendering a TOC-valid ID
-	private Map<String, Integer> idMap = new HashMap<String, Integer>(); // anchor,
-																		// objectCount
-																		// of
-																		// anchor
-	
-																			
+	// This is anchor --> "object number at which the anchor resides" 
+	private Map<String, Integer> idMap = new HashMap<String, Integer>(); 
 
 	public static class OnDrawCompleteListener{
 		public void drawComplete(){
 
+		}
+	}
+	
+	/**
+	 * Returns an empty renderer with the same basic settings as this one
+	 * @return an empty renderer with the same basic settings as this one
+	 */
+	public HtmlRenderer getBlankRenderer(){
+		return new HtmlRenderer(cacheDir, viewWidth, viewHeight, bookObjectHeight, imageHeightLimit, bookName);
+	}
+	
+	private void renderNextPage(){
+		// clarity-enhancing method that also can help if impl changes later.
+		getRenderedPage(objsByPage.size()-1);
+	}
+
+	/**
+	 * (EXPENSIVE) Returns the page number that ends the requested source
+	 * 
+	 * CALLER BEWARE: this method will, unless the end of source has been
+	 * rendered before, render the entire passed source. If the source is
+	 * of any respectable size, this will take a while. 
+	 * 
+	 */
+	public int getEosPageNumber() {
+		if (tracker.getEosPageNum(sourceIdent) > 0){
+			// we know where it ends, fine!
+			return tracker.getEosPageNum(sourceIdent);
+		}
+		int page = objsByPage.size()-1; // the last rendered page
+		while (hasPage(page)){page++;} // render until we get "false"
+		
+		// TODO: remove this debug code once we're sure of the functionality
+		if (tracker.getEosPageNum(sourceIdent) < 0){
+			Log.d(tag, "MASSIVE WARNING: tried to get eos pNum but it didn't really work, we got -1");
+		}
+		
+		return tracker.getEosPageNum(sourceIdent);
+	}
+	
+	/**
+	 * Checks whether a given pNum exists for the current source
+	 * 
+	 * CALLER BEWARE: this method will render until it can give a definitive answer. 
+	 * Calling this for high pNums when only low have been rendered is a 
+	 * costly operation - the intended usage is to call this only as far
+	 * as needed for buffering purposes, i.e look ahead by at most 3-ish.   
+	 * @param pageNum the pNum to determine existence of
+	 * @return whether there's a page pNum
+	 */
+	public boolean hasPage(int pageNum){
+		int eos = tracker.getEosPageNum(sourceIdent);
+		if (eos > pageNum){
+			// we know where the end is, and it's not there. Simple.
+			return true; 
+		} else if (eos > 0 && eos <= pageNum){
+			// we know where the end is, and it's before your target
+			return false; 
+		} else {
+			// we have no idea, so we'll recurse until we know.
+			renderNextPage();
+			return hasPage(pageNum);
 		}
 	}
 
@@ -117,19 +169,6 @@ public class HtmlRenderer{
 		paint.setTextSize(baseTextSize);
 	}
 
-	
-	/**
-	 * Returns whether the last render was the end of source
-	 * 
-	 * @return whether the last render was the end of source
-	 */
-	public boolean atEndOfSource(){
-		return endOfSource;
-	}
-
-	public boolean atStartOfSource(){
-		return startOfSource;
-	}
 
 	public void setOnDrawCompleteListener(OnDrawCompleteListener l){
 		this.onDrawCompleteListener = l;
@@ -138,7 +177,11 @@ public class HtmlRenderer{
 	public String getHtmlSource(){
 		return htmlSource;
 	}
-
+	/**
+	 * Returns true if the pNum passed is the final page in the source
+	 * @param pageNumber 
+	 * @return
+	 */
 	public boolean isEndOfSource(int pageNumber) {
 		// refactor this once we're sure of the functionality
 		Log.d(tag, "isEndOfSource called. PageNumber: " + pageNumber + ", source-end page number: " + tracker.getEosPageNum(sourceIdent));
@@ -164,7 +207,6 @@ public class HtmlRenderer{
 		this.sourceIdent = sourceIdentifier;
 		this.objectsIterated = 0;
 		objsByPage = tracker.getPageStartList(sourceIdent);
-		parseHtml();
 	}
 
 	public int getBaseTextSize(){
@@ -216,6 +258,7 @@ public class HtmlRenderer{
 	private void invalidate(){
 		tracker.invalidate();
 		objsByPage = tracker.getPageStartList(sourceIdent); // get new object to work with
+		printObjects = null;
 	}
 
 	private void parseHtml(){
@@ -435,6 +478,9 @@ public class HtmlRenderer{
 		if(pageNumber < 0){
 			throw new IllegalArgumentException("pageNumber must be > 0. Number was: " + pageNumber);
 		}
+		if (printObjects == null){
+			parseHtml(); // helps laziness
+		}
 		
 		if (pageNumber >= objsByPage.size()){
 			// TODO: consider IAE here, though how would callers check the contract?
@@ -596,6 +642,43 @@ public class HtmlRenderer{
 		return bookObjectHeight;
 	}
 
+	@Override
+	public int hashCode(){
+		// This is written to be consistent with the overriden equals, see its documentation.
+		return sourceIdent;
+	}
+	
+	@Override
+	public boolean equals(Object other){
+		// TODO figure out whether we should reject non-HtmlRenderer objects - this could, concieveably, collide. 
+		
+		// This implementation uses the fact that clients supply a supposedly uniquely identifying ID
+		// This *can* return true if the renderer is backed by the same file (under the current implementation).
+		// all should be well. 
+		
+		return hashCode() == other.hashCode();
+	}
+
+	public void onConfigChanged(int baseTextSize, int bookObjectHeight,
+			int xMargin, int yMargin, int rowMargin, int textColor,
+			Bitmap backgroundBitmap) {
+		Log.d(tag, "Renderer " + sourceIdent + "recieved onConfigChange call, changing like a boss!");
+		setBaseTextSize(baseTextSize);
+		setWidthMargin(xMargin);
+		setHeightMargin(yMargin);
+		setRowMargin(rowMargin);
+		this.bookObjectHeight = bookObjectHeight; // TODO replace with appropriate setter
+		// TODO add support for background bitmap
+		paint.setColor(textColor); // TODO replace with appropriate setter method
+	}
+	
+	public void onRotation(){
+		int newHeight = viewWidth;
+		viewWidth = viewHeight;
+		viewHeight = newHeight;
+	}
+
+	
 
 	
 }

@@ -15,6 +15,11 @@ import se.chalmers.threebook.model.Bookmark;
 import se.chalmers.threebook.util.HtmlParser;
 import android.util.Log;
 
+/**
+ * @deprecated
+ * @author monkeycid
+ *
+ */
 public class OldEpubContentStream implements ContentStream {
 
 	private Navigator nav;
