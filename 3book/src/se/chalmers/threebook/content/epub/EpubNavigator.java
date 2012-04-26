@@ -82,15 +82,21 @@ public class EpubNavigator implements BookNavigator {
 			curRender = nextRenderer.getRenderedPage(nextSourcePagesRendered++);
 			
 			int magicNumber = 1; // XXX remove magic number with programmatical sidebuffer-1
-			if (nextSourcePagesRendered > magicNumber){ nextSource(); } // time to move on!
+			if (nextSourcePagesRendered > magicNumber){
+				nextSourcePagesRendered = 0; // reset for next time
+				nextSource(); 
+			} // time to move on!
 			
 			
 		} else if (targetPage < 0){
 			Log.d(tag, "previous page requested is not in current source. Must work magic to swap in new renderer.");
-			curRender = prevRenderer.getRenderedPage(prevSourcePagesRendered++);
+			curRender = prevRenderer.getRenderedPage(prevRenderer.getEosPageNumber() - prevSourcePagesRendered++);
 			
 			int magicNumber = 1; // XXX remove magic number with programmatical sidebuffer-1
-			if (prevSourcePagesRendered > magicNumber){ prevSource(); } // time to move on!
+			if (prevSourcePagesRendered > magicNumber){
+				prevSourcePagesRendered = 0; // reset for next time
+				prevSource(); 
+			} // time to move on!
 		
 		} else {
 			curRender = renderer.getRenderedPage(targetPage);
@@ -240,6 +246,7 @@ public class EpubNavigator implements BookNavigator {
 			prevRenderer = renderer.getBlankRenderer();
 			prevSource = content.getPreviousSource(curSection);
 			prevRenderer.setHtmlSource(prevSource.getHtml(), prevSource.getUniqueIdentifier());
+			
 			break;
 		case 1: // we're moving the renderers one step forward
 			// old prevRenderer is overwritten

@@ -125,6 +125,8 @@ public class HtmlRenderer implements RenderConfigListener {
 			Log.d(tag, "MASSIVE WARNING: tried to get eos pNum but it didn't really work, we got -1");
 		}
 		
+		Log.d(tag, "getEosPageNumber has worked hard! the source ends on page: " + tracker.getEosPageNum(sourceIdent) + ", while objSize is : " + objsByPage.size() );
+		
 		return tracker.getEosPageNum(sourceIdent);
 	}
 	
