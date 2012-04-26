@@ -44,7 +44,7 @@ public class FileBrowserActivity extends ActionBarActivity {
 
 	public class FileSelect {
 		private File file;
-		private boolean selected;
+		private boolean selected = false;
 		private boolean enabled = true;
 
 		public FileSelect(File file, boolean selected) {

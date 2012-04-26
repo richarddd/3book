@@ -8,8 +8,10 @@ import se.chalmers.threebook.FileBrowserActivity.FileSelect;
 import se.chalmers.threebook.R;
 
 import android.content.Context;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.CheckBox;
@@ -58,13 +60,11 @@ public class FileBrowserAdapter extends BaseAdapter {
 							.findViewById(R.id.txt_file_item_title),
 					(ImageView) convertView.findViewById(R.id.img_file_icon), (CheckBox)convertView.findViewById(R.id.chk_file_browser));
 			
-			holder.checkbox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-
-				public void onCheckedChanged(CompoundButton buttonView,
-						boolean isChecked) {
+			holder.checkbox.setOnClickListener(new OnClickListener() {
+				public void onClick(View v) {
 					FileSelect fs = (FileSelect) holder.checkbox
 							.getTag();
-					fs.setSelected(buttonView.isChecked());
+					fs.setSelected(((CompoundButton)v).isChecked());
 				}
 			});
 			convertView.setTag(holder);
@@ -80,10 +80,12 @@ public class FileBrowserAdapter extends BaseAdapter {
 		holder.text.setText(name);
 		if (fs.getFile().isDirectory()) {
 			imageId = FILETYPE_FOLDER;
+			holder.checkbox.setVisibility(CheckBox.VISIBLE);
 		} else if (fileSupported(name)) {
 			holder.checkbox.setVisibility(CheckBox.VISIBLE);
 			imageId = FILETYPE_EBOOK;
 		} else {
+			holder.checkbox.setVisibility(CheckBox.GONE);
 			imageId = FILETYPE_FILE;
 			fs.setEnabled(false);
 		}
