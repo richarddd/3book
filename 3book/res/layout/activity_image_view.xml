@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent">
+    
+    <se.chalmers.threebook.ui.TouchImageView
+        android:id="@+id/img_image_view"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent" />
+
+    <LinearLayout
+        android:id="@+id/lay_zoom_controls"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:background="#cc000000" >
+
+        <ImageView
+            android:layout_margin="@dimen/padding_l"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:src="@android:drawable/ic_menu_zoom" />
+
+        <SeekBar
+            android:id="@+id/bar_image_zoom"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_weight="1" />
+        
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="@dimen/padding_l"
+            android:layout_gravity="center_vertical"
+            android:src="@android:drawable/ic_menu_zoom" />
+ 
+    </LinearLayout>
+
+</RelativeLayout>

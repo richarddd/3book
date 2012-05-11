@@ -495,7 +495,7 @@ public class HtmlRenderer{
 				
 
 				//if bitmap is small enough to just draw on canvas
-				if(imageBitmap.getHeight() <= imageHeightLimit && imageBitmap.getWidth() <= viewWidth-(2 * widthMargin)){
+				if(imageBitmap.getHeight() <= imageHeightLimit && imageBitmap.getWidth()*2 <= viewWidth-(2 * widthMargin)){
 					Matrix matrix = new Matrix();
 					matrix.setTranslate((float) ((viewWidth-imageBitmap.getWidth())*0.5), totalRowHeight+(textBefore?baseTextSize:0));
 					canvas.drawBitmap(imageBitmap,matrix, null);

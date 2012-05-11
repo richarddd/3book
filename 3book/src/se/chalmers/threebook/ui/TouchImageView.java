@@ -1,5 +1,7 @@
 package se.chalmers.threebook.ui;
 
+import javax.crypto.spec.IvParameterSpec;
+
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Matrix;
@@ -11,6 +13,13 @@ import android.view.View;
 import android.widget.ImageView;
 
 public class TouchImageView extends ImageView {
+	
+	private OnTouchListener secondTouchListner;
+	
+	
+	public void setSecondTouchListener(OnTouchListener listener){
+		secondTouchListner = listener;
+	}
 
 	Matrix matrix = new Matrix();
 
@@ -62,6 +71,10 @@ public class TouchImageView extends ImageView {
 
 			public boolean onTouch(View v, MotionEvent event) {
 				mScaleDetector.onTouchEvent(event);
+				
+				if(secondTouchListner != null){
+					secondTouchListner.onTouch(v, event);
+				}
 
 				matrix.getValues(m);
 				float x = m[Matrix.MTRANS_X];
@@ -135,6 +148,8 @@ public class TouchImageView extends ImageView {
 		bmWidth = bm.getWidth();
 		bmHeight = bm.getHeight();
 	}
+	
+	
 
 	public void setMaxZoom(float x) {
 		maxScale = x;
@@ -207,6 +222,32 @@ public class TouchImageView extends ImageView {
 			return true;
 
 		}
+	}
+	
+	public void zoom(float factor){
+		
+		//matrix.getValues(m);
+		
+		//float scaleX = m[Matrix.MSCALE_X];
+		//float scaleY = m[Matrix.MSCALE_Y];
+		
+		matrix.setScale(factor, factor, width/2, height/2);
+		setImageMatrix(matrix);
+		invalidate();
+		
+		
+		/*
+		float origScale = saveScale;
+		saveScale *= factor;
+		if (saveScale > maxScale) {
+			saveScale = maxScale;
+			factor = maxScale / origScale;
+		} else if (saveScale < minScale) {
+			saveScale = minScale;
+			factor = minScale / origScale;
+		}	
+		matrix.postScale(saveScale, saveScale);
+		*/
 	}
 
 	@Override
